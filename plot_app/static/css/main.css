@@ -1,0 +1,360 @@
+/*************************
+*******General******
+**************************/
+
+html {
+    width: 100%;
+}
+body {
+    min-width: 600px;
+    max-width: 900px;
+    width: 75%;
+    margin: auto;
+}
+.content {
+    margin: 2em;
+	margin-top: 116px;
+}
+h1 {
+    margin: 2em 0 0 0;
+    color: #2e484c;
+    font-family: 'Titillium Web', sans-serif;
+    font-size: 1.8em;
+	font-weight: 700;
+    text-transform: uppercase;
+}
+h1 .name {
+    color: #222;
+    font-size: 0.9em;
+    text-transform: none;
+	padding-left: 3px;
+}
+a:link, a:visited {
+    font-weight: bold;
+    text-decoration: none;
+    color: #337ab7;
+}
+a:hover, a:focus, a:active {
+    text-decoration: underline;
+    color: #9685BA;
+}
+p {
+	margin: 0.6em 0 0.3em;
+}
+p,td,button {
+    font-family: 'Roboto', sans-serif;
+    font-size: 1.2em;
+    text-align: justify;
+    text-justify: inter-word;
+}
+
+label {
+	font-weight: normal;
+}
+
+table.spaced {
+	margin: 16px 0;
+}
+table.spaced tbody {
+	background: #f9f9f9;
+	border-color: #f9f9f9;
+	border-style: solid;
+	border-width: 16px;
+}
+
+td.left {
+	padding-right: 30px;
+}
+
+.plot-legend-box {
+	border-left-style: solid;
+	border-left-width: 20px;
+	padding-left: 4px;
+}
+
+
+/* bokeh logo */
+.bk-logo-small {
+/*	filter: saturate(70%); */
+	display: none !important; /* hide it: looks much better. We give credit to bokeh on the page */
+}
+/* bokeh plots */
+.bk-plot-layout {
+	/* spacing between plots */
+	margin-top: 12px;
+}
+.bk-grid-column {
+	/* adjust to changed spacing */
+	height: 100% !important;
+}
+/* bootstrap interferences */
+.bk-slick-header-column {
+	box-sizing: content-box;
+}
+
+ul {
+	list-style: none;
+}
+
+
+.align-right{
+	float: right;
+}
+
+
+/*************************
+*******Button******
+**************************/
+
+.btn-common {
+	font-size: 14px;
+	color: #337ab7;
+	border: 1px solid #0099ae;
+	padding: 6px 25px;
+}
+
+.btn-common:hover, 
+.btn-common:focus{
+	outline: none;
+	background: none;
+	box-shadow: none;
+	color: #9685BA;
+	border-color:#9685BA;
+}
+
+input {
+	margin: 3px 0;
+}
+
+
+/*************************
+*******Header******
+**************************/
+
+
+#header{
+  margin-bottom: 0;
+  padding: 12px;
+
+  border-color: #dddddd;
+  border-image: none;
+  border-style: solid none;
+  border-width: 1px medium;
+
+  /* the following makes it sticky */
+  width: 900px;
+  position: fixed;
+  z-index: 1000;
+  top: 0;
+  background-color: #fff;
+  /* and this centers it (independent from the <body> width) */
+  left: 50%;
+  margin-left: -450px;
+}
+
+#header .navbar-inverse .container{
+  position: relative;
+}
+
+#header .navbar {
+  background: #fff;
+  border: 0;
+  margin-bottom: 0;
+}
+
+#header .navbar-toggle{
+  margin-top: 20px;
+}
+
+#header .navbar-brand{
+  padding: 0;
+  margin-left: 0;
+}
+
+#header .navbar-brand h1{
+  padding: 0;
+  margin: 0;
+}
+
+#header .navbar-nav.navbar-right >li a {
+  color: #555555;
+  font-size: 13px;
+  padding: 20px;
+  text-transform: uppercase;
+  font-weight: normal;
+  font-family: 'Titillium Web', sans-serif;
+}
+
+
+#header .navbar-inverse .navbar-nav  li.active > a,  
+#header .navbar-inverse .navbar-nav  li.active > a:focus, 
+#header .navbar-nav.navbar-right li > a:hover,
+.navbar-inverse .navbar-nav > .open > a {
+  background-color: inherit;
+  border: 0;
+  color: #26aae1;
+  text-decoration: none;
+}
+
+#header .navbar-inverse .navbar-nav  li a:hover{
+  color: #26aae1;
+}
+.navbar-right {
+	margin-right: -10px;
+}
+
+
+
+/*  Dropdown menu*/
+
+ul.sub-menu {
+  display: none;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#header .navbar-nav li ul.sub-menu li a{
+  color: #818285;
+  padding: 5px 0;
+  font-size: 13px;
+  display: block;
+  text-transform: capitalize;
+}
+
+#header .navbar-nav li ul.sub-menu li .active{
+  background: #26aae1;
+  color: #fff;
+  position: relative;
+}
+
+#header .navbar-nav li ul.sub-menu li .active i{
+  position: absolute;
+  font-size: 56px;
+  top: -13px;
+  color: #0884d5;
+}
+
+#header .navbar-nav li ul.sub-menu li .active .fa-angle-right{
+  left: -3px;
+}
+
+#header .navbar-nav li ul.sub-menu li .active .fa-angle-left{
+  right: -3px;
+}
+
+#header .navbar-nav li ul.sub-menu li a:hover,
+#header .navbar-nav li ul.sub-menu li a:focus{
+  background: #26aae1;
+  color: #fff;
+}
+
+.fa-angle-down{
+  padding-left: 5px; 
+}
+
+.scaleIn {
+  -webkit-animation-name: scaleIn;
+  animation-name: scaleIn;
+}
+
+@-webkit-keyframes scaleIn {
+  0% {
+    opacity: 0;
+    -webkit-transform: scale(0);
+    transform: scale(0);
+  }
+
+  100% {
+    opacity: 1;
+    -webkit-transform: scale(1);
+    transform: scale(1);
+  }
+}
+
+@keyframes scaleIn {
+  0% {
+    opacity: 0;
+    -webkit-transform: scale(0);
+    -ms-transform: scale(0);
+    transform: scale(0);
+  }
+
+  100% {
+    opacity: 1;
+    -webkit-transform: scale(1);
+    -ms-transform: scale(1);
+    transform: scale(1);
+  }
+}
+
+.nav.navbar-nav > li:hover > ul.sub-menu{
+	display: block;
+	-webkit-animation: fadeInUp 400ms;
+	animation: fadeInUp 400ms;
+}
+
+ul.sub-menu {
+	position: absolute;
+	top: 60px;
+	left: 0;
+	background: #fff;
+	padding: 10px 0;
+	width: 240px;
+	box-shadow: none;
+	display: none;
+	z-index: 999;
+	border: 1px solid #26aae1;
+}
+
+#header .navbar-nav li ul.sub-menu li a {
+	padding-left: 20px;
+}
+
+@media only screen and (max-width : 750px) {
+	#header .navbar-nav {
+		padding-left: 20px;
+	}
+	#header {
+		left: 0;
+		margin-left: 0;
+	}
+}
+
+#header .navbar-nav.navbar-right li {
+	padding: 0;
+}
+
+#header .navbar-nav.navbar-right >li a {
+	padding: 20px 10px;
+}
+
+.nav.navbar-nav.post-nav li{
+	display: inline-block;
+	margin-right: 15px;
+}
+
+
+
+/*************************
+*******Footer******
+**************************/
+
+#footer {
+  color: #333;
+}
+
+#footer h1{
+  margin-bottom: 65px;
+  margin-top: 36px;
+}
+
+.copyright-text{
+  margin-top: 30px;
+}
+
+.copyright-text p {
+  margin-bottom: 0;
+}
+
+

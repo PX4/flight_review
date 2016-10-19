@@ -1,0 +1,12 @@
+
+{% include 'header.html' %}
+
+<div id="logging-page" style="display: none;"></div> <!-- marker for JS script -->
+
+<div id="loading-plots" style="height: 50px;"><p>Loading Plots...</p></div>
+
+{{ plot_div|indent(8) }}
+
+
+{% include 'footer.html' %}
+
