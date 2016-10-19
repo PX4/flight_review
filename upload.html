@@ -1,0 +1,57 @@
+
+{% include 'plot_app/templates/header.html' %}
+
+<h1>Upload a Log File</h1>
+
+<p>
+Select and upload a log file for plotting and analysis. See TODO for an
+example log.
+</p>
+
+<p>
+<table class="spaced">
+<form enctype="multipart/form-data" action="/upload" method="post">
+	<tr>
+		<td class="left">Description (optional):</td><td><input class="align-right" type="text" name="description" /></td>
+	</tr>
+	<tr>
+		<td class="left">E-Mail (optional):</td><td><input class="align-right" type="text" name="email" /></td>
+	<tr>
+		<td colspan="2"><small>Will only be used to send you a link to
+				the uploaded file and is not stored on the server.</small></td>
+	</tr>
+	<tr>
+		<td colspan="2">
+			<label><input type="checkbox" name="allowForAnalysis" value="true"> Allow
+				this log file to be used for statistical analysis.</label>
+		</td>
+	</tr>
+	<!--
+	<tr>
+		<td colspan="2">
+			<label><input type="checkbox" name="obfuscated" value="true">
+				Obfuscate location information in the log.</label>
+		</td>
+	</tr>
+	-->
+	<tr>
+		<td class="left">ULog File:</td><td><input class="align-right" type="file" name="filearg" /></td>
+	</tr>
+	<tr>
+		<td></td><td><input class="btn btn-common align-right"
+			id="upload-button" type="submit" value="Upload" /></td>
+	</tr>
+</form>
+</table>
+</p>
+
+<p>
+<b>Important</b>: The log data may contain location data. By uploading a log,
+you agree that this information is stored on the server. Should you choose to
+share the link, it will be accessible to others as well.
+</p>
+
+
+{% include 'plot_app/templates/footer.html' %}
+
+
