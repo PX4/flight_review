@@ -32,6 +32,7 @@ def load_data(file_name):
             'position_setpoint_triplet' ]
     ulog = ULog(file_name, msg_filter)
     px4_ulog = PX4ULog(ulog)
+    px4_ulog.add_roll_pitch_yaw()
 
     # filter messages with timestamp = 0 (these are invalid).
     # The better way is not to publish such messages in the first place, and fix

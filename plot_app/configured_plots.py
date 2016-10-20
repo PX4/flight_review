@@ -189,7 +189,7 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, log_description):
         data_plot.add_graph([lambda data: (axis, np.rad2deg(data[axis]))],
                 colors2[0:1], [axis_name+' Estimated'])
         data_plot.change_dataset('vehicle_attitude_setpoint')
-        data_plot.add_graph([lambda data: (axis+'_body', np.rad2deg(data[axis+'_body']))],
+        data_plot.add_graph([lambda data: (axis+'_d', np.rad2deg(data[axis+'_d']))],
                 colors2[1:2], [axis_name+' Setpoint'])
         plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes)
 
