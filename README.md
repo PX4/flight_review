@@ -9,8 +9,12 @@ It uses the [bokeh](http://bokeh.pydata.org) library for plotting and the
 
 #### Installation and Setup ####
 
+- clone the repo
+- `git submodule sync`
+- `git submodule update`
 - use python3
-- `pip3 install bokeh jinja2 sqlite3`
+- `pip3 install bokeh jinja2`
+- `sudo apt-get install sqlite3`
 - at least version 0.12.3 of bokeh is required. Install with: `pip3 install bokeh`
 - configure web server settings in `plot_app/config`. This can be skipped for a
   local installation.
