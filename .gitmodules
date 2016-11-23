@@ -1,3 +1,0 @@
-[submodule "plot_app/pyulog"]
-	path = plot_app/pyulog
-	url = https://github.com/PX4/pyulog.git

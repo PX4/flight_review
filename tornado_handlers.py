@@ -5,7 +5,7 @@ import tornado.web
 # this is needed for the following imports
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'plot_app'))
 from plot_app.config import *
-from plot_app.pyulog.ulog_parser import *
+from pyulog import *
 from multipart_streamer import MultiPartStreamer
 from plot_app.helper import get_log_filename, validate_log_id
 from send_email import send_notification_email

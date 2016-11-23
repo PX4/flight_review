@@ -7,8 +7,8 @@ from timeit import default_timer as timer
 import sys
 import sqlite3
 
-from pyulog.ulog_parser import *
-from pyulog.ulog_parser.px4 import *
+from pyulog import *
+from pyulog.px4 import *
 
 from helper import *
 from config import *
