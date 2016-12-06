@@ -19,6 +19,17 @@ from config import *
 from plotting import *
 
 
+class DBData:
+    """ simple class that contains information from the DB entry of a single
+    log file """
+    def __init__(self):
+        self.description = ''
+        self.feedback = ''
+        self.type = 'personal'
+        self.weather = ''
+        self.rating = ''
+
+
 def add_fragment(plots, name, display_name = None):
     """ add a navigation anchor """
     global plot_width
@@ -29,7 +40,7 @@ def add_fragment(plots, name, display_name = None):
         width = int(plot_width*0.9)))
 
 
-def generate_plots(ulog, px4_ulog, flight_mode_changes, log_description):
+def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
     """ create a list of bokeh plots (and widgets) to show """
 
     plots = []
@@ -41,8 +52,8 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, log_description):
         sys_name = cgi.escape(ulog.msg_info_dict['sys_name']) + ' '
     div = Div(text="<h1>"+sys_name + px4_ulog.get_mav_type()+"</h1>", width=int(plot_width*0.9))
     header_divs = [ div ]
-    if log_description != '':
-        div_descr = Div(text="<h4>"+log_description+"</h4>", width=int(plot_width*0.9))
+    if db_data.description != '':
+        div_descr = Div(text="<h4>"+db_data.description+"</h4>", width=int(plot_width*0.9))
         header_divs.append(div_descr)
 
     # airframe
@@ -94,6 +105,14 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, log_description):
     m, s = divmod(int((ulog.last_timestamp - ulog.start_timestamp)/1e6), 60)
     h, m = divmod(m, 60)
     table_text.append(('Logging duration', '{:d}:{:02d}:{:02d}'.format( h, m, s)))
+
+    # weather, rating, feedback
+    if len(db_data.weather) > 0:
+        table_text.append(('Weather', db_data.weather))
+    if len(db_data.rating) > 0:
+        table_text.append(('Flight Rating', db_data.rating))
+    if len(db_data.feedback) > 0:
+        table_text.append(('Feedback', db_data.feedback.replace('\n', '<br/>')))
 
     # generate the table
     divs_text = '<table>' + ''.join(['<tr><td class="left">'+a+

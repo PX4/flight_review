@@ -12,7 +12,7 @@ from pyulog.px4 import *
 
 from helper import *
 from config import *
-from configured_plots import generate_plots
+from configured_plots import generate_plots, DBData
 
 
 
@@ -87,22 +87,26 @@ if error_message == '':
         flight_mode_changes = []
 
 
-    # read the description from DB
-    log_description = ''
+    # read the data from DB
+    db_data = DBData()
     try:
         con = sqlite3.connect(get_db_filename(), detect_types=sqlite3.PARSE_DECLTYPES)
         cur = con.cursor()
-        cur.execute('select Description from Logs where Id = ?', [log_id])
+        cur.execute('select Description, Feedback, Type, Weather, Rating from Logs where Id = ?', [log_id])
         db_tuple = cur.fetchone()
         if db_tuple != None:
-            log_description = db_tuple[0]
+            db_data.description = db_tuple[0]
+            db_data.feedback = db_tuple[1]
+            db_data.type = db_tuple[2]
+            db_data.weather = db_tuple[3]
+            db_data.rating = db_tuple[4]
         cur.close()
         con.close()
     except:
         print("DB access failed:", sys.exc_info()[0], sys.exc_info()[1])
 
 
-    plots = generate_plots(ulog, px4_ulog, flight_mode_changes, log_description)
+    plots = generate_plots(ulog, px4_ulog, flight_mode_changes, db_data)
 
     title = 'Flight Review - '+px4_ulog.get_mav_type()
 
