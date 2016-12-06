@@ -45,6 +45,12 @@ with immediate feedback.
 - open the `testing_notebook.ipynb` file
 
 ### TODO list ###
+- plot ground truth if found in log
+- create a public index page: sortable & filterable by SW version, HW, airframe,
+  success/failure, flight duration, ...
+  -> add a checkbox 'public' to upload form
+- Google Maps seems to have some problems (initialization, scaling and zooming
+  issues). This is bokeh
 - maximum upload size is currently limited to 100MB. This requires a bokeh
   setting.
 - add SSL
