@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+# Script to create or upgrade the SQLite DB
+
 import sqlite3 as lite
 import sys
 import os
@@ -15,8 +17,32 @@ print('creating DB at '+get_db_filename())
 con = lite.connect(get_db_filename())
 with con:
     cur = con.cursor()
-    cur.execute("CREATE TABLE Logs(Id TEXT, Title TEXT, Description TEXT, "
-            "OriginalFilename TEXT, Date TIMESTAMP, AllowForAnalysis INTEGER, "
-            "Obfuscated INTEGER, Source TEXT)")
+    cur.execute("PRAGMA table_info('Logs')")
+    columns = cur.fetchall()
+
+    if len(columns) == 0:
+        cur.execute("CREATE TABLE Logs(Id TEXT, Title TEXT, Description TEXT, "
+                "OriginalFilename TEXT, Date TIMESTAMP, AllowForAnalysis INTEGER, "
+                "Obfuscated INTEGER, Source TEXT, Email TEXT, Weather TEXT, "
+                "Rating TEXT, Feedback TEXT, Type TEXT)")
+    else:
+        # try to upgrade
+        column_names = [ x[1] for x in columns]
+        if not 'Email' in column_names:
+            print('Adding column Email')
+            cur.execute("ALTER TABLE Logs ADD COLUMN Email TEXT DEFAULT ''")
+        if not 'Weather' in column_names:
+            print('Adding column Weather')
+            cur.execute("ALTER TABLE Logs ADD COLUMN Weather TEXT DEFAULT ''")
+        if not 'Rating' in column_names:
+            print('Adding column Rating')
+            cur.execute("ALTER TABLE Logs ADD COLUMN Rating TEXT DEFAULT ''")
+        if not 'Feedback' in column_names:
+            print('Adding column Feedback')
+            cur.execute("ALTER TABLE Logs ADD COLUMN Feedback TEXT DEFAULT ''")
+        if not 'Type' in column_names:
+            print('Adding column Type')
+            cur.execute("ALTER TABLE Logs ADD COLUMN Type TEXT DEFAULT ''")
+
 con.close()
 

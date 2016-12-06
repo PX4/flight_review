@@ -60,9 +60,13 @@ class UploadHandler(tornado.web.RequestHandler):
             try:
                 self.ps.data_complete()
                 form_data = self.ps.get_values(['description', 'email',
-                    'allowForAnalysis', 'obfuscated', 'source'])
+                    'allowForAnalysis', 'obfuscated', 'source', 'type',
+                    'feedback', 'weather', 'rating'])
                 description = cgi.escape(form_data['description'].decode("utf-8"))
                 email = form_data['email'].decode("utf-8")
+                upload_type = 'personal'
+                if 'type' in form_data:
+                    upload_type = form_data['type'].decode("utf-8")
                 source = 'webui'
                 title = '' # may be used in future...
                 if 'source' in form_data:
@@ -75,6 +79,20 @@ class UploadHandler(tornado.web.RequestHandler):
                 if 'allowForAnalysis' in form_data:
                     if form_data['allowForAnalysis'].decode("utf-8") == 'true':
                         allow_for_analysis = 1
+                feedback = ''
+                if 'feedback' in form_data:
+                    feedback = cgi.escape(form_data['feedback'].decode("utf-8"))
+                weather = ''
+                rating = ''
+                stored_email = ''
+
+                if upload_type == 'flightreport':
+                    weather = cgi.escape(form_data['weather'].decode("utf-8"))
+                    if weather == 'notset': weather = ''
+                    rating = cgi.escape(form_data['rating'].decode("utf-8"))
+                    if rating == 'notset': rating = ''
+                    stored_email = email
+
                 file_obj = self.ps.get_parts_by_name('filearg')[0]
                 upload_file_name = file_obj.get_filename()
 
@@ -107,10 +125,12 @@ class UploadHandler(tornado.web.RequestHandler):
                 cur = con.cursor()
                 cur.execute('insert into Logs (Id, Title, Description, '
                         'OriginalFilename, Date, AllowForAnalysis, Obfuscated, '
-                        'Source) values (?, ?, ?, ?, ?, ?, ?, ?)',
+                        'Source, Email, Weather, Rating, Feedback, Type) values '
+                        '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                         [log_id, title, description, upload_file_name,
                             datetime.datetime.now(), allow_for_analysis,
-                            obfuscated, source])
+                            obfuscated, source, stored_email, weather, rating,
+                            feedback, upload_type])
                 con.commit()
                 cur.close()
                 con.close()

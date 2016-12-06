@@ -4,45 +4,126 @@
 <h1>Upload a Log File</h1>
 
 <p>
-Select and upload a log file for plotting and analysis. See TODO for an
-example log.
+Select and upload a log file for plotting and analysis. <!-- See TODO for an
+example log. -->
 </p>
 
 <p>
-<table class="spaced">
-<form enctype="multipart/form-data" action="/upload" method="post">
-	<tr>
-		<td class="left">Description (optional):</td><td><input class="align-right" type="text" name="description" /></td>
-	</tr>
-	<tr>
-		<td class="left">E-Mail (optional):</td><td><input class="align-right" type="text" name="email" /></td>
-	<tr>
-		<td colspan="2"><small>Will only be used to send you a link to
-				the uploaded file and is not stored on the server.</small></td>
-	</tr>
-	<tr>
-		<td colspan="2">
-			<label><input type="checkbox" name="allowForAnalysis" value="true"> Allow
-				this log file to be used for statistical analysis.</label>
-		</td>
-	</tr>
-	<!--
-	<tr>
-		<td colspan="2">
-			<label><input type="checkbox" name="obfuscated" value="true">
-				Obfuscate location information in the log.</label>
-		</td>
-	</tr>
-	-->
-	<tr>
-		<td class="left">ULog File:</td><td><input class="align-right" type="file" name="filearg" /></td>
-	</tr>
-	<tr>
-		<td></td><td><input class="btn btn-common align-right"
-			id="upload-button" type="submit" value="Upload" /></td>
-	</tr>
-</form>
-</table>
+
+
+<ul class="nav nav-tabs">
+	<li class="active"><a data-toggle="tab" href="#personal">Personal</a></li>
+	<li><a data-toggle="tab" href="#flightreport">Flight Report</a></li>
+</ul>
+
+<div class="tab-content">
+	<div id="personal" class="tab-pane fade in active">
+
+		<!-- Personal Tab -->
+		<table class="spaced">
+			<form enctype="multipart/form-data" action="/upload" method="post">
+				<tr>
+					<td></td><td>
+						<input type="hidden" name="type" value="personal">
+					</td>
+				</tr>
+				<tr>
+					<td class="left">Description (optional):</td><td><input class="align-right" type="text" name="description" /></td>
+				</tr>
+				<tr>
+					<td class="left">Additional Feedback (optional):</td><td><textarea
+		 class="align-right" cols="20" rows="3" name="feedback"></textarea></td>
+				</tr>
+				<tr>
+					<td class="left">E-Mail (optional):</td><td><input class="align-right" type="text" name="email" /></td>
+					<tr>
+						<td colspan="2"><small>Will only be used to send you a link to
+								the uploaded file and is not stored on the server.</small></td>
+					</tr>
+					<tr>
+						<td colspan="2">
+							<label><input type="checkbox" name="allowForAnalysis" value="true"> Allow
+								this log file to be used for statistical analysis.</label>
+						</td>
+					</tr>
+					<!--
+					<tr>
+					<td colspan="2">
+					<label><input type="checkbox" name="obfuscated" value="true">
+					Obfuscate location information in the log.</label>
+					</td>
+					</tr>
+					-->
+					<tr>
+						<td class="left">ULog File:</td><td><input class="align-right" type="file" name="filearg" /></td>
+					</tr>
+					<tr>
+						<td></td><td><input class="btn btn-common align-right"
+						  id="upload-button" type="submit" value="Upload" /></td>
+					</tr>
+			</form>
+		</table>
+
+	</div>
+	<div id="flightreport" class="tab-pane fade">
+
+		<!-- Flight Report Tab -->
+		<table class="spaced">
+			<form enctype="multipart/form-data" action="/upload" method="post">
+				<tr>
+					<td></td><td>
+						<input type="hidden" name="type" value="flightreport">
+					</td>
+				</tr>
+				<tr>
+					<td class="left">Description:</td><td><input class="align-right" type="text" name="description" /></td>
+				</tr>
+				<tr>
+					<td class="left">Additional Feedback:</td><td><textarea
+					class="align-right" cols="20" rows="3" name="feedback"></textarea></td>
+				</tr>
+				<tr>
+					<td class="left">E-Mail:</td><td><input class="align-right" type="text" name="email" /></td>
+					<tr>
+						<td colspan="2"><small>May be used to request additional information.</small></td>
+					</tr>
+					<tr>
+						<td class="left">Weather:</td><td>
+							<select class="align-right" name="weather">
+								<option value="notset" selected="selected">Please select:</option>
+								<option value="sunny">Sunny</option>
+								<option value="cloudy">Cloudy</option>
+								<option value="windy">Windy</option>
+								<option value="rainy">Rainy</option>
+								<option value="stormy">Stormy</option>
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td class="left">Flight Rating:</td>
+						<td>
+							<select class="align-right" name="rating">
+								<option value="notset" selected="selected">Please select:</option>
+								<option value="crash">Crashed</option>
+								<option value="unsatisfactory">Unsatisfactory</option>
+								<option value="good">Good</option>
+								<option value="great">Great!</option>
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td class="left">ULog File:</td><td><input class="align-right" type="file" name="filearg" /></td>
+					</tr>
+					<tr>
+						<td></td><td><input class="btn btn-common align-right"
+						  id="upload-button" type="submit" value="Upload" /></td>
+					</tr>
+			</form>
+		</table>
+
+	</div>
+</div>
+
 </p>
 
 <p>

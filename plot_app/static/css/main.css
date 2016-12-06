@@ -53,7 +53,9 @@ label {
 }
 
 table.spaced {
+	/* upload page */
 	margin: 16px 0;
+	width: 650px;
 }
 table.spaced tbody {
 	background: #f9f9f9;
