@@ -26,8 +26,19 @@ class DBData:
         self.description = ''
         self.feedback = ''
         self.type = 'personal'
-        self.weather = ''
+        self.wind_speed = -1
         self.rating = ''
+        self.video_url = ''
+
+    def windSpeedStr(self):
+        return {0: 'Calm', 5: 'Breeze', 8: 'Gale', 10: 'Storm'}.get(self.wind_speed, '')
+
+    def ratingStr(self):
+        return {'crash_pilot': 'Crashed (Pilot mistake)',
+                'crash_sw_hw': 'Crashed (Software or Hardware issue)',
+                'unsatisfactory': 'Unsatisfactory',
+                'good': 'Good',
+                'great': 'Great!'}.get(self.rating, '')
 
 
 def add_fragment(plots, name, display_name = None):
@@ -106,13 +117,16 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
     h, m = divmod(m, 60)
     table_text.append(('Logging duration', '{:d}:{:02d}:{:02d}'.format( h, m, s)))
 
-    # weather, rating, feedback
-    if len(db_data.weather) > 0:
-        table_text.append(('Weather', db_data.weather))
+    # Wind speed, rating, feedback
+    if db_data.wind_speed >= 0:
+        table_text.append(('Wind Speed', db_data.windSpeedStr()))
     if len(db_data.rating) > 0:
-        table_text.append(('Flight Rating', db_data.rating))
+        table_text.append(('Flight Rating', db_data.ratingStr()))
     if len(db_data.feedback) > 0:
         table_text.append(('Feedback', db_data.feedback.replace('\n', '<br/>')))
+    if len(db_data.video_url) > 0:
+        table_text.append(('Video', '<a href="'+db_data.video_url+
+            '" target="_blank">'+db_data.video_url+'</a>'))
 
     # generate the table
     divs_text = '<table>' + ''.join(['<tr><td class="left">'+a+

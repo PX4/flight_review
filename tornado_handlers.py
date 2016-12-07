@@ -61,7 +61,7 @@ class UploadHandler(tornado.web.RequestHandler):
                 self.ps.data_complete()
                 form_data = self.ps.get_values(['description', 'email',
                     'allowForAnalysis', 'obfuscated', 'source', 'type',
-                    'feedback', 'weather', 'rating'])
+                    'feedback', 'windSpeed', 'rating', 'videoUrl'])
                 description = cgi.escape(form_data['description'].decode("utf-8"))
                 email = form_data['email'].decode("utf-8")
                 upload_type = 'personal'
@@ -82,16 +82,20 @@ class UploadHandler(tornado.web.RequestHandler):
                 feedback = ''
                 if 'feedback' in form_data:
                     feedback = cgi.escape(form_data['feedback'].decode("utf-8"))
-                weather = ''
+                wind_speed = -1
                 rating = ''
                 stored_email = ''
+                video_url = ''
 
                 if upload_type == 'flightreport':
-                    weather = cgi.escape(form_data['weather'].decode("utf-8"))
-                    if weather == 'notset': weather = ''
+                    try:
+                        wind_speed = int(cgi.escape(form_data['windSpeed'].decode("utf-8")))
+                    except ValueError:
+                        wind_speed = -1
                     rating = cgi.escape(form_data['rating'].decode("utf-8"))
                     if rating == 'notset': rating = ''
                     stored_email = email
+                    video_url = cgi.escape(form_data['videoUrl'].decode("utf-8"))
 
                 file_obj = self.ps.get_parts_by_name('filearg')[0]
                 upload_file_name = file_obj.get_filename()
@@ -125,12 +129,13 @@ class UploadHandler(tornado.web.RequestHandler):
                 cur = con.cursor()
                 cur.execute('insert into Logs (Id, Title, Description, '
                         'OriginalFilename, Date, AllowForAnalysis, Obfuscated, '
-                        'Source, Email, Weather, Rating, Feedback, Type) values '
-                        '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                        'Source, Email, WindSpeed, Rating, Feedback, Type, '
+                        'videoUrl) values '
+                        '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                         [log_id, title, description, upload_file_name,
                             datetime.datetime.now(), allow_for_analysis,
-                            obfuscated, source, stored_email, weather, rating,
-                            feedback, upload_type])
+                            obfuscated, source, stored_email, wind_speed, rating,
+                            feedback, upload_type, video_url])
                 con.commit()
                 cur.close()
                 con.close()

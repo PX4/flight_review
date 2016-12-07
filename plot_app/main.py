@@ -92,14 +92,16 @@ if error_message == '':
     try:
         con = sqlite3.connect(get_db_filename(), detect_types=sqlite3.PARSE_DECLTYPES)
         cur = con.cursor()
-        cur.execute('select Description, Feedback, Type, Weather, Rating from Logs where Id = ?', [log_id])
+        cur.execute('select Description, Feedback, Type, WindSpeed, Rating, VideoUrl '
+                'from Logs where Id = ?', [log_id])
         db_tuple = cur.fetchone()
         if db_tuple != None:
             db_data.description = db_tuple[0]
             db_data.feedback = db_tuple[1]
             db_data.type = db_tuple[2]
-            db_data.weather = db_tuple[3]
+            db_data.wind_speed = db_tuple[3]
             db_data.rating = db_tuple[4]
+            db_data.video_url = db_tuple[5]
         cur.close()
         con.close()
     except:

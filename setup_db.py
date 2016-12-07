@@ -23,17 +23,17 @@ with con:
     if len(columns) == 0:
         cur.execute("CREATE TABLE Logs(Id TEXT, Title TEXT, Description TEXT, "
                 "OriginalFilename TEXT, Date TIMESTAMP, AllowForAnalysis INTEGER, "
-                "Obfuscated INTEGER, Source TEXT, Email TEXT, Weather TEXT, "
-                "Rating TEXT, Feedback TEXT, Type TEXT)")
+                "Obfuscated INTEGER, Source TEXT, Email TEXT, WindSpeed INT, "
+                "Rating TEXT, Feedback TEXT, Type TEXT, VideoUrl TEXT)")
     else:
         # try to upgrade
         column_names = [ x[1] for x in columns]
         if not 'Email' in column_names:
             print('Adding column Email')
             cur.execute("ALTER TABLE Logs ADD COLUMN Email TEXT DEFAULT ''")
-        if not 'Weather' in column_names:
-            print('Adding column Weather')
-            cur.execute("ALTER TABLE Logs ADD COLUMN Weather TEXT DEFAULT ''")
+        if not 'WindSpeed' in column_names:
+            print('Adding column WindSpeed')
+            cur.execute("ALTER TABLE Logs ADD COLUMN WindSpeed INT DEFAULT -1")
         if not 'Rating' in column_names:
             print('Adding column Rating')
             cur.execute("ALTER TABLE Logs ADD COLUMN Rating TEXT DEFAULT ''")
@@ -43,6 +43,9 @@ with con:
         if not 'Type' in column_names:
             print('Adding column Type')
             cur.execute("ALTER TABLE Logs ADD COLUMN Type TEXT DEFAULT ''")
+        if not 'VideoUrl' in column_names:
+            print('Adding column VideoUrl')
+            cur.execute("ALTER TABLE Logs ADD COLUMN VideoUrl TEXT DEFAULT ''")
 
 con.close()
 

@@ -36,31 +36,32 @@ example log. -->
 				</tr>
 				<tr>
 					<td class="left">E-Mail (optional):</td><td><input class="align-right" type="text" name="email" /></td>
-					<tr>
-						<td colspan="2"><small>Will only be used to send you a link to
-								the uploaded file and is not stored on the server.</small></td>
-					</tr>
-					<tr>
-						<td colspan="2">
-							<label><input type="checkbox" name="allowForAnalysis" value="true"> Allow
-								this log file to be used for statistical analysis.</label>
-						</td>
-					</tr>
-					<!--
-					<tr>
+				</tr>
+				<tr>
+					<td colspan="2"><small>Will only be used to send you a link to
+							the uploaded file and is not stored on the server.</small></td>
+				</tr>
+				<tr>
 					<td colspan="2">
-					<label><input type="checkbox" name="obfuscated" value="true">
-					Obfuscate location information in the log.</label>
+						<label><input type="checkbox" name="allowForAnalysis" value="true"> Allow
+							this log file to be used for statistical analysis.</label>
 					</td>
-					</tr>
-					-->
-					<tr>
-						<td class="left">ULog File:</td><td><input class="align-right" type="file" name="filearg" /></td>
-					</tr>
-					<tr>
-						<td></td><td><input class="btn btn-common align-right"
-						  id="upload-button" type="submit" value="Upload" /></td>
-					</tr>
+				</tr>
+				<!--
+				<tr>
+				<td colspan="2">
+				<label><input type="checkbox" name="obfuscated" value="true">
+				Obfuscate location information in the log.</label>
+				</td>
+				</tr>
+				-->
+				<tr>
+					<td class="left">ULog File:</td><td><input class="align-right" type="file" name="filearg" /></td>
+				</tr>
+				<tr>
+					<td></td><td><input class="btn btn-common align-right"
+						 id="upload-button" type="submit" value="Upload" /></td>
+				</tr>
 			</form>
 		</table>
 
@@ -76,7 +77,7 @@ example log. -->
 					</td>
 				</tr>
 				<tr>
-					<td class="left">Description:</td><td><input class="align-right" type="text" name="description" /></td>
+					<td class="left">Test Description:</td><td><input class="align-right" type="text" name="description" /></td>
 				</tr>
 				<tr>
 					<td class="left">Additional Feedback:</td><td><textarea
@@ -84,40 +85,45 @@ example log. -->
 				</tr>
 				<tr>
 					<td class="left">E-Mail:</td><td><input class="align-right" type="text" name="email" /></td>
-					<tr>
-						<td colspan="2"><small>May be used to request additional information.</small></td>
-					</tr>
-					<tr>
-						<td class="left">Weather:</td><td>
-							<select class="align-right" name="weather">
-								<option value="notset" selected="selected">Please select:</option>
-								<option value="sunny">Sunny</option>
-								<option value="cloudy">Cloudy</option>
-								<option value="windy">Windy</option>
-								<option value="rainy">Rainy</option>
-								<option value="stormy">Stormy</option>
-							</select>
-						</td>
-					</tr>
-					<tr>
-						<td class="left">Flight Rating:</td>
-						<td>
-							<select class="align-right" name="rating">
-								<option value="notset" selected="selected">Please select:</option>
-								<option value="crash">Crashed</option>
-								<option value="unsatisfactory">Unsatisfactory</option>
-								<option value="good">Good</option>
-								<option value="great">Great!</option>
-							</select>
-						</td>
-					</tr>
-					<tr>
-						<td class="left">ULog File:</td><td><input class="align-right" type="file" name="filearg" /></td>
-					</tr>
-					<tr>
-						<td></td><td><input class="btn btn-common align-right"
-						  id="upload-button" type="submit" value="Upload" /></td>
-					</tr>
+				</tr>
+				<tr>
+					<td colspan="2"><small>May be used to request additional information.</small></td>
+				</tr>
+				<tr>
+					<td class="left">Wind Speed:</td><td>
+						<select class="align-right" name="windSpeed">
+							<option value="-1" selected="selected">Please select:</option>
+							<!-- Beafort Scale -->
+							<option value="0">Calm</option>
+							<option value="5">Breeze</option>
+							<option value="8">Gale</option>
+							<option value="10">Storm</option>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<td class="left">Flight Rating:</td>
+					<td>
+						<select class="align-right" name="rating">
+							<option value="notset" selected="selected">Please select:</option>
+							<option value="crash_pilot">Crashed (Pilot mistake)</option>
+							<option value="crash_sw_hw">Crashed (Software or Hardware issue)</option>
+							<option value="unsatisfactory">Unsatisfactory</option>
+							<option value="good">Good</option>
+							<option value="great">Great!</option>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<td class="left">Video Url:</td><td><input class="align-right" type="text" name="videoUrl" /></td>
+				</tr>
+				<tr>
+					<td class="left">ULog File:</td><td><input class="align-right" type="file" name="filearg" /></td>
+				</tr>
+				<tr>
+					<td></td><td><input class="btn btn-common align-right"
+						 id="upload-button" type="submit" value="Upload" /></td>
+				</tr>
 			</form>
 		</table>
 
