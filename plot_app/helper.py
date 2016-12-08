@@ -6,6 +6,7 @@ import os
 import numpy as np
 from config import get_log_filepath, get_airframes_filename, get_airframes_url
 from urllib.request import urlretrieve
+import xml.etree.ElementTree # airframe parsing
 
 __DO_PRINT_TIMING = False
 
@@ -77,6 +78,46 @@ def download_airframes_maybe():
             print("Download error: "+str(e))
             return False
     return True
+
+def get_airframe_data(airframe_id):
+    """ return a dict of aiframe data ('name' & 'type') from an autostart id.
+    Downloads aiframes if necessary. Returns None on error
+    """
+
+    if download_airframes_maybe():
+        try:
+            airframe_xml = get_airframes_filename()
+            e = xml.etree.ElementTree.parse(airframe_xml).getroot()
+            for airframe_group in e.findall('airframe_group'):
+                for airframe in airframe_group.findall('airframe'):
+                    if str(airframe_id) == airframe.get('id'):
+                        ret = {'name': airframe.get('name')}
+                        try:
+                            ret['type'] = airframe.find('type').text
+                        except:
+                            pass
+                        return ret
+        except:
+            pass
+    return None
+
+flight_modes_table = {
+    # make sure the colors are the same as in the html template
+    0: ('Manual', '#cc0000'), # red
+    1: ('Altitude Control', '#222222'), # gray
+    2: ('Position Control', '#00cc33'), # green
+    6: ('Acro', '#66cc00'), # olive
+    8: ('Stabilized', '#0033cc'), # dark blue
+    7: ('Offboard', '#00cccc'), # light blue
+    9: ('Rattitude', '#cc9900'), # orange
+
+    3: ('Mission', '#6600cc'), # purple
+    4: ('Loiter', '#6600cc'), # purple
+    5: ('Return to Land', '#6600cc'), # purple
+    10: ('Takeoff', '#6600cc'), # purple
+    11: ('Land', '#6600cc'), # purple
+    12: ('Follow Target', '#6600cc'), # purple
+    }
 
 
 def WGS84_to_mercator(lon, lat):

@@ -13,7 +13,7 @@ from bokeh.models.widgets import DataTable, DateFormatter, TableColumn, Div
 
 from downsampling import DynamicDownsample
 import numpy as np
-from helper import map_projection, WGS84_to_mercator
+from helper import map_projection, WGS84_to_mercator, flight_modes_table
 
 
 TOOLS = "pan,wheel_zoom,box_zoom,reset,save"
@@ -84,24 +84,6 @@ def plot_parameter_changes(p, plots_height, changed_parameters):
         return labels
     return None
 
-
-flight_modes_table = {
-    # make sure the colors are the same as in the html template
-    0: ('Manual', '#cc0000'), # red
-    1: ('Altitude Control', '#222222'), # gray
-    2: ('Position Control', '#00cc33'), # green
-    6: ('Acro', '#66cc00'), # olive
-    8: ('Stabilized', '#0033cc'), # dark blue
-    7: ('Offboard', '#00cccc'), # light blue
-    9: ('Rattitude', '#cc9900'), # orange
-
-    3: ('Mission', '#6600cc'), # purple
-    4: ('Loiter', '#6600cc'), # purple
-    5: ('Return to Land', '#6600cc'), # purple
-    10: ('Takeoff', '#6600cc'), # purple
-    11: ('Land', '#6600cc'), # purple
-    12: ('Follow Target', '#6600cc'), # purple
-    }
 
 def plot_flight_modes_background(p, flight_mode_changes):
     for i in range(len(flight_mode_changes)-1):
