@@ -8,7 +8,8 @@ from plot_app.config import *
 from plot_app.db_entry import *
 from pyulog import *
 from multipart_streamer import MultiPartStreamer
-from plot_app.helper import get_log_filename, validate_log_id
+from plot_app.helper import get_log_filename, validate_log_id, \
+    flight_modes_table, get_airframe_data
 from send_email import send_notification_email
 import uuid
 from jinja2 import Environment, FileSystemLoader
@@ -235,8 +236,14 @@ class BrowseHandler(tornado.web.RequestHandler):
                 <th>#</th>
                 <th>Date</th>
                 <th>Description</th>
+                <th>Type</th>
+                <th>Airframe</th>
+                <th>Hardware</th>
+                <th>Software</th>
+                <th>Duration</th>
                 <th>Rating</th>
-                <th>Wind Speed</th>
+                <th># Errors</th>
+                <th>Flight Modes</th>
             </tr>
         </thead>
         <tbody>
@@ -263,18 +270,51 @@ class BrowseHandler(tornado.web.RequestHandler):
             db_data.wind_speed = db_tuple[3]
             db_data.rating = db_tuple[4]
             db_data.video_url = db_tuple[5]
+
+            db_data_gen = DBDataGenerated(log_id)
+            ver_sw = db_data_gen.ver_sw
+            if len(ver_sw) > 10:
+                ver_sw = ver_sw[:6]
+            airframe_data = get_airframe_data(db_data_gen.sys_autostart_id)
+            if airframe_data == None:
+                airframe = db_data_gen.sys_autostart_id
+            else:
+                airframe = airframe_data['name']
+
+            flight_modes = ', '.join([ flight_modes_table[x][0]
+                    for x in db_data_gen.flight_modes if x in
+                    flight_modes_table])
+
+            m, s = divmod(db_data_gen.duration_s, 60)
+            h, m = divmod(m, 60)
+            duration_str = '{:d}:{:02d}:{:02d}'.format(h, m, s)
+
             table_data += """
-                <tr>
-                    <td><a href="plot_app?log={log_id}">{counter}</a></td>
-                    <td>{date}</td>
-                    <td>{description}</td>
-                    <td>{rating}</td>
-                    <td>{wind_speed}</td>
-                </tr>
-            """.format(log_id=log_id, counter=counter,
+<tr>
+<td><a href="plot_app?log={log_id}">{counter}</a></td>
+<td>{date}</td>
+<td>{description}</td>
+<td>{mav_type}</td>
+<td>{airframe}</td>
+<td>{hw}</td>
+<td>{sw}</td>
+<td>{duration}</td>
+<td>{rating}</td>
+<td>{num_errors}</td>
+<td>{flight_modes}</td>
+</tr>
+""".format(log_id=log_id, counter=counter,
                     date=log_date,
                     description=db_data.description, rating=db_data.ratingStr(),
-                    wind_speed=db_data.windSpeedStr())
+                    wind_speed=db_data.windSpeedStr(),
+                    mav_type=db_data_gen.mav_type,
+                    airframe=airframe,
+                    hw=db_data_gen.sys_hw,
+                    sw=ver_sw,
+                    duration=duration_str,
+                    num_errors=db_data_gen.num_logged_errors,
+                    flight_modes=flight_modes
+                    )
             counter += 1
 
         cur.close()
