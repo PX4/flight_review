@@ -15,6 +15,9 @@ from email.mime.text import MIMEText
 def send_notification_email(email_adress, plot_url, log_description):
     """ send a notification email after uploading a plot """
 
+    if email_adress == '':
+        return True
+
     # typical values for text_subtype are plain, html, xml
     text_subtype = 'plain'
 
