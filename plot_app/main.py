@@ -12,7 +12,8 @@ from pyulog.px4 import *
 
 from helper import *
 from config import *
-from configured_plots import generate_plots, DBData
+from db_entry import *
+from configured_plots import generate_plots
 
 
 
