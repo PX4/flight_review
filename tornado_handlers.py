@@ -5,6 +5,7 @@ import tornado.web
 # this is needed for the following imports
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'plot_app'))
 from plot_app.config import *
+from plot_app.db_entry import *
 from pyulog import *
 from multipart_streamer import MultiPartStreamer
 from plot_app.helper import get_log_filename, validate_log_id
@@ -21,6 +22,7 @@ Request handlers for Tornado web server
 """
 
 UPLOAD_TEMPLATE = 'upload.html'
+BROWSE_TEMPLATE = 'browse.html'
 
 env = Environment(loader=FileSystemLoader(os.path.dirname(os.path.realpath(__file__))))
 
@@ -32,6 +34,8 @@ class CustomHTTPError(tornado.web.HTTPError):
 
 @tornado.web.stream_request_body
 class UploadHandler(tornado.web.RequestHandler):
+    """ Upload log file Tornado request handler: handles page requests and POST
+    data """
 
     def initialize(self):
         self.ps = None
@@ -61,7 +65,7 @@ class UploadHandler(tornado.web.RequestHandler):
                 self.ps.data_complete()
                 form_data = self.ps.get_values(['description', 'email',
                     'allowForAnalysis', 'obfuscated', 'source', 'type',
-                    'feedback', 'windSpeed', 'rating', 'videoUrl'])
+                    'feedback', 'windSpeed', 'rating', 'videoUrl', 'public'])
                 description = cgi.escape(form_data['description'].decode("utf-8"))
                 email = form_data['email'].decode("utf-8")
                 upload_type = 'personal'
@@ -86,6 +90,7 @@ class UploadHandler(tornado.web.RequestHandler):
                 rating = ''
                 stored_email = ''
                 video_url = ''
+                is_public = 0
 
                 if upload_type == 'flightreport':
                     try:
@@ -96,6 +101,11 @@ class UploadHandler(tornado.web.RequestHandler):
                     if rating == 'notset': rating = ''
                     stored_email = email
                     video_url = cgi.escape(form_data['videoUrl'].decode("utf-8"))
+                    # always allow for statistical analysis
+                    allow_for_analysis = 1
+                    if 'public' in form_data:
+                        if form_data['public'].decode("utf-8") == 'true':
+                            is_public = 1
 
                 file_obj = self.ps.get_parts_by_name('filearg')[0]
                 upload_file_name = file_obj.get_filename()
@@ -130,12 +140,12 @@ class UploadHandler(tornado.web.RequestHandler):
                 cur.execute('insert into Logs (Id, Title, Description, '
                         'OriginalFilename, Date, AllowForAnalysis, Obfuscated, '
                         'Source, Email, WindSpeed, Rating, Feedback, Type, '
-                        'videoUrl) values '
-                        '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                        'videoUrl, Public) values '
+                        '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                         [log_id, title, description, upload_file_name,
                             datetime.datetime.now(), allow_for_analysis,
                             obfuscated, source, stored_email, wind_speed, rating,
-                            feedback, upload_type, video_url])
+                            feedback, upload_type, video_url, is_public])
                 con.commit()
                 cur.close()
                 con.close()
@@ -176,6 +186,7 @@ class UploadHandler(tornado.web.RequestHandler):
 
 
 class DownloadHandler(tornado.web.RequestHandler):
+    """ Download log file Tornado request handler """
 
     def get(self):
         log_id = self.get_argument('log')
@@ -212,4 +223,64 @@ class DownloadHandler(tornado.web.RequestHandler):
                         break
                     self.write(data)
                 self.finish()
+
+
+class BrowseHandler(tornado.web.RequestHandler):
+    """ Browse public log file Tornado request handler """
+
+    def get(self):
+        table_header = """
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Rating</th>
+                <th>Wind Speed</th>
+            </tr>
+        </thead>
+        <tbody>
+        """
+        table_footer = "</tbody>"
+        table_data = ""
+
+        # get the logs (but only the public ones)
+        con = sqlite3.connect(get_db_filename(), detect_types=sqlite3.PARSE_DECLTYPES)
+        cur = con.cursor()
+        cur.execute('select Id, Date, Description, WindSpeed, Rating, VideoUrl '
+            'from Logs where Public = 1')
+        # need to fetch all here, because we will do more SQL calls while
+        # iterating (having multiple cursor's does not seem to work)
+        db_tuples = cur.fetchall()
+        counter = 1
+        for db_tuple in db_tuples:
+            db_data = DBData()
+            log_id = db_tuple[0]
+            log_date = db_tuple[1].strftime('%Y-%m-%d')
+            db_data.description = db_tuple[2]
+            db_data.feedback = ''
+            db_data.type = ''
+            db_data.wind_speed = db_tuple[3]
+            db_data.rating = db_tuple[4]
+            db_data.video_url = db_tuple[5]
+            table_data += """
+                <tr>
+                    <td><a href="plot_app?log={log_id}">{counter}</a></td>
+                    <td>{date}</td>
+                    <td>{description}</td>
+                    <td>{rating}</td>
+                    <td>{wind_speed}</td>
+                </tr>
+            """.format(log_id=log_id, counter=counter,
+                    date=log_date,
+                    description=db_data.description, rating=db_data.ratingStr(),
+                    wind_speed=db_data.windSpeedStr())
+            counter += 1
+
+        cur.close()
+        con.close()
+
+        template = env.get_template(BROWSE_TEMPLATE)
+        self.write(template.render(table_data = table_header + table_data +
+            table_footer))
 
