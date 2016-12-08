@@ -8,7 +8,6 @@ Select and upload a log file for plotting and analysis. <!-- See TODO for an
 example log. -->
 </p>
 
-<p>
 
 
 <ul class="nav nav-tabs">
@@ -22,6 +21,10 @@ example log. -->
 		<!-- Personal Tab -->
 		<table class="spaced">
 			<form enctype="multipart/form-data" action="/upload" method="post">
+				<tr>
+					<td colspan="2">Personal upload form:
+						others will only see the log if you share the link.</td>
+				</tr>
 				<tr>
 					<td></td><td>
 						<input type="hidden" name="type" value="personal">
@@ -71,6 +74,11 @@ example log. -->
 		<!-- Flight Report Tab -->
 		<table class="spaced">
 			<form enctype="multipart/form-data" action="/upload" method="post">
+				<tr>
+					<td colspan="2">Flight report upload form:
+						provide a log with additional infos so that the PX4 team
+						can analyze the log and improve the flight stack.</td>
+				</tr>
 				<tr>
 					<td></td><td>
 						<input type="hidden" name="type" value="flightreport">
@@ -130,7 +138,6 @@ example log. -->
 	</div>
 </div>
 
-</p>
 
 <p>
 <b>Important</b>: The log data may contain location data. By uploading a log,
