@@ -12,7 +12,6 @@ from bokeh.models.widgets import (
     )
 
 import cgi # for html escaping
-import xml.etree.ElementTree # airframe parsing
 
 from helper import *
 from config import *
@@ -49,25 +48,16 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
     table_text = []
     if 'SYS_AUTOSTART' in ulog.initial_parameters:
         sys_autostart = ulog.initial_parameters['SYS_AUTOSTART']
-        found_airframe = False
-        if download_airframes_maybe():
-            try:
-                airframe_xml = get_airframes_filename()
-                e = xml.etree.ElementTree.parse(airframe_xml).getroot()
-                for airframe_group in e.findall('airframe_group'):
-                    for airframe in airframe_group.findall('airframe'):
-                        if str(sys_autostart) == airframe.get('id'):
-                            try:
-                                airframe_type = ', '+airframe.find('type').text
-                            except:
-                                airframe_type = ''
-                            table_text.append(('Airframe', airframe.get('name')+
-                                airframe_type+' <small>('+str(sys_autostart)+')</small>'))
-                            found_airframe = True
-            except Exception as e:
-                print('airframe parse error: '+str(e))
-        if not found_airframe:
+        airframe_data = get_airframe_data(sys_autostart)
+
+        if airframe_data == None:
             table_text.append(('Airframe', str(sys_autostart)))
+        else:
+            airframe_type = ''
+            if 'type' in airframe_data:
+                airframe_type = ', '+airframe_data['type']
+            table_text.append(('Airframe', airframe_data.get('name')+
+                airframe_type+' <small>('+str(sys_autostart)+')</small>'))
 
     # HW & SW
     if 'ver_hw' in ulog.msg_info_dict:
