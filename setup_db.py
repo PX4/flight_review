@@ -24,7 +24,8 @@ with con:
         cur.execute("CREATE TABLE Logs(Id TEXT, Title TEXT, Description TEXT, "
                 "OriginalFilename TEXT, Date TIMESTAMP, AllowForAnalysis INTEGER, "
                 "Obfuscated INTEGER, Source TEXT, Email TEXT, WindSpeed INT, "
-                "Rating TEXT, Feedback TEXT, Type TEXT, VideoUrl TEXT)")
+                "Rating TEXT, Feedback TEXT, Type TEXT, VideoUrl TEXT, "
+                "Public INT)")
     else:
         # try to upgrade
         column_names = [ x[1] for x in columns]
@@ -46,6 +47,9 @@ with con:
         if not 'VideoUrl' in column_names:
             print('Adding column VideoUrl')
             cur.execute("ALTER TABLE Logs ADD COLUMN VideoUrl TEXT DEFAULT ''")
+        if not 'Public' in column_names:
+            print('Adding column Public')
+            cur.execute("ALTER TABLE Logs ADD COLUMN Public INT DEFAULT 0")
 
 con.close()
 
