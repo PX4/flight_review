@@ -17,15 +17,29 @@ print('creating DB at '+get_db_filename())
 con = lite.connect(get_db_filename())
 with con:
     cur = con.cursor()
+
+    # Logs table (contains information not found in the log file)
     cur.execute("PRAGMA table_info('Logs')")
     columns = cur.fetchall()
 
     if len(columns) == 0:
-        cur.execute("CREATE TABLE Logs(Id TEXT, Title TEXT, Description TEXT, "
-                "OriginalFilename TEXT, Date TIMESTAMP, AllowForAnalysis INTEGER, "
-                "Obfuscated INTEGER, Source TEXT, Email TEXT, WindSpeed INT, "
-                "Rating TEXT, Feedback TEXT, Type TEXT, VideoUrl TEXT, "
-                "Public INT)")
+        cur.execute("CREATE TABLE Logs("
+                "Id TEXT, " # log id (part of the file name)
+                "Title TEXT, "
+                "Description TEXT, "
+                "OriginalFilename TEXT, "
+                "Date TIMESTAMP, " # date & time when uploaded
+                "AllowForAnalysis INTEGER, " # if 1 allow for statistical analysis
+                "Obfuscated INTEGER, "
+                "Source TEXT, " # where it comes from: 'webui', 'CI', 'QGroundControl'
+                "Email TEXT, " # email (may be empty)
+                "WindSpeed INT, " # Wind speed in beaufort scale
+                "Rating TEXT, " # how the flight was rated
+                "Feedback TEXT, " # additional feedback
+                "Type TEXT, " # upload type: 'personal' (or '') or 'flightreport'
+                "VideoUrl TEXT, "
+                "Public INT, " # if 1 this log can be publicly listed
+                "CONSTRAINT Id_PK PRIMARY KEY (Id))")
     else:
         # try to upgrade
         column_names = [ x[1] for x in columns]
