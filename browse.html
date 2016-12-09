@@ -27,7 +27,9 @@
 <script type="text/javascript">
 
 $(document).ready(function() {
-    $('#logs_table').DataTable();
+	$('#logs_table').DataTable({
+		"order": [[0, 'desc']]
+	});
 } );
 
 </script>
