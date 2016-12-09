@@ -21,7 +21,7 @@ class DBData:
         return {0: 'Calm', 5: 'Breeze', 8: 'Gale', 10: 'Storm'}.get(self.wind_speed, '')
 
     def ratingStr(self):
-        return {'crash_pilot': 'Crashed (Pilot mistake)',
+        return {'crash_pilot': 'Crashed (Pilot error)',
                 'crash_sw_hw': 'Crashed (Software or Hardware issue)',
                 'unsatisfactory': 'Unsatisfactory',
                 'good': 'Good',
