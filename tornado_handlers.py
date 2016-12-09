@@ -101,7 +101,7 @@ class UploadHandler(tornado.web.RequestHandler):
                     rating = cgi.escape(form_data['rating'].decode("utf-8"))
                     if rating == 'notset': rating = ''
                     stored_email = email
-                    video_url = cgi.escape(form_data['videoUrl'].decode("utf-8"))
+                    video_url = cgi.escape(form_data['videoUrl'].decode("utf-8"), quote=True)
                     # always allow for statistical analysis
                     allow_for_analysis = 1
                     if 'public' in form_data:
@@ -234,7 +234,7 @@ class BrowseHandler(tornado.web.RequestHandler):
         <thead>
             <tr>
                 <th>#</th>
-                <th>Date</th>
+                <th>Upload Date</th>
                 <th>Description</th>
                 <th>Type</th>
                 <th>Airframe</th>
@@ -242,7 +242,7 @@ class BrowseHandler(tornado.web.RequestHandler):
                 <th>Software</th>
                 <th>Duration</th>
                 <th>Rating</th>
-                <th># Errors</th>
+                <th>Errors</th>
                 <th>Flight Modes</th>
             </tr>
         </thead>
@@ -271,7 +271,42 @@ class BrowseHandler(tornado.web.RequestHandler):
             db_data.rating = db_tuple[4]
             db_data.video_url = db_tuple[5]
 
-            db_data_gen = DBDataGenerated(log_id)
+            # try to get the additional data from the DB
+            cur.execute('select * from LogsGenerated where Id = ?', [log_id])
+            db_tuple = cur.fetchone()
+            if db_tuple == None: # need to generate from file
+                db_data_gen = DBDataGenerated.fromLogFile(log_id)
+
+                try:
+                    cur.execute('insert into LogsGenerated (Id, Duration, '
+                            'Mavtype, Estimator, AutostartId, Hardware, '
+                            'Software, NumLoggedErrors, NumLoggedWarnings, '
+                            'FlightModes) values '
+                            '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                            [log_id, db_data_gen.duration_s, db_data_gen.mav_type,
+                            db_data_gen.estimator, db_data_gen.sys_autostart_id,
+                            db_data_gen.sys_hw, db_data_gen.ver_sw,
+                            db_data_gen.num_logged_errors,
+                            db_data_gen.num_logged_warnings,
+                            ','.join(map(str, db_data_gen.flight_modes)) ])
+                    con.commit()
+                except sqlite3.IntegrityError:
+                    # someone else already inserted it (race). just ignore it
+                    pass
+            else: # get it from the DB
+                db_data_gen = DBDataGenerated()
+                db_data_gen.duration_s = db_tuple[1]
+                db_data_gen.mav_type = db_tuple[2]
+                db_data_gen.estimator = db_tuple[3]
+                db_data_gen.sys_autostart_id = db_tuple[4]
+                db_data_gen.sys_hw = db_tuple[5]
+                db_data_gen.ver_sw = db_tuple[6]
+                db_data_gen.num_logged_errors = db_tuple[7]
+                db_data_gen.num_logged_warnings = db_tuple[8]
+                db_data_gen.flight_modes = set([int(x)
+                    for x in db_tuple[9].split(',')])
+
+            # bring it into displayable form
             ver_sw = db_data_gen.ver_sw
             if len(ver_sw) > 10:
                 ver_sw = ver_sw[:6]
@@ -305,7 +340,8 @@ class BrowseHandler(tornado.web.RequestHandler):
 </tr>
 """.format(log_id=log_id, counter=counter,
                     date=log_date,
-                    description=db_data.description, rating=db_data.ratingStr(),
+                    description=db_data.description,
+                    rating=db_data.ratingStr(),
                     wind_speed=db_data.windSpeedStr(),
                     mav_type=db_data_gen.mav_type,
                     airframe=airframe,

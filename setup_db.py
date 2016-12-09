@@ -65,5 +65,28 @@ with con:
             print('Adding column Public')
             cur.execute("ALTER TABLE Logs ADD COLUMN Public INT DEFAULT 0")
 
+
+    # LogsGenerated table (information from the log file, for faster access)
+    cur.execute("PRAGMA table_info('LogsGenerated')")
+    columns = cur.fetchall()
+
+    if len(columns) == 0:
+        cur.execute("CREATE TABLE LogsGenerated("
+                "Id TEXT, " # log id
+                "Duration INT, " # logging duration in [s]
+                "MavType TEXT, " # vehicle type
+                "Estimator TEXT, "
+                "AutostartId INT, " # airframe config
+                "Hardware TEXT, "
+                "Software TEXT, "
+                "NumLoggedErrors INT, " # number of logged error messages (or more severe)
+                "NumLoggedWarnings INT, "
+                "FlightModes TEXT, " # all flight modes as comma-separated int's
+                "CONSTRAINT Id_PK PRIMARY KEY (Id))")
+
+    else:
+        # try to upgrade
+        column_names = [ x[1] for x in columns]
+
 con.close()
 
