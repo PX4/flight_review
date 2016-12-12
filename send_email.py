@@ -18,9 +18,6 @@ def send_notification_email(email_adress, plot_url, log_description):
     if email_adress == '':
         return True
 
-    # typical values for text_subtype are plain, html, xml
-    text_subtype = 'plain'
-
     subject="Log File uploaded"
     destination = [email_adress]
 
@@ -29,11 +26,44 @@ Hi there!
 
 Your uploaded log file with description '{description}' is available under:
 {plot_url}
-"""
+""".format(plot_url=plot_url, description=log_description)
+
+    return _send_email(destination, subject, content)
+
+
+def send_flightreport_email(destination, plot_url, log_description, feedback,
+        rating, wind_speed):
+    """ send notification email for a flight report upload """
+
+    if len(destination) == 0:
+        return True
+
+    content="""\
+Hi
+
+A new flight report just got uploaded:
+{plot_url}
+
+Description: {description}
+Feedback: {feedback}
+Rating: {rating}
+Wind Speed: {wind_speed}
+""".format(plot_url=plot_url, description=log_description,
+    feedback=feedback, rating=rating, wind_speed=wind_speed)
+
+    subject="Flight Report uploaded"
+
+    return _send_email(destination, subject, content)
+
+
+def _send_email(destination, subject, content):
+    """ common method for sending an email to one or more destinations """
+
+    # typical values for text_subtype are plain, html, xml
+    text_subtype = 'plain'
 
     try:
-        msg = MIMEText(content.format(plot_url=plot_url,
-            description=log_description), text_subtype)
+        msg = MIMEText(content, text_subtype)
         msg['Subject'] = subject
         sender = email_config['sender']
         msg['From'] = sender # some SMTP servers will do this automatically

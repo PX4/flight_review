@@ -18,14 +18,22 @@ class DBData:
         self.video_url = ''
 
     def windSpeedStr(self):
-        return {0: 'Calm', 5: 'Breeze', 8: 'Gale', 10: 'Storm'}.get(self.wind_speed, '')
+        return self.windSpeedStrStatic(self.wind_speed)
+
+    @staticmethod
+    def windSpeedStrStatic(wind_speed):
+        return {0: 'Calm', 5: 'Breeze', 8: 'Gale', 10: 'Storm'}.get(wind_speed, '')
 
     def ratingStr(self):
+        return self.ratingStrStatic(self.rating)
+
+    @staticmethod
+    def ratingStrStatic(rating):
         return {'crash_pilot': 'Crashed (Pilot error)',
                 'crash_sw_hw': 'Crashed (Software or Hardware issue)',
                 'unsatisfactory': 'Unsatisfactory',
                 'good': 'Good',
-                'great': 'Great!'}.get(self.rating, '')
+                'great': 'Great!'}.get(rating, '')
 
 
 class DBDataGenerated:

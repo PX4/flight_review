@@ -29,6 +29,11 @@ __AIRFRAMES_URL = "http://px4-travis.s3.amazonaws.com/Firmware/master/airframes.
 __GMAPS_API_KEY = ""
 
 
+# notification emails to send on uploading new logs
+email_notifications_config = dict(
+    public_flightreport = [] # list of email addresses
+    )
+
 # general configuration variables for plotting
 plot_width = 840
 

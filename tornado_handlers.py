@@ -10,7 +10,7 @@ from pyulog import *
 from multipart_streamer import MultiPartStreamer
 from plot_app.helper import get_log_filename, validate_log_id, \
     flight_modes_table, get_airframe_data
-from send_email import send_notification_email
+from send_email import send_notification_email, send_flightreport_email
 import uuid
 from jinja2 import Environment, FileSystemLoader
 import sqlite3
@@ -152,9 +152,16 @@ class UploadHandler(tornado.web.RequestHandler):
                 con.close()
 
                 url = '/plot_app?log='+log_id
+                full_plot_url = 'http://'+get_domain_name()+url
 
-                send_notification_email(email, 'http://'+get_domain_name()+url,
-                    description)
+                # send notification emails
+                send_notification_email(email, full_plot_url, description)
+
+                if upload_type == 'flightreport' and is_public:
+                    send_flightreport_email(email_notifications_config['public_flightreport'],
+                            full_plot_url, description, feedback,
+                            DBData.ratingStrStatic(rating),
+                            DBData.windSpeedStrStatic(wind_speed))
 
                 # do not redirect for QGC
                 if not source == 'QGroundControl':
