@@ -311,7 +311,7 @@ class BrowseHandler(tornado.web.RequestHandler):
                 db_data_gen.num_logged_errors = db_tuple[7]
                 db_data_gen.num_logged_warnings = db_tuple[8]
                 db_data_gen.flight_modes = set([int(x)
-                    for x in db_tuple[9].split(',')])
+                    for x in db_tuple[9].split(',') if len(x) > 0])
 
             # bring it into displayable form
             ver_sw = db_data_gen.ver_sw
