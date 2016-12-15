@@ -20,6 +20,9 @@ __LOG_FILE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
 __DB_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)),
     '../data/logs.sqlite')
 
+__CACHE_FILE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+    '../data/cache')
+
 __AIRFRAMES_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)),
     '../data/airframes.xml')
 
@@ -62,6 +65,11 @@ def get_domain_name():
 def get_log_filepath():
     return __LOG_FILE_PATH
 
+def get_cache_filepath():
+    return __CACHE_FILE_PATH
+
+def get_kml_filepath():
+    return os.path.join(get_cache_filepath(), 'kml')
 
 def get_db_filename():
     return __DB_FILENAME

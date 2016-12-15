@@ -6,12 +6,24 @@ import sqlite3 as lite
 import sys
 import os
 
-from plot_app.config import get_db_filename, get_log_filepath
+from plot_app.config import get_db_filename, get_log_filepath, \
+    get_cache_filepath, get_kml_filepath
 
 log_dir = get_log_filepath()
 if not os.path.exists(log_dir):
     print('creating log directory '+log_dir)
     os.makedirs(log_dir)
+
+cur_dir = get_cache_filepath()
+if not os.path.exists(cur_dir):
+    print('creating cache directory '+cur_dir)
+    os.makedirs(cur_dir)
+
+cur_dir = get_kml_filepath()
+if not os.path.exists(cur_dir):
+    print('creating kml directory '+cur_dir)
+    os.makedirs(cur_dir)
+
 
 print('creating DB at '+get_db_filename())
 con = lite.connect(get_db_filename())
