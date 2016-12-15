@@ -69,6 +69,8 @@ $(function() { //on startup
 			d.attr('href', d.attr('href') + '?log='+log);
 			var d = $('#download-menu-params');
 			d.attr('href', d.attr('href') + '?log='+log+'&type=1');
+			var d = $('#download-menu-kml');
+			d.attr('href', d.attr('href') + '?log='+log+'&type=2');
 		}
 
 	} else { //not on log page
