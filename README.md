@@ -14,8 +14,9 @@ It uses the [bokeh](http://bokeh.pydata.org) library for plotting and the
 - `pip3 install bokeh jinja2 pyulog` (at least version 0.12.3 of bokeh is
   required)
 - `sudo apt-get install sqlite3`
-- configure web server settings in `plot_app/config`. This can be skipped for a
-  local installation.
+- configure web server settings in `plot_app/config.py` (and set the google maps
+  API key in `plot_app/templates/index.hml`). This can be skipped for a local
+  installation.
 - `./setup_db.py` to initialize the database
 
 
