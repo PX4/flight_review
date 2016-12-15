@@ -135,6 +135,10 @@ input {
 	margin: 3px 0;
 }
 
+#google-map {
+	height: 500px;
+}
+
 
 /*************************
 *******Header******

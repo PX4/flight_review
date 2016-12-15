@@ -7,12 +7,14 @@ sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'plot_
 from plot_app.config import *
 from plot_app.db_entry import *
 from pyulog import *
+from pyulog.ulog2kml import convert_ulog2kml
 from multipart_streamer import MultiPartStreamer
 from plot_app.helper import get_log_filename, validate_log_id, \
     flight_modes_table, get_airframe_data
 from send_email import send_notification_email, send_flightreport_email
 import uuid
 from jinja2 import Environment, FileSystemLoader
+import shutil
 import sqlite3
 import datetime
 import cgi # for html escaping
@@ -218,6 +220,49 @@ class DownloadHandler(tornado.web.RequestHandler):
                 self.write(delimiter)
                 self.write(str(ulog.initial_parameters[param_key]))
                 self.write('\n')
+
+        if download_type == '2': # download the kml file
+            kml_path = get_kml_filepath()
+            kml_file_name = os.path.join(kml_path, log_id.replace('/', '.')+'.kml')
+
+            # check if chached file exists
+            if not os.path.exists(kml_file_name):
+                print('need to create kml file', kml_file_name)
+
+                def kml_colors(x):
+                    """ flight mode colors for KML file """
+                    if not x in flight_modes_table: x = 0
+
+                    color_str = flight_modes_table[x][1][1:] # color in form 'ff00aa'
+
+                    # increase brightness to match colors with template
+                    rgb = [int(color_str[2*x:2*x+2], 16) for x in range(3)]
+                    for i in range(3):
+                        rgb[i] += 40
+                        if rgb[i] > 255: rgb[i] = 255
+
+                    color_str = "".join(map(lambda x: format(x, '02x'),rgb))
+
+                    return 'ff'+color_str[4:6]+color_str[2:4]+color_str[0:2] # KML uses aabbggrr
+
+                style = {'line_width': 2}
+                # create in random temporary file, then move it (to avoid races)
+                temp_file_name = kml_file_name+'.'+str(uuid.uuid4())
+                convert_ulog2kml(log_file_name, temp_file_name, 'vehicle_global_position',
+                    kml_colors, style=style)
+                shutil.move(temp_file_name, kml_file_name)
+
+
+            # send the whole KML file
+            self.set_header("Content-Type", "text/plain")
+            self.set_header('Content-Disposition', 'attachment; filename=track.kml')
+            with open(kml_file_name, 'rb') as f:
+                while True:
+                    data = f.read(4096)
+                    if not data:
+                        break
+                    self.write(data)
+                self.finish()
 
         else: # download the log file
             self.set_header('Content-Type', 'application/octet-stream')

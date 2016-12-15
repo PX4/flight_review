@@ -3,7 +3,40 @@
 
 <div id="logging-page" style="display: none;"></div> <!-- marker for JS script -->
 
-<div id="loading-plots" style="height: 50px;"><p>Loading Plots...</p></div>
+
+<!-- Google Maps -->
+<div id="google-map"></div>
+<script>
+
+function initMap() {
+
+	var map = new google.maps.Map(document.getElementById('google-map'), {
+		zoom: 15,
+		streetViewControl: false,
+		zoomControl: true,
+		panControl: true,
+		mapTypeId: google.maps.MapTypeId.HYBRID,
+	});
+
+	if(window.location.hostname == 'localhost') {
+		console.log('KML files do not work locally!'); //<-- important to know
+	}
+
+	var ctaLayer = new google.maps.KmlLayer({
+		url: window.location.protocol+'//'+window.location.host+'/download'+
+			location.search+'&type=2',
+		map: map
+	});
+}
+</script>
+<script async defer
+	 src="https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_API_KEY&callback=initMap">
+</script>
+
+
+
+
+<div id="loading-plots" style="height: 50px;"><p><big>Loading Plots...</big></p></div>
 
 {{ plot_div|indent(8) }}
 
