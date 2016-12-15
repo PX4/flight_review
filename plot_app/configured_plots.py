@@ -104,40 +104,52 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
 
 
 
-
+# FIXME: for now, we use Google maps directly without bokeh, because it's not working reliably
     # GPS map
+#    gps_plots = []
+#    gps_titles = []
+#    plot = plot_map(data, plot_config, map_type='google', api_key =
+#            get_google_maps_api_key(), setpoints=False)
+#    plot = None
+#    if not plot is None:
+#        gps_plots.append(plot)
+#        gps_titles.append('GPS Map: Satellite')
+#
+#    plot = plot_map(data, plot_config, map_type='plain', setpoints=True)
+#    if not plot is None:
+#        gps_plots.append(plot)
+#        gps_titles.append('GPS Map: Plain')
+#
+#    data_plot = DataPlot2D(data, plot_config, 'vehicle_local_position',
+#        x_axis_label = '[m]', y_axis_label = '[m]', plot_height='gps_map')
+#    data_plot.add_graph('y', 'x', colors2[0], 'Estimated')
+#    data_plot.change_dataset('vehicle_local_position_setpoint')
+#    data_plot.add_graph('y', 'x', colors2[1], 'Setpoint')
+#    if not data_plot.finalize() is None:
+#        gps_plots.append(data_plot.bokeh_plot)
+#        gps_titles.append('Local Position')
+#
+#
+#    if len(gps_plots) >= 2:
+#        tabs = []
+#        for i in range(len(gps_plots)):
+#            tabs.append(Panel(child=gps_plots[i], title=gps_titles[i]))
+#        gps_plot_height = plot_config['plot_height']['gps_map'] + 30
+#        plots.append(Tabs(tabs=tabs, width=plot_width, height=gps_plot_height))
+#    elif len(gps_plots) == 1:
+#        plots.extend(gps_plots)
 
-    gps_plots = []
-    gps_titles = []
-    plot = plot_map(data, plot_config, map_type='google', api_key =
-            get_google_maps_api_key(), setpoints=True)
-    if not plot is None:
-        gps_plots.append(plot)
-        gps_titles.append('GPS Map: Satellite')
 
-    plot = plot_map(data, plot_config, map_type='plain', setpoints=True)
-    if not plot is None:
-        gps_plots.append(plot)
-        gps_titles.append('GPS Map: Plain')
-
+    # Position plot
     data_plot = DataPlot2D(data, plot_config, 'vehicle_local_position',
         x_axis_label = '[m]', y_axis_label = '[m]', plot_height='gps_map')
     data_plot.add_graph('y', 'x', colors2[0], 'Estimated')
     data_plot.change_dataset('vehicle_local_position_setpoint')
     data_plot.add_graph('y', 'x', colors2[1], 'Setpoint')
-    if not data_plot.finalize() is None:
-        gps_plots.append(data_plot.bokeh_plot)
-        gps_titles.append('Local Position')
-
-
-    if len(gps_plots) >= 2:
-        tabs = []
-        for i in range(len(gps_plots)):
-            tabs.append(Panel(child=gps_plots[i], title=gps_titles[i]))
-        gps_plot_height = plot_config['plot_height']['gps_map'] + 30
-        plots.append(Tabs(tabs=tabs, width=plot_width, height=gps_plot_height))
-    elif len(gps_plots) == 1:
-        plots.extend(gps_plots)
+    # GPS + position setpoints
+    plot_map(data, plot_config, map_type='plain', setpoints=True,
+            bokeh_plot=data_plot.bokeh_plot)
+    if not data_plot.finalize() is None: plots.append(data_plot.bokeh_plot)
 
 
 
