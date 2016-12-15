@@ -128,8 +128,17 @@ def plot_set_equal_aspect_ratio(p, x, y, zoom_out_factor=1.3, min_range=5):
 
 # GPS map
 
-def plot_map(data, config, map_type = 'plain', api_key=None, setpoints=False):
-    """ possible map types: 'osm', 'google', 'plain' """
+def plot_map(data, config, map_type = 'plain', api_key=None, setpoints=False,
+        bokeh_plot=None):
+    """
+    Do a 2D position plot
+
+    :param map_type: one of 'osm', 'google', 'plain'
+    :param bokeh_plot: if None, create a new bokeh plot, otherwise use the
+                       supplied one (only for 'plain' map_type)
+
+    :return: bokeh plot object
+    """
 
     try:
         cur_dataset = [ elem for elem in data
@@ -227,19 +236,35 @@ def plot_map(data, config, map_type = 'plain', api_key=None, setpoints=False):
             lon = np.deg2rad(lon)
             anchor_lat = lat[0]
             anchor_lon = lon[0]
+
+            # try to get the anchor position from the dataset
+            try:
+                local_pos_data = [ elem for elem in data
+                            if elem.name == 'vehicle_local_position' and elem.multi_id == 0][0]
+                indices = np.nonzero(local_pos_data.data['ref_timestamp'])
+                if len(indices[0]) > 0:
+                    anchor_lat = np.deg2rad(local_pos_data.data['ref_lat'][indices[0][0]])
+                    anchor_lon = np.deg2rad(local_pos_data.data['ref_lon'][indices[0][0]])
+            except:
+                pass
+
+
             lat,lon = map_projection(lat, lon, anchor_lat, anchor_lon)
             data_source = ColumnDataSource(data=dict(lat = lat, lon = lon))
 
-            p = figure(tools=TOOLS, active_scroll=ACTIVE_SCROLL_TOOLS,
-                    x_axis_label='[m]', y_axis_label='[m]')
-            p.plot_width = plots_width
-            p.plot_height = plots_height
+            if bokeh_plot is None:
+                p = figure(tools=TOOLS, active_scroll=ACTIVE_SCROLL_TOOLS,
+                        x_axis_label='[m]', y_axis_label='[m]')
+                p.plot_width = plots_width
+                p.plot_height = plots_height
 
-            plot_set_equal_aspect_ratio(p, lon, lat)
+                plot_set_equal_aspect_ratio(p, lon, lat)
+            else:
+                p = bokeh_plot
 
             # TODO: altitude line coloring
             p.line(x='lon', y='lat', source=data_source, line_width=2,
-                    line_color=config['maps_line_color'])
+                    line_color=config['maps_line_color'], legend='GPS (projected)')
 
 
         if setpoints:
@@ -259,10 +284,9 @@ def plot_map(data, config, map_type = 'plain', api_key=None, setpoints=False):
 
                 data_source = ColumnDataSource(data=dict(lat = lat, lon = lon))
 
-                circles = Circle(x='lon', y='lat',
+                p.circle(x='lon', y='lat', source=data_source,
                         line_width=2, size=6, line_color=config['mission_setpoint_color'],
-                        fill_color=None)
-                p.add_glyph(data_source, circles)
+                        fill_color=None, legend='Position Setpoints')
             except:
                 pass
 
