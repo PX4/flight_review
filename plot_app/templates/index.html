@@ -23,8 +23,10 @@ function initMap() {
 	}
 
 	var ctaLayer = new google.maps.KmlLayer({
+		// add some random parameter so that Google does not cache it (I had a
+		// case where the map did not work because Google cached it)
 		url: window.location.protocol+'//'+window.location.host+'/download'+
-			location.search+'&type=2',
+			location.search+'&type=2&randnotused='+Math.random().toString(36).substring(3),
 		map: map
 	});
 }
