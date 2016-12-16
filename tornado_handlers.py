@@ -254,7 +254,7 @@ class DownloadHandler(tornado.web.RequestHandler):
 
 
             # send the whole KML file
-            self.set_header("Content-Type", "text/plain")
+            self.set_header("Content-Type", "application/vnd.google-earth.kml+xml")
             self.set_header('Content-Disposition', 'attachment; filename=track.kml')
             with open(kml_file_name, 'rb') as f:
                 while True:
