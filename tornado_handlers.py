@@ -378,8 +378,8 @@ class BrowseHandler(tornado.web.RequestHandler):
 
             table_data += """
 <tr>
-<td><a href="plot_app?log={log_id}">{counter}</a></td>
-<td>{date}</td>
+<td>{counter}</td>
+<td><a href="plot_app?log={log_id}">{date}</a></td>
 <td>{description}</td>
 <td>{mav_type}</td>
 <td>{airframe}</td>
