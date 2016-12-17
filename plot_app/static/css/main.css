@@ -105,9 +105,18 @@ ul {
 
 
 /* browse page / DataTables */
+
 table.dataTable thead .sorting::after {
 	/* hide the sorting indicators on all column headers (less visual clutter) */
 	content: none !important;
+}
+
+table.dataTable {
+	width: 140%;
+	margin-left: -20%;
+}
+table.dataTable td {
+	text-align: left;
 }
 
 

@@ -28,7 +28,21 @@
 
 $(document).ready(function() {
 	$('#logs_table').DataTable({
-		"order": [[0, 'desc']]
+		"order": [[0, 'desc']],
+
+		"columns": [
+			null,
+			null,
+			{ "width": "13%" }, /* description */
+			null,
+			null,
+			null,
+			null,
+			null,
+			{ "width": "13%" }, /* rating */
+			null,
+			{ "width": "11%" } /* flight modes */
+		]
 	});
 } );
 

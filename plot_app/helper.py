@@ -163,3 +163,19 @@ def map_projection(lat, lon, anchor_lat, anchor_lon):
 
     return x, y
 
+
+def html_long_word_force_break(text, max_length = 15):
+    """
+    force line breaks for text that contains long words, suitable for HTML
+    display
+    """
+    ret = ''
+    for d in text.split(' '):
+        while len(d) > max_length:
+            ret += d[:max_length]+'<wbr />'
+            d = d[max_length:]
+        ret += d+' '
+
+    if len(ret) > 0:
+        return ret[:-1]
+    return ret

@@ -10,7 +10,7 @@ from pyulog import *
 from pyulog.ulog2kml import convert_ulog2kml
 from multipart_streamer import MultiPartStreamer
 from plot_app.helper import get_log_filename, validate_log_id, \
-    flight_modes_table, get_airframe_data
+    flight_modes_table, get_airframe_data, html_long_word_force_break
 from send_email import send_notification_email, send_flightreport_email
 import uuid
 from jinja2 import Environment, FileSystemLoader
@@ -376,6 +376,10 @@ class BrowseHandler(tornado.web.RequestHandler):
             h, m = divmod(m, 60)
             duration_str = '{:d}:{:02d}:{:02d}'.format(h, m, s)
 
+            # make sure to break long descriptions w/o spaces (otherwise they
+            # mess up the layout)
+            description = html_long_word_force_break(db_data.description)
+
             table_data += """
 <tr>
 <td>{counter}</td>
@@ -392,7 +396,7 @@ class BrowseHandler(tornado.web.RequestHandler):
 </tr>
 """.format(log_id=log_id, counter=counter,
                     date=log_date,
-                    description=db_data.description,
+                    description=description,
                     rating=db_data.ratingStr(),
                     wind_speed=db_data.windSpeedStr(),
                     mav_type=db_data_gen.mav_type,
