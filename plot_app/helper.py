@@ -104,8 +104,8 @@ def get_airframe_data(airframe_id):
 flight_modes_table = {
     # make sure the colors are the same as in the html template
     0: ('Manual', '#cc0000'), # red
-    1: ('Altitude Control', '#222222'), # gray
-    2: ('Position Control', '#00cc33'), # green
+    1: ('Altitude', '#222222'), # gray
+    2: ('Position', '#00cc33'), # green
     6: ('Acro', '#66cc00'), # olive
     8: ('Stabilized', '#0033cc'), # dark blue
     7: ('Offboard', '#00cccc'), # light blue
