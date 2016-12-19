@@ -230,7 +230,7 @@ class DownloadHandler(tornado.web.RequestHandler):
                 self.write(str(ulog.initial_parameters[param_key]))
                 self.write('\n')
 
-        if download_type == '2': # download the kml file
+        elif download_type == '2': # download the kml file
             kml_path = get_kml_filepath()
             kml_file_name = os.path.join(kml_path, log_id.replace('/', '.')+'.kml')
 
