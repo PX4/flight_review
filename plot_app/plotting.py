@@ -530,7 +530,7 @@ class DataPlot2D(DataPlot):
         self._p.plot_height = self._config['plot_height'][self._plot_height_name]
 
 
-    def add_graph(self, dataset_x, dataset_y, color, legend):
+    def add_graph(self, dataset_x, dataset_y, color, legend, check_if_all_zero = False):
         """ add a line to the graph
         """
         if self._had_error: return
@@ -545,6 +545,10 @@ class DataPlot2D(DataPlot):
             non_nan_indexes = np.logical_not(np.logical_or(np.isnan(x), np.isnan(y)))
             x = x[non_nan_indexes]
             y = y[non_nan_indexes]
+
+            if check_if_all_zero:
+                if np.count_nonzero(x) == 0 and np.count_nonzero(y) == 0:
+                    raise ValueError()
 
             data_source = ColumnDataSource(data=dict(x = x, y = y))
 

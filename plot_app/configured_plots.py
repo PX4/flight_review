@@ -143,7 +143,8 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
     # Position plot
     data_plot = DataPlot2D(data, plot_config, 'vehicle_local_position',
         x_axis_label = '[m]', y_axis_label = '[m]', plot_height='gps_map')
-    data_plot.add_graph('y', 'x', colors2[0], 'Estimated')
+    data_plot.add_graph('y', 'x', colors2[0], 'Estimated',
+            check_if_all_zero=True)
     data_plot.change_dataset('vehicle_local_position_setpoint')
     data_plot.add_graph('y', 'x', colors2[1], 'Setpoint')
     # GPS + position setpoints
