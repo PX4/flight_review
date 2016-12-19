@@ -256,10 +256,14 @@ class DownloadHandler(tornado.web.RequestHandler):
 
                 style = {'line_width': 2}
                 # create in random temporary file, then move it (to avoid races)
-                temp_file_name = kml_file_name+'.'+str(uuid.uuid4())
-                convert_ulog2kml(log_file_name, temp_file_name, 'vehicle_global_position',
-                    kml_colors, style=style)
-                shutil.move(temp_file_name, kml_file_name)
+                try:
+                    temp_file_name = kml_file_name+'.'+str(uuid.uuid4())
+                    convert_ulog2kml(log_file_name, temp_file_name,
+                            'vehicle_global_position', kml_colors, style=style)
+                    shutil.move(temp_file_name, kml_file_name)
+                except:
+                    print('Error creating KML file', sys.exc_info()[0], sys.exc_info()[1])
+                    raise CustomHTTPError(400, 'No Position Data in log')
 
 
             # send the whole KML file
@@ -285,6 +289,21 @@ class DownloadHandler(tornado.web.RequestHandler):
                         break
                     self.write(data)
                 self.finish()
+
+
+    def write_error(self, status_code, **kwargs):
+        html_template="""
+<html><title>Error {status_code}</title>
+<body>HTTP Error {status_code}{error_message}</body>
+</html>
+"""
+        error_message=''
+        if 'exc_info' in kwargs:
+            e = kwargs["exc_info"][1]
+            if isinstance(e, CustomHTTPError) and e.error_message:
+                error_message=': '+e.error_message
+        self.write(html_template.format(status_code=status_code,
+            error_message=error_message))
 
 
 class BrowseHandler(tornado.web.RequestHandler):
