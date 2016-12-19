@@ -7,6 +7,8 @@ import numpy as np
 from config import get_log_filepath, get_airframes_filename, get_airframes_url
 from urllib.request import urlretrieve
 import xml.etree.ElementTree # airframe parsing
+import shutil
+import uuid
 
 __DO_PRINT_TIMING = False
 
@@ -73,7 +75,11 @@ def download_airframes_maybe():
     if need_download:
         print("Downloading airframes from "+get_airframes_url())
         try:
-            urlretrieve(get_airframes_url(), airframes_file)
+            # download to a temporary random file, then move to avoid race
+            # conditions
+            temp_file_name = airframes_file+'.'+str(uuid.uuid4())
+            urlretrieve(get_airframes_url(), temp_file_name)
+            shutil.move(temp_file_name, airframes_file)
         except Exception as e:
             print("Download error: "+str(e))
             return False
