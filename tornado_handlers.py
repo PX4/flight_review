@@ -1,6 +1,7 @@
 
 import sys
 import os
+import binascii
 import tornado.web
 # this is needed for the following imports
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'plot_app'))
@@ -26,6 +27,7 @@ Request handlers for Tornado web server
 
 UPLOAD_TEMPLATE = 'upload.html'
 BROWSE_TEMPLATE = 'browse.html'
+EDIT_TEMPLATE = 'edit.html'
 
 env = Environment(loader=FileSystemLoader(os.path.dirname(os.path.realpath(__file__))))
 
@@ -137,18 +139,21 @@ class UploadHandler(tornado.web.RequestHandler):
                     # TODO: randomize gps data, ...
                     pass
 
+                # generate a token: secure random string (url-safe)
+                token = str(binascii.hexlify(os.urandom(16)), 'ascii')
+
                 # put additional data into a DB
                 con = sqlite3.connect(get_db_filename())
                 cur = con.cursor()
                 cur.execute('insert into Logs (Id, Title, Description, '
                         'OriginalFilename, Date, AllowForAnalysis, Obfuscated, '
                         'Source, Email, WindSpeed, Rating, Feedback, Type, '
-                        'videoUrl, Public) values '
-                        '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                        'videoUrl, Public, Token) values '
+                        '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                         [log_id, title, description, upload_file_name,
                             datetime.datetime.now(), allow_for_analysis,
                             obfuscated, source, stored_email, wind_speed, rating,
-                            feedback, upload_type, video_url, is_public])
+                            feedback, upload_type, video_url, is_public, token])
                 con.commit()
                 cur.close()
                 con.close()
@@ -156,14 +161,18 @@ class UploadHandler(tornado.web.RequestHandler):
                 url = '/plot_app?log='+log_id
                 full_plot_url = 'http://'+get_domain_name()+url
 
+                delete_url = 'http://'+get_domain_name()+ \
+                    '/edit_entry?action=delete&log='+log_id+'&token='+token
+
                 # send notification emails
-                send_notification_email(email, full_plot_url, description)
+                send_notification_email(email, full_plot_url, description,
+                        delete_url)
 
                 if upload_type == 'flightreport' and is_public:
                     send_flightreport_email(email_notifications_config['public_flightreport'],
                             full_plot_url, description, feedback,
                             DBData.ratingStrStatic(rating),
-                            DBData.windSpeedStrStatic(wind_speed))
+                            DBData.windSpeedStrStatic(wind_speed), delete_url)
 
                 # do not redirect for QGC
                 if not source == 'QGroundControl':
@@ -416,3 +425,72 @@ class BrowseHandler(tornado.web.RequestHandler):
         self.write(template.render(table_data = table_header + table_data +
             table_footer))
 
+
+
+class EditEntryHandler(tornado.web.RequestHandler):
+    """ Edit a log entry, with confirmation (currently only delete) """
+
+    def get(self):
+        log_id = cgi.escape(self.get_argument('log'))
+        action =  self.get_argument('action')
+        confirmed = self.get_argument('confirm', default = '0')
+        token = cgi.escape(self.get_argument('token'))
+
+        if action == 'delete':
+            if confirmed == '1':
+                if self.delete_log_entry(log_id, token):
+                    content = """
+<h1>Log file deleted</h1>
+<p>
+Successfully deleted the log file.
+</p>
+"""
+                else:
+                    content = """
+<h1>Failed</h1>
+<p>
+Failed to delete the log file.
+</p>
+"""
+            else: # request user to confirm
+                # use the same url, just append 'confirm=1'
+                delete_url = self.request.path+'?action=delete&log='+log_id+ \
+                        '&token='+token+'&confirm=1'
+                content = """
+<h1>Delete log file</h1>
+<p>
+Click <a href="{delete_url}">here</a> to confirm and delete the log {log_id}.
+</p>
+""".format(delete_url=delete_url, log_id=log_id)
+        else:
+            raise tornado.web.HTTPError(400, 'Invalid Parameter')
+
+        template = env.get_template(EDIT_TEMPLATE)
+        self.write(template.render(content = content))
+
+
+    def delete_log_entry(self, log_id, token):
+        """
+        delete a log entry (DB & file), validate token first
+
+        :return: True on success
+        """
+        con = sqlite3.connect(get_db_filename(), detect_types=sqlite3.PARSE_DECLTYPES)
+        cur = con.cursor()
+        cur.execute('select Token from Logs where Id = ?', (log_id,))
+        db_tuple = cur.fetchone()
+        if db_tuple is None:
+            return False
+        if token != db_tuple[0]: # validate token
+            return False
+
+        log_file_name = get_log_filename(log_id)
+        print('deleting log entry {} and file {}'.format(log_id, log_file_name))
+        os.unlink(log_file_name)
+        cur.execute("DELETE FROM LogsGenerated WHERE Id = ?", (log_id,))
+        cur.execute("DELETE FROM Logs WHERE Id = ?", (log_id,))
+        con.commit()
+        cur.close()
+        con.close()
+
+        return True

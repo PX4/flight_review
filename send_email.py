@@ -12,7 +12,8 @@ from email.mime.text import MIMEText
 
 
 
-def send_notification_email(email_adress, plot_url, log_description):
+def send_notification_email(email_adress, plot_url, log_description,
+        delete_url):
     """ send a notification email after uploading a plot """
 
     if email_adress == '':
@@ -26,13 +27,17 @@ Hi there!
 
 Your uploaded log file with description '{description}' is available under:
 {plot_url}
-""".format(plot_url=plot_url, description=log_description)
+
+Use the following link to delete the log:
+{delete_url}
+""".format(plot_url=plot_url, description=log_description,
+        delete_url=delete_url)
 
     return _send_email(destination, subject, content)
 
 
 def send_flightreport_email(destination, plot_url, log_description, feedback,
-        rating, wind_speed):
+        rating, wind_speed, delete_url):
     """ send notification email for a flight report upload """
 
     if len(destination) == 0:
@@ -48,8 +53,12 @@ Description: {description}
 Feedback: {feedback}
 Rating: {rating}
 Wind Speed: {wind_speed}
+
+Use the following link to delete the log:
+{delete_url}
 """.format(plot_url=plot_url, description=log_description,
-    feedback=feedback, rating=rating, wind_speed=wind_speed)
+    feedback=feedback, rating=rating, wind_speed=wind_speed,
+    delete_url=delete_url)
 
     subject="Flight Report uploaded"
 

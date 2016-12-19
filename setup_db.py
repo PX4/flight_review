@@ -51,6 +51,7 @@ with con:
                 "Type TEXT, " # upload type: 'personal' (or '') or 'flightreport'
                 "VideoUrl TEXT, "
                 "Public INT, " # if 1 this log can be publicly listed
+                "Token TEXT, " # Security token (currently used to delete the entry)
                 "CONSTRAINT Id_PK PRIMARY KEY (Id))")
     else:
         # try to upgrade
@@ -76,6 +77,9 @@ with con:
         if not 'Public' in column_names:
             print('Adding column Public')
             cur.execute("ALTER TABLE Logs ADD COLUMN Public INT DEFAULT 0")
+        if not 'Token' in column_names:
+            print('Adding column Token')
+            cur.execute("ALTER TABLE Logs ADD COLUMN Token TEXT DEFAULT ''")
 
 
     # LogsGenerated table (information from the log file, for faster access)

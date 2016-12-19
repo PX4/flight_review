@@ -13,7 +13,8 @@ from bokeh.application.handlers import ScriptHandler, DirectoryHandler, Notebook
 # this is needed for the following imports
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'plot_app'))
 from plot_app.helper import set_log_id_is_filename
-from tornado_handlers import DownloadHandler, UploadHandler, BrowseHandler
+from tornado_handlers import DownloadHandler, UploadHandler, BrowseHandler, \
+    EditEntryHandler
 
 
 parser = argparse.ArgumentParser(description='Start bokeh Server')
@@ -62,6 +63,7 @@ set_log_id_is_filename(show_ulog_file)
 extra_patterns = [
     (r'/upload', UploadHandler),
     (r'/browse', BrowseHandler),
+    (r'/edit_entry', EditEntryHandler),
     (r'/?', UploadHandler), #root should point to upload
     (r'/download', DownloadHandler)
 ]
