@@ -14,17 +14,12 @@ email_config = dict(
 __DOMAIN_NAME = "localhost:5006" # web site url = eg. 'http://' + __DOMAIN_NAME + '/upload'
 
 
-__LOG_FILE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-    '../data/log_files')
+__STORAGE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../data')
 
-__DB_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-    '../data/logs.sqlite')
-
-__CACHE_FILE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-    '../data/cache')
-
-__AIRFRAMES_FILENAME = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-    '../data/airframes.xml')
+__LOG_FILE_PATH = os.path.join(__STORAGE_PATH, 'log_files')
+__DB_FILENAME = os.path.join(__STORAGE_PATH, 'logs.sqlite')
+__CACHE_FILE_PATH = os.path.join(__STORAGE_PATH, 'cache')
+__AIRFRAMES_FILENAME = os.path.join(__CACHE_FILE_PATH, 'airframes.xml')
 
 __AIRFRAMES_URL = "http://px4-travis.s3.amazonaws.com/Firmware/master/airframes.xml"
 
