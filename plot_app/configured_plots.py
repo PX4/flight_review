@@ -63,11 +63,20 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
     if 'ver_hw' in ulog.msg_info_dict:
         sys_hw = cgi.escape(ulog.msg_info_dict['ver_hw'])
         table_text.append(('Hardware', sys_hw))
+
+    release_str = ulog.get_version_info_str()
+    if release_str is None:
+        release_str = ''
+        release_str_suffix = ''
+    else:
+        release_str += ' <small>('
+        release_str_suffix = ')</small>'
     if 'ver_sw' in ulog.msg_info_dict:
         ver_sw = cgi.escape(ulog.msg_info_dict['ver_sw'])
         ver_sw_link = 'https://github.com/PX4/Firmware/commit/'+ver_sw
-        table_text.append(('Software Version', '<a href="'+ver_sw_link+
-            '" target="_blank">'+ver_sw+'</a>'))
+        table_text.append(('Software Version', release_str +
+            '<a href="'+ver_sw_link+'" target="_blank">'+ver_sw[:8]+'</a>'+
+            release_str_suffix))
     table_text.append(('Estimator', px4_ulog.get_estimator()))
     # dropouts
     dropout_durations = [ dropout.duration for dropout in ulog.dropouts]
