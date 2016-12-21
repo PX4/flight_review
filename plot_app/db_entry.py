@@ -46,6 +46,7 @@ class DBDataGenerated:
         self.sys_autostart_id = 0
         self.sys_hw = ''
         self.ver_sw = ''
+        self.ver_sw_release = ''
         self.num_logged_errors = 0
         self.num_logged_warnings = 0
         self.flight_modes = set()
@@ -67,6 +68,9 @@ class DBDataGenerated:
         obj.sys_autostart_id = ulog.initial_parameters.get('SYS_AUTOSTART', 0)
         obj.sys_hw = cgi.escape(ulog.msg_info_dict.get('ver_hw', ''))
         obj.ver_sw = cgi.escape(ulog.msg_info_dict.get('ver_sw', ''))
+        version_info = ulog.get_version_info()
+        if not version_info is None:
+            obj.ver_sw_release = 'v{}.{}.{} {}'.format(*version_info)
         obj.num_logged_errors = 0
         obj.num_logged_warnings = 0
 

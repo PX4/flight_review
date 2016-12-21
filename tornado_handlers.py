@@ -361,14 +361,15 @@ class BrowseHandler(tornado.web.RequestHandler):
                     cur.execute('insert into LogsGenerated (Id, Duration, '
                             'Mavtype, Estimator, AutostartId, Hardware, '
                             'Software, NumLoggedErrors, NumLoggedWarnings, '
-                            'FlightModes) values '
-                            '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                            'FlightModes, SoftwareVersion) values '
+                            '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                             [log_id, db_data_gen.duration_s, db_data_gen.mav_type,
                             db_data_gen.estimator, db_data_gen.sys_autostart_id,
                             db_data_gen.sys_hw, db_data_gen.ver_sw,
                             db_data_gen.num_logged_errors,
                             db_data_gen.num_logged_warnings,
-                            ','.join(map(str, db_data_gen.flight_modes)) ])
+                            ','.join(map(str, db_data_gen.flight_modes)),
+                            db_data_gen.ver_sw_release])
                     con.commit()
                 except sqlite3.IntegrityError:
                     # someone else already inserted it (race). just ignore it
@@ -385,11 +386,20 @@ class BrowseHandler(tornado.web.RequestHandler):
                 db_data_gen.num_logged_warnings = db_tuple[8]
                 db_data_gen.flight_modes = set([int(x)
                     for x in db_tuple[9].split(',') if len(x) > 0])
+                db_data_gen.ver_sw_release = db_tuple[10]
 
             # bring it into displayable form
             ver_sw = db_data_gen.ver_sw
             if len(ver_sw) > 10:
                 ver_sw = ver_sw[:6]
+            if len(db_data_gen.ver_sw_release) > 0:
+                try:
+                    release_split = db_data_gen.ver_sw_release.split()
+                    release_type = int(release_split[1])
+                    if release_type == 255: # it's a release
+                        ver_sw = release_split[0]
+                except:
+                    pass
             airframe_data = get_airframe_data(db_data_gen.sys_autostart_id)
             if airframe_data == None:
                 airframe = db_data_gen.sys_autostart_id

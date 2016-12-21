@@ -93,16 +93,21 @@ with con:
                 "MavType TEXT, " # vehicle type
                 "Estimator TEXT, "
                 "AutostartId INT, " # airframe config
-                "Hardware TEXT, "
-                "Software TEXT, "
+                "Hardware TEXT, " # board
+                "Software TEXT, " # software (git tag)
                 "NumLoggedErrors INT, " # number of logged error messages (or more severe)
                 "NumLoggedWarnings INT, "
                 "FlightModes TEXT, " # all flight modes as comma-separated int's
+                "SoftwareVersion TEXT, " # release version
                 "CONSTRAINT Id_PK PRIMARY KEY (Id))")
 
     else:
         # try to upgrade
         column_names = [ x[1] for x in columns]
+
+        if not 'SoftwareVersion' in column_names:
+            print('Adding column SoftwareVersion')
+            cur.execute("ALTER TABLE LogsGenerated ADD COLUMN SoftwareVersion TEXT DEFAULT ''")
 
 con.close()
 
