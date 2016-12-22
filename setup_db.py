@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#! /usr/bin/env python3
 
 # Script to create or upgrade the SQLite DB
 

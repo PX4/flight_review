@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#! /usr/bin/env python3
 
 # Script to backup the SQLite DB
 
@@ -7,6 +7,8 @@ import sys
 import os
 import datetime
 
+# this is needed for the following imports
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'plot_app'))
 from plot_app.config import get_db_filename
 
 db_filename = get_db_filename()
