@@ -443,6 +443,7 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
             ['RAM Usage', 'CPU Load'])
     data_plot.add_span('load', line_color=colors3[2])
     data_plot.add_span('ram_usage', line_color=colors3[1])
+    plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes)
     if not data_plot.finalize() is None: plots.append(data_plot)
 
 
