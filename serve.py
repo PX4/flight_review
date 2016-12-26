@@ -79,6 +79,10 @@ if args.show:
             server.show('/upload')
     server.io_loop.add_callback(show_callback)
 
-server.start()
-
+# run_until_shutdown has been added 0.12.4 and is the preferred start method
+run_op = getattr(server, "run_until_shutdown", None)
+if callable(run_op):
+    server.run_until_shutdown()
+else:
+    server.start()
 
