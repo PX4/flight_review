@@ -46,32 +46,12 @@ function addNavigationItems() {
 	}
 }
 
-function getParameterByName(name, url) {
-    if (!url) url = window.location.href;
-    name = name.replace(/[\[\]]/g, "\\$&");
-    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
-        results = regex.exec(url);
-    if (!results) return null;
-    if (!results[2]) return '';
-    return decodeURIComponent(results[2].replace(/\+/g, " "));
-}
-
 $(function() { //on startup
 	//check if it's the log page
 	if ($('#logging-page').length > 0) {
 		//generate the navigation menu. we may have to wait because bokeh loads
 		//this after this is executed
 		window.setTimeout(addNavigationItems, 500);
-
-		var log = getParameterByName('log');
-		if (log != null && log != '') {
-			var d = $('#download-menu-log');
-			d.attr('href', d.attr('href') + '?log='+log);
-			var d = $('#download-menu-params');
-			d.attr('href', d.attr('href') + '?log='+log+'&type=1');
-			var d = $('#download-menu-kml');
-			d.attr('href', d.attr('href') + '?log='+log+'&type=2');
-		}
 	}
 });
 

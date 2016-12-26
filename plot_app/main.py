@@ -54,6 +54,7 @@ ulog_file_name = 'test.ulg'
 
 ulog_file_name = os.path.join(get_log_filepath(), ulog_file_name)
 error_message = ''
+log_id = ''
 
 try:
     GET_arguments = curdoc().session_context.request.arguments
@@ -112,6 +113,7 @@ if error_message == '':
     # template variables
     curdoc().template_variables['google_maps_api_key'] = get_google_maps_api_key()
     curdoc().template_variables['is_plot_page'] = True
+    curdoc().template_variables['log_id'] = log_id
     flight_modes = [
         {'name': 'Manual', 'color': HTML_color_to_RGB(flight_modes_table[0][1])},
         {'name': 'Altitude Control', 'color': HTML_color_to_RGB(flight_modes_table[1][1])},
