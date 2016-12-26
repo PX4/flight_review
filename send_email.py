@@ -37,7 +37,7 @@ Use the following link to delete the log:
 
 
 def send_flightreport_email(destination, plot_url, log_description, feedback,
-        rating, wind_speed, delete_url):
+        rating, wind_speed, delete_url, uploader_email):
     """ send notification email for a flight report upload """
 
     if len(destination) == 0:
@@ -53,12 +53,13 @@ Description: {description}
 Feedback: {feedback}
 Rating: {rating}
 Wind Speed: {wind_speed}
+Uploader: {uploader_email}
 
 Use the following link to delete the log:
 {delete_url}
 """.format(plot_url=plot_url, description=log_description,
     feedback=feedback, rating=rating, wind_speed=wind_speed,
-    delete_url=delete_url)
+    delete_url=delete_url, uploader_email=uploader_email)
 
     subject="Flight Report uploaded"
 

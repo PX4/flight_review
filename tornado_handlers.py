@@ -172,7 +172,8 @@ class UploadHandler(tornado.web.RequestHandler):
                     send_flightreport_email(email_notifications_config['public_flightreport'],
                             full_plot_url, description, feedback,
                             DBData.ratingStrStatic(rating),
-                            DBData.windSpeedStrStatic(wind_speed), delete_url)
+                            DBData.windSpeedStrStatic(wind_speed), delete_url,
+                            stored_email)
 
                 # do not redirect for QGC
                 if not source == 'QGroundControl':
