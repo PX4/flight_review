@@ -72,12 +72,6 @@ $(function() { //on startup
 			var d = $('#download-menu-kml');
 			d.attr('href', d.attr('href') + '?log='+log+'&type=2');
 		}
-
-	} else { //not on log page
-		$('#download-menu').hide();
-		$('#navigation-menu').hide();
-		$('#size-menu').hide();
-		$('#plot-legend-menu').hide();
 	}
 });
 

@@ -38,11 +38,14 @@
                         <li _class="active"><a href="upload">Upload</a></li>
                         <li ><a href="browse">Browse</a></li>
 
+{% if is_plot_page %}
                         <li class="dropdown" id="download-menu"><a href="javascript:;">Download <i class="fa fa-angle-down"></i></a>
                             <ul role="menu" class="sub-menu">
                                 <li><a id="download-menu-log" href="download">Log File</a></li>
                                 <li><a id="download-menu-params" href="download" target="_blank">Parameters</a></li>
+{% if has_position_data %}
                                 <li><a id="download-menu-kml" href="download" target="_blank">KML Track</a></li>
+{% endif %}
                             </ul>
                         </li>                    
                         <li class="dropdown" id="navigation-menu"><a href="javascript:;">Navigation <i class="fa fa-angle-down"></i></a>
@@ -59,24 +62,16 @@
                         </li>
                         <li class="dropdown" id="plot-legend-menu"><a href="javascript:;">Plot Legend <i class="fa fa-angle-down"></i></a>
                             <ul role="menu" class="sub-menu">
+{% for cur_flight_mode in flight_modes %}
+{% set cur_name = cur_flight_mode.name %}
+{% set cur_color = cur_flight_mode.color %}
                                 <li><a href="javascript:;">
-<div class="plot-legend-box" style="border-left-color: rgba(204, 0, 0, 0.25);">Manual</div></a></li>
-								<li><a href="javascript:;">
-<div class="plot-legend-box" style="border-left-color: rgba(34, 34, 34, 0.25);">Altitude Control</div></a></li>
-								<li><a href="javascript:;">
-<div class="plot-legend-box" style="border-left-color: rgba(0, 204, 51, 0.25);">Position Control</div></a></li>
-								<li><a href="javascript:;">
-<div class="plot-legend-box" style="border-left-color: rgba(102, 204, 0, 0.25);">Acro</div></a></li>
-								<li><a href="javascript:;">
-<div class="plot-legend-box" style="border-left-color: rgba(0, 51, 204, 0.25);">Stabilized</div></a></li>
-								<li><a href="javascript:;">
-<div class="plot-legend-box" style="border-left-color: rgba(0, 204, 204, 0.25);">Offboard</div></a></li>
-								<li><a href="javascript:;">
-<div class="plot-legend-box" style="border-left-color: rgba(204, 153, 0, 0.25);">Rattitude</div></a></li>
-								<li><a href="javascript:;">
-<div class="plot-legend-box" style="border-left-color: rgba(102, 0, 204, 0.25);">Auto (Mission, RTL, Follow, ...)</div></a></li>
+								<div class="plot-legend-box"
+									style="border-left-color: rgba({{ cur_color[0] }}, {{ cur_color[1] }}, {{ cur_color[2] }}, 0.25);">{{ cur_name }}</div></a></li>
+{% endfor %}
                             </ul>
                         </li>
+{% endif %}
 						<!--
                         <li><a href="about">About</a></li>
 						-->

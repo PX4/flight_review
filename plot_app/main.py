@@ -12,6 +12,7 @@ from pyulog.px4 import *
 
 from helper import *
 from config import *
+from colors import HTML_color_to_RGB
 from db_entry import *
 from configured_plots import generate_plots
 
@@ -108,10 +109,26 @@ if error_message == '':
     except:
         print("DB access failed:", sys.exc_info()[0], sys.exc_info()[1])
 
+    # template variables
+    curdoc().template_variables['google_maps_api_key'] = get_google_maps_api_key()
+    curdoc().template_variables['is_plot_page'] = True
+    flight_modes = [
+        {'name': 'Manual', 'color': HTML_color_to_RGB(flight_modes_table[0][1])},
+        {'name': 'Altitude Control', 'color': HTML_color_to_RGB(flight_modes_table[1][1])},
+        {'name': 'Position Control', 'color': HTML_color_to_RGB(flight_modes_table[2][1])},
+        {'name': 'Acro', 'color': HTML_color_to_RGB(flight_modes_table[6][1])},
+        {'name': 'Stabilized', 'color': HTML_color_to_RGB(flight_modes_table[8][1])},
+        {'name': 'Offboard', 'color': HTML_color_to_RGB(flight_modes_table[7][1])},
+        {'name': 'Rattitude', 'color': HTML_color_to_RGB(flight_modes_table[9][1])},
+        {'name': 'Auto (Mission, RTL, Follow, ...)',
+            'color': HTML_color_to_RGB(flight_modes_table[3][1])}
+        ]
+    curdoc().template_variables['flight_modes'] = flight_modes
 
     plots = generate_plots(ulog, px4_ulog, flight_mode_changes, db_data)
 
     title = 'Flight Review - '+px4_ulog.get_mav_type()
+
 
 else:
 

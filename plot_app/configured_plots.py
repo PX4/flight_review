@@ -10,6 +10,7 @@ from bokeh.models import (
 from bokeh.models.widgets import (
     DataTable, DateFormatter, TableColumn, Div, Button, Panel, Tabs
     )
+from bokeh.io import curdoc
 
 import cgi # for html escaping
 
@@ -159,7 +160,9 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
     # GPS + position setpoints
     plot_map(data, plot_config, map_type='plain', setpoints=True,
             bokeh_plot=data_plot.bokeh_plot)
-    if not data_plot.finalize() is None: plots.append(data_plot.bokeh_plot)
+    if not data_plot.finalize() is None:
+        plots.append(data_plot.bokeh_plot)
+        curdoc().template_variables['has_position_data'] = True
 
 
 

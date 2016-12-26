@@ -108,7 +108,6 @@ def get_airframe_data(airframe_id):
     return None
 
 flight_modes_table = {
-    # make sure the colors are the same as in the html template
     0: ('Manual', '#cc0000'), # red
     1: ('Altitude', '#222222'), # gray
     2: ('Position', '#00cc33'), # green
