@@ -69,7 +69,7 @@ class DBDataGenerated:
         obj.sys_hw = cgi.escape(ulog.msg_info_dict.get('ver_hw', ''))
         obj.ver_sw = cgi.escape(ulog.msg_info_dict.get('ver_sw', ''))
         version_info = ulog.get_version_info()
-        if not version_info is None:
+        if version_info is not None:
             obj.ver_sw_release = 'v{}.{}.{} {}'.format(*version_info)
         obj.num_logged_errors = 0
         obj.num_logged_warnings = 0

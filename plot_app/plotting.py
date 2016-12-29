@@ -321,17 +321,17 @@ class DataPlot:
             self._p = figure(title=title,
                     x_axis_label=x_axis_label, y_axis_label=y_axis_label,
                     tools=TOOLS, active_scroll=ACTIVE_SCROLL_TOOLS)
-            if not y_range is None:
+            if y_range is not None:
                 self._p.y_range = y_range
 
-            if not changed_params is None:
+            if changed_params is not None:
                 self._param_change_label = plot_parameter_changes(self._p,
                         config['plot_height'][plot_height], changed_params)
 
             self._cur_dataset = [ elem for elem in data
                     if elem.name == data_name and elem.multi_id == 0][0]
 
-            if not y_start is None:
+            if y_start is not None:
                 # make sure y axis starts at 0. We do it by adding an invisible circle
                 self._p.circle(x=int(self._cur_dataset.data['timestamp'][0]),
                         y=y_start, size=0, alpha=0)

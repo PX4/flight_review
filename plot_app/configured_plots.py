@@ -121,12 +121,12 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
 #    plot = plot_map(data, plot_config, map_type='google', api_key =
 #            get_google_maps_api_key(), setpoints=False)
 #    plot = None
-#    if not plot is None:
+#    if plot is not None:
 #        gps_plots.append(plot)
 #        gps_titles.append('GPS Map: Satellite')
 #
 #    plot = plot_map(data, plot_config, map_type='plain', setpoints=True)
-#    if not plot is None:
+#    if plot is not None:
 #        gps_plots.append(plot)
 #        gps_titles.append('GPS Map: Plain')
 #
@@ -135,7 +135,7 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
 #    data_plot.add_graph('y', 'x', colors2[0], 'Estimated')
 #    data_plot.change_dataset('vehicle_local_position_setpoint')
 #    data_plot.add_graph('y', 'x', colors2[1], 'Setpoint')
-#    if not data_plot.finalize() is None:
+#    if data_plot.finalize() is not None:
 #        gps_plots.append(data_plot.bokeh_plot)
 #        gps_titles.append('Local Position')
 #
@@ -160,7 +160,7 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
     # GPS + position setpoints
     plot_map(data, plot_config, map_type='plain', setpoints=True,
             bokeh_plot=data_plot.bokeh_plot)
-    if not data_plot.finalize() is None:
+    if data_plot.finalize() is not None:
         plots.append(data_plot.bokeh_plot)
         curdoc().template_variables['has_position_data'] = True
 
@@ -198,7 +198,7 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
     #plot_dropouts(data_plot.bokeh_plot, ulog.dropouts)
     # TODO: call range update callback on startup when plot loaded...
 
-    if not data_plot.finalize() is None: plots.append(data_plot)
+    if data_plot.finalize() is not None: plots.append(data_plot)
 
 
 
@@ -219,7 +219,7 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
                 colors2[1:2], [axis_name+' Setpoint'])
         plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes)
 
-        if not data_plot.finalize() is None: plots.append(data_plot)
+        if data_plot.finalize() is not None: plots.append(data_plot)
 
         # rate
         data_plot = DataPlot(data, plot_config, 'vehicle_attitude',
@@ -232,7 +232,7 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
                 colors2[1:2], [axis_name+' Rate Setpoint'])
         plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes)
 
-        if not data_plot.finalize() is None: plots.append(data_plot)
+        if data_plot.finalize() is not None: plots.append(data_plot)
 
 
 
@@ -249,7 +249,7 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
         data_plot.add_graph([axis], colors2[1:2], [axis.upper()+' Setpoint'])
         plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes)
 
-        if not data_plot.finalize() is None: plots.append(data_plot)
+        if data_plot.finalize() is not None: plots.append(data_plot)
 
 
 
@@ -262,7 +262,7 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
     data_plot.add_graph(['vx', 'vy', 'vz'], colors3, ['x', 'y', 'z'])
     plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes)
 
-    if not data_plot.finalize() is None: plots.append(data_plot)
+    if data_plot.finalize() is not None: plots.append(data_plot)
 
 
 
@@ -282,7 +282,7 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
             ['Channel '+str(i) for i in range(num_rc_channels)])
     plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes)
 
-    if not data_plot.finalize() is None: plots.append(data_plot)
+    if data_plot.finalize() is not None: plots.append(data_plot)
 
 
 
@@ -301,7 +301,7 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
             ['Output '+str(i) for i in range(num_actuator_outputs)])
     plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes)
 
-    if not data_plot.finalize() is None: plots.append(data_plot)
+    if data_plot.finalize() is not None: plots.append(data_plot)
 
 
 
@@ -313,7 +313,7 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
         plot_height = 'small', changed_params=changed_params)
     data_plot.add_graph(['accelerometer_m_s2[0]', 'accelerometer_m_s2[1]',
         'accelerometer_m_s2[2]'], colors3, ['x', 'y', 'z'])
-    if not data_plot.finalize() is None: plots.append(data_plot)
+    if data_plot.finalize() is not None: plots.append(data_plot)
 
 
 
@@ -328,7 +328,7 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
         lambda data: ('gyro_rad[1]', np.rad2deg(data['gyro_rad[1]'])),
         lambda data: ('gyro_rad[2]', np.rad2deg(data['gyro_rad[2]']))],
             colors3, ['x', 'y', 'z'])
-    if not data_plot.finalize() is None: plots.append(data_plot)
+    if data_plot.finalize() is not None: plots.append(data_plot)
 
 
 
@@ -341,7 +341,7 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
     data_plot.add_graph(['magnetometer_ga[0]', 'magnetometer_ga[1]',
         'magnetometer_ga[2]'], colors3,
         ['x', 'y', 'z'])
-    if not data_plot.finalize() is None: plots.append(data_plot)
+    if data_plot.finalize() is not None: plots.append(data_plot)
 
 
     add_fragment(plots, 'distance-sensor') # navigation
@@ -352,7 +352,7 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
         plot_height = 'small', changed_params=changed_params)
     data_plot.add_graph(['current_distance', 'covariance'], colors3[0:2],
         ['Distance', 'Covariance'])
-    if not data_plot.finalize() is None: plots.append(data_plot)
+    if data_plot.finalize() is not None: plots.append(data_plot)
 
 
 
@@ -367,7 +367,7 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
     data_plot.add_graph(['eph', 'epv', 'satellites_used', 'fix_type'], colors8[::2],
         ['Horizontal position accuracy [m]', 'Vertical position accuracy [m]',
             'Num Satellites used', 'GPS Fix'])
-    if not data_plot.finalize() is None: plots.append(data_plot)
+    if data_plot.finalize() is not None: plots.append(data_plot)
 
 
     # gps noise & jamming
@@ -376,7 +376,7 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
         plot_height = 'small', changed_params=changed_params)
     data_plot.add_graph(['noise_per_ms', 'jamming_indicator'], colors3[0:2],
         ['Noise per ms', 'Jamming Indicator'])
-    if not data_plot.finalize() is None: plots.append(data_plot)
+    if data_plot.finalize() is not None: plots.append(data_plot)
 
 
     # thrust and magnetic field
@@ -391,7 +391,7 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
     data_plot.change_dataset('actuator_controls_0')
     data_plot.add_graph([lambda data: ('thrust', data['control[3]'])],
         colors2[1:2], ['Thrust'])
-    if not data_plot.finalize() is None: plots.append(data_plot)
+    if data_plot.finalize() is not None: plots.append(data_plot)
 
 
     add_fragment(plots, 'power') # navigation
@@ -406,7 +406,7 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
         colors8[::2],
         ['Voltage  [V]', 'Voltage filtered [V]', 'Current [A]',
         'Discharged Amount [mAh / 100]'])
-    if not data_plot.finalize() is None: plots.append(data_plot)
+    if data_plot.finalize() is not None: plots.append(data_plot)
 
 
 
@@ -419,7 +419,7 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
     data_plot.add_graph(['nan_flags', 'health_flags',
         'timeout_flags'], colors3,
         ['NaN Flags', 'Health Flags (vel, pos, hgt)', 'Timeout Flags (vel, pos, hgt)'])
-    if not data_plot.finalize() is None: plots.append(data_plot)
+    if data_plot.finalize() is not None: plots.append(data_plot)
 
 
 
@@ -432,7 +432,7 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
     data_plot.add_graph(['rc_lost', lambda data: ('rssi', data['rssi']/100)],
         colors3[0:2],
         ['RC Lost', 'RSSI [0, 1]'])
-    if not data_plot.finalize() is None: plots.append(data_plot)
+    if data_plot.finalize() is not None: plots.append(data_plot)
 
 
 
@@ -447,7 +447,7 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
     data_plot.add_span('load', line_color=colors3[2])
     data_plot.add_span('ram_usage', line_color=colors3[1])
     plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes)
-    if not data_plot.finalize() is None: plots.append(data_plot)
+    if data_plot.finalize() is not None: plots.append(data_plot)
 
 
     add_fragment(plots, 'sensor-sampling') # navigation
@@ -459,7 +459,7 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
         changed_params=changed_params)
     data_plot.add_graph([lambda data: ('timediff',
         np.append(np.diff(data['timestamp']), 0))], [colors3[2]], [None])
-    if not data_plot.finalize() is None: plots.append(data_plot)
+    if data_plot.finalize() is not None: plots.append(data_plot)
 
 
 
@@ -485,7 +485,7 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
         if plots[i] is None:
             plots[i] = widgetbox(param_changes_button, width = int(plot_width*0.99))
         if type(plots[i]) is DataPlot:
-            if not plots[i].param_change_label is None:
+            if plots[i].param_change_label is not None:
                 param_change_labels.append(plots[i].param_change_label)
             plots[i] = plots[i].bokeh_plot
 
