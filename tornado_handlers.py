@@ -11,7 +11,8 @@ from pyulog import *
 from pyulog.ulog2kml import convert_ulog2kml
 from multipart_streamer import MultiPartStreamer
 from plot_app.helper import get_log_filename, validate_log_id, \
-    flight_modes_table, get_airframe_data, html_long_word_force_break
+    flight_modes_table, get_airframe_data, html_long_word_force_break, \
+    validate_url
 from send_email import send_notification_email, send_flightreport_email
 import uuid
 from jinja2 import Environment, FileSystemLoader
@@ -105,7 +106,11 @@ class UploadHandler(tornado.web.RequestHandler):
                     rating = cgi.escape(form_data['rating'].decode("utf-8"))
                     if rating == 'notset': rating = ''
                     stored_email = email
+                    # get video url & check if valid
                     video_url = cgi.escape(form_data['videoUrl'].decode("utf-8"), quote=True)
+                    if not validate_url(video_url):
+                        video_url = ''
+
                     # always allow for statistical analysis
                     allow_for_analysis = 1
                     if 'public' in form_data:
