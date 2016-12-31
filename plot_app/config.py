@@ -50,6 +50,7 @@ plot_config = dict(
 colors3 = ['#e0212d', '#208900', plot_color_blue]
 colors2 = [colors3[0], colors3[1]] # for data to express: 'what it is' and 'what it should be'
 colors8 = get_N_colors(8, 0.7)
+color_gray = '#464646'
 
 plot_config['mission_setpoint_color'] = colors8[4]
 

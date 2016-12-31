@@ -31,7 +31,7 @@ def load_data(file_name):
             'actuator_controls_1', 'actuator_outputs',
             'vehicle_attitude', 'vehicle_attitude_setpoint',
             'vehicle_rates_setpoint', 'rc_channels', 'input_rc',
-            'position_setpoint_triplet' ]
+            'position_setpoint_triplet', 'vehicle_attitude_groundtruth' ]
     ulog = ULog(file_name, msg_filter)
     px4_ulog = PX4ULog(ulog)
     px4_ulog.add_roll_pitch_yaw()

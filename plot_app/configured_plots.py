@@ -217,6 +217,9 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
         data_plot.change_dataset('vehicle_attitude_setpoint')
         data_plot.add_graph([lambda data: (axis+'_d', np.rad2deg(data[axis+'_d']))],
                 colors2[1:2], [axis_name+' Setpoint'])
+        data_plot.change_dataset('vehicle_attitude_groundtruth')
+        data_plot.add_graph([lambda data: (axis, np.rad2deg(data[axis]))],
+                [color_gray], [axis_name+' Groundtruth'])
         plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes)
 
         if data_plot.finalize() is not None: plots.append(data_plot)
@@ -230,6 +233,9 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
         data_plot.change_dataset('vehicle_rates_setpoint')
         data_plot.add_graph([lambda data: (axis, np.rad2deg(data[axis]))],
                 colors2[1:2], [axis_name+' Rate Setpoint'])
+        data_plot.change_dataset('vehicle_attitude_groundtruth')
+        data_plot.add_graph([lambda data: (axis+'speed', np.rad2deg(data[axis+'speed']))],
+                [color_gray], [axis_name+' Rate Groundtruth'])
         plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes)
 
         if data_plot.finalize() is not None: plots.append(data_plot)
