@@ -3,6 +3,7 @@ import sys
 import os
 import binascii
 import tornado.web
+from tornado.ioloop import IOLoop
 # this is needed for the following imports
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'plot_app'))
 from plot_app.config import *
@@ -180,6 +181,14 @@ class UploadHandler(tornado.web.RequestHandler):
                             DBData.windSpeedStrStatic(wind_speed), delete_url,
                             stored_email)
 
+                    # also generate the additional DB entry
+                    def generate_db_entry_cb(log_id):
+                        ioloop = IOLoop.instance()
+                        # use a timeout to minimize interference with other requests
+                        ioloop.call_later(20, generateDBDataFromLogFile, log_id)
+                    ioloop = IOLoop.instance()
+                    ioloop.spawn_callback(generate_db_entry_cb, log_id)
+
                 # do not redirect for QGC
                 if not source == 'QGroundControl':
                     self.redirect(url)
@@ -312,6 +321,43 @@ class DownloadHandler(tornado.web.RequestHandler):
             error_message=error_message))
 
 
+def generateDBDataFromLogFile(log_id, db_connection = None):
+    """
+    Extract necessary information from the log file and insert as an entry to
+    the LogsGenerated table (faster information retrieval later on).
+    This is an expensive operation.
+    It's ok to call this a second time for the same log, the call will just
+    silently fail (but still read the whole log and will not update the DB entry)
+
+    :return: DBDataGenerated object
+    """
+
+    db_data_gen = DBDataGenerated.fromLogFile(log_id)
+
+    if db_connection is None:
+        db_connection = sqlite3.connect(get_db_filename())
+
+    try:
+        db_cursor = db_connection.cursor()
+        db_cursor.execute('insert into LogsGenerated (Id, Duration, '
+                'Mavtype, Estimator, AutostartId, Hardware, '
+                'Software, NumLoggedErrors, NumLoggedWarnings, '
+                'FlightModes, SoftwareVersion) values '
+                '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                [log_id, db_data_gen.duration_s, db_data_gen.mav_type,
+                db_data_gen.estimator, db_data_gen.sys_autostart_id,
+                db_data_gen.sys_hw, db_data_gen.ver_sw,
+                db_data_gen.num_logged_errors,
+                db_data_gen.num_logged_warnings,
+                ','.join(map(str, db_data_gen.flight_modes)),
+                db_data_gen.ver_sw_release])
+        db_connection.commit()
+    except sqlite3.IntegrityError:
+        # someone else already inserted it (race). just ignore it
+        pass
+    return db_data_gen
+
+
 class BrowseHandler(tornado.web.RequestHandler):
     """ Browse public log file Tornado request handler """
 
@@ -361,25 +407,9 @@ class BrowseHandler(tornado.web.RequestHandler):
             cur.execute('select * from LogsGenerated where Id = ?', [log_id])
             db_tuple = cur.fetchone()
             if db_tuple == None: # need to generate from file
-                db_data_gen = DBDataGenerated.fromLogFile(log_id)
-
-                try:
-                    cur.execute('insert into LogsGenerated (Id, Duration, '
-                            'Mavtype, Estimator, AutostartId, Hardware, '
-                            'Software, NumLoggedErrors, NumLoggedWarnings, '
-                            'FlightModes, SoftwareVersion) values '
-                            '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                            [log_id, db_data_gen.duration_s, db_data_gen.mav_type,
-                            db_data_gen.estimator, db_data_gen.sys_autostart_id,
-                            db_data_gen.sys_hw, db_data_gen.ver_sw,
-                            db_data_gen.num_logged_errors,
-                            db_data_gen.num_logged_warnings,
-                            ','.join(map(str, db_data_gen.flight_modes)),
-                            db_data_gen.ver_sw_release])
-                    con.commit()
-                except sqlite3.IntegrityError:
-                    # someone else already inserted it (race). just ignore it
-                    pass
+                # Note that this is not necessary in most cases, as the entry is
+                # also generated after uploading (but with a timeout)
+                db_data_gen = generateDBDataFromLogFile(log_id, con)
             else: # get it from the DB
                 db_data_gen = DBDataGenerated()
                 db_data_gen.duration_s = db_tuple[1]
