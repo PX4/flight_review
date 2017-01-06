@@ -78,6 +78,13 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
         table_text.append(('Software Version', release_str +
             '<a href="'+ver_sw_link+'" target="_blank">'+ver_sw[:8]+'</a>'+
             release_str_suffix))
+
+    if 'sys_os_name' in ulog.msg_info_dict and 'sys_os_ver_release' in ulog.msg_info_dict:
+        os_name = cgi.escape(ulog.msg_info_dict['sys_os_name'])
+        os_ver = ulog.get_version_info_str('sys_os_ver_release')
+        if os_ver is not None:
+            table_text.append(('OS Version',  os_name + ', ' + os_ver))
+
     table_text.append(('Estimator', px4_ulog.get_estimator()))
     # dropouts
     dropout_durations = [ dropout.duration for dropout in ulog.dropouts]
