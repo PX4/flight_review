@@ -164,6 +164,14 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
         plots.append(data_plot.bokeh_plot)
         curdoc().template_variables['has_position_data'] = True
 
+    # Position groundtruth (only if topic found)
+    if any(elem.name == 'vehicle_local_position_groundtruth' for elem in data):
+        data_plot = DataPlot2D(data, plot_config, 'vehicle_local_position',
+            x_axis_label = '[m]', y_axis_label = '[m]', plot_height='gps_map')
+        data_plot.add_graph('y', 'x', colors2[0], 'Estimated')
+        data_plot.change_dataset('vehicle_local_position_groundtruth')
+        data_plot.add_graph('y', 'x', color_gray, 'Groundtruth')
+        if data_plot.finalize() is not None: plots.append(data_plot.bokeh_plot)
 
 
     # initialize parameter changes
