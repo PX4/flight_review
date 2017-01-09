@@ -23,36 +23,56 @@ function navigate(fragment) {
 	}, 10);
 }
 
-function addNavigationItems() {
-	var fragments = $('#ul-fragments');
-	if ($('div.fragment').length == 0) {
-		window.setTimeout(addNavigationItems, 500);
-		return;
+{% if is_plot_page %}
+
+function checkPlotsInitialized() {
+	// check if plots are fully initialized and do the necessary setup.
+	// we cannot rely on a specific event for this as bokeh dynamically loads
+	// the plots after startup
+
+	var plot_ids = [
+{% set comma = joiner(",") %}
+{% for cur_plot in plots %}
+	{{ comma() }} "{{ cur_plot.model_id }}"
+{% endfor %}
+	];
+
+	var plot_fragments = [
+{% set comma = joiner(",") %}
+{% for cur_plot in plots %}
+	{{ comma() }} "{{ cur_plot.fragment }}"
+{% endfor %}
+	];
+
+	for (var i = 0; i < plot_ids.length; ++i) {
+		if (!$('#modelid_'+plot_ids[i]).length) {
+			window.setTimeout(checkPlotsInitialized, 500);
+			return; // not yet loaded
+		}
 	}
-	//assume plots are loaded
-	$('div.fragment').each(function(){
-		fragments.append('<li><a href="javascript:navigate(\''+$(this).attr('id')+'\');">'+
-				$(this).attr('data-display')+'</a></li>');
-	});
+
+
+	// if we get here, all plots are loaded
+
+	// add fragment anchor links to each plot (placement via CSS)
+	for (var i = 0; i < plot_ids.length; ++i) {
+		$('#modelid_'+plot_ids[i]).before('<a id="'+plot_fragments[i]+'" '+
+			'class="fragment bk-plot-layout"' +
+			' href="#'+plot_fragments[i]+'"><big>&para;</big></a>');
+	}
+
 	$('#loading-plots').hide();
 
-	//because bokeh dynamically loads the content after startup, jumping to
-	//fragments does not work, so we do it manually
+	// because bokeh dynamically loads the content after startup, jumping to
+	// fragments does not work on page load, so we do it manually
 	var cur_frag = window.location.hash.substr(1);
 	if (cur_frag.length > 0) {
-		//FIXME: timeout of 1s is probably too low. plots are available
-		//but not rendered yet...
 		window.setTimeout(function() { $('#'+cur_frag).scrollView(); }, 1000);
 	}
 }
 
 $(function() { //on startup
-	//check if it's the log page
-	if ($('#logging-page').length > 0) {
-		//generate the navigation menu. we may have to wait because bokeh loads
-		//this after this is executed
-		window.setTimeout(addNavigationItems, 500);
-	}
+	window.setTimeout(checkPlotsInitialized, 500);
 });
 
 /* resize the plots */
@@ -79,6 +99,8 @@ function setSize(size) {
 	bokeh_doc = Bokeh.index[Object.keys(Bokeh.index)[0]].model.document
 	bokeh_doc.resize(); //trigger resize event
 }
+
+{% endif %} {# is_plot_page #}
 
 
 // auto-hide sticky header when scrolling down, show when scrolling up

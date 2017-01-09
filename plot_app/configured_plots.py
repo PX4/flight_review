@@ -19,15 +19,6 @@ from config import *
 from plotting import *
 
 
-def add_fragment(plots, name, display_name = None):
-    """ add a navigation anchor """
-    global plot_width
-    if display_name == None:
-        display_name = name.replace('-', ' ').capitalize()
-    plots.append(widgetbox(Div(text='<div class="fragment" id="frag-'+name+
-        '" data-display="'+display_name+'"></div>'),
-        width = int(plot_width*0.9)))
-
 
 def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
     """ create a list of bokeh plots (and widgets) to show """
@@ -191,7 +182,6 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
 
     ### Add all data plots ###
 
-    add_fragment(plots, 'altitude') # navigation
 
     # Altitude estimate
     data_plot = DataPlot(data, plot_config, 'vehicle_gps_position',
@@ -219,8 +209,6 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
 
     # Roll/Pitch/Yaw angle & angular rate
     for axis in ['roll', 'pitch', 'yaw']:
-
-        add_fragment(plots, axis) # navigation
 
         # angle
         axis_name = axis.capitalize()
@@ -258,8 +246,6 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
 
 
 
-    add_fragment(plots, 'local-position') # navigation
-
     # Local position
     for axis in ['x', 'y', 'z']:
         data_plot = DataPlot(data, plot_config, 'vehicle_local_position',
@@ -274,8 +260,6 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
 
 
 
-    add_fragment(plots, 'velocity') # navigation
-
     # Velocity
     data_plot = DataPlot(data, plot_config, 'vehicle_local_position',
         y_axis_label = '[m/s]', title = 'Velocity',
@@ -286,8 +270,6 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
-
-    add_fragment(plots, 'raw-radio-inputs') # navigation
 
     # raw radio control inputs
     data_plot = DataPlot(data, plot_config, 'rc_channels',
@@ -307,8 +289,6 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
 
 
 
-    add_fragment(plots, 'actuators') # navigation
-
     # actuators
     data_plot = DataPlot(data, plot_config, 'actuator_outputs',
         y_start=0, title = 'Actuators', plot_height = 'small',
@@ -326,8 +306,6 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
 
 
 
-    add_fragment(plots, 'accelerometer') # navigation
-
     # raw acceleration
     data_plot = DataPlot(data, plot_config, 'sensor_combined',
         y_axis_label = '[m/s^2]', title = 'Raw Acceleration',
@@ -337,8 +315,6 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
-
-    add_fragment(plots, 'gyroscope') # navigation
 
     # raw angular speed
     data_plot = DataPlot(data, plot_config, 'sensor_combined',
@@ -353,8 +329,6 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
 
 
 
-    add_fragment(plots, 'magnetometer') # navigation
-
     # magnetic field strength
     data_plot = DataPlot(data, plot_config, 'sensor_combined',
         y_axis_label = '[gauss]', title = 'Raw Magnetic Field Strength',
@@ -365,8 +339,6 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
-    add_fragment(plots, 'distance-sensor') # navigation
-
     # distance sensor
     data_plot = DataPlot(data, plot_config, 'distance_sensor',
         y_start=0, y_axis_label = '[m]', title = 'Distance Sensor',
@@ -376,8 +348,6 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
-
-    add_fragment(plots, 'gps-data', 'GPS Data') # navigation
 
     # gps uncertainty
     # the accuracy values can be really large if there is no fix, so we limit the
@@ -415,8 +385,6 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
-    add_fragment(plots, 'power') # navigation
-
     # power
     # TODO: dischared in Ah?
     data_plot = DataPlot(data, plot_config, 'battery_status',
@@ -431,8 +399,6 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
 
 
 
-    add_fragment(plots, 'estimator-watchdog') # navigation
-
     # estimator watchdog
     data_plot = DataPlot(data, plot_config, 'estimator_status',
         y_start=0, title = 'Estimator Watchdog',
@@ -443,8 +409,6 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
-
-    add_fragment(plots, 'rc-quality', 'RC Quality') # navigation
 
     # RC Quality
     data_plot = DataPlot(data, plot_config, 'input_rc',
@@ -457,8 +421,6 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
 
 
 
-    add_fragment(plots, 'cpu', 'CPU & RAM') # navigation
-
     # cpu load
     data_plot = DataPlot(data, plot_config, 'cpuload',
         title = 'CPU & RAM', plot_height = 'small', y_range = Range1d(0, 1),
@@ -470,8 +432,6 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
     plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes)
     if data_plot.finalize() is not None: plots.append(data_plot)
 
-
-    add_fragment(plots, 'sensor-sampling') # navigation
 
     # sampling: time difference
     data_plot = DataPlot(data, plot_config, 'sensor_combined',
@@ -502,6 +462,8 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
                 label.text_alpha = 1
     param_changes_button.on_click(param_changes_button_clicked)
 
+
+    jinja_plot_data = []
     for i in range(len(plots)):
         if plots[i] is None:
             plots[i] = widgetbox(param_changes_button, width = int(plot_width*0.99))
@@ -510,9 +472,15 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
                 param_change_labels.append(plots[i].param_change_label)
             plots[i] = plots[i].bokeh_plot
 
+            plot_title = plots[i].title.text
+            fragment = 'Nav-'+plot_title.replace(' ', '-') \
+                .replace('&', '_').replace('(', '').replace(')', '')
+            jinja_plot_data.append({
+                        'model_id': plots[i].ref['id'],
+                        'fragment': fragment,
+                        'title': plot_title
+                    })
 
-
-    add_fragment(plots, 'logged-messages') # navigation
 
 
     # log messages
@@ -543,5 +511,7 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
     div = Div(text="""<b>Logged Messages</b>""", width=int(plot_width/2))
     plots.append(widgetbox(div,data_table, width = plot_width))
 
+
+    curdoc().template_variables['plots'] = jinja_plot_data
 
     return plots

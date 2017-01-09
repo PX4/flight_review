@@ -50,6 +50,11 @@
                         </li>                    
                         <li class="dropdown" id="navigation-menu"><a href="javascript:;">Navigation <i class="fa fa-angle-down"></i></a>
                             <ul role="menu" class="sub-menu" id="ul-fragments">
+{% for cur_plot in plots %}
+{% set cur_title = cur_plot.title %}
+{% set cur_fragment = cur_plot.fragment %}
+	<li><a href="javascript:navigate('{{ cur_fragment }}');">{{ cur_title }}</a></li>
+{% endfor %}
                             </ul>
                         </li>
                         <li class="dropdown" id="size-menu"><a href="javascript:;">Size <i class="fa fa-angle-down"></i></a>
