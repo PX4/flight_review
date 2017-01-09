@@ -31,7 +31,8 @@ UPLOAD_TEMPLATE = 'upload.html'
 BROWSE_TEMPLATE = 'browse.html'
 EDIT_TEMPLATE = 'edit.html'
 
-env = Environment(loader=FileSystemLoader(os.path.dirname(os.path.realpath(__file__))))
+env = Environment(loader=FileSystemLoader(
+    os.path.join(os.path.dirname(os.path.realpath(__file__)), 'plot_app/templates')))
 
 class CustomHTTPError(tornado.web.HTTPError):
     def __init__(self, status_code, error_message=None):
