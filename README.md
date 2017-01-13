@@ -11,7 +11,7 @@ It uses the [bokeh](http://bokeh.pydata.org) library for plotting and the
 
 - clone the repository
 - use python3
-- `pip3 install bokeh jinja2 pyulog` (at least version 0.12.3 of bokeh is
+- `pip3 install bokeh jinja2 pyulog` (at least version 0.12.4 of bokeh is
   required)
 - `sudo apt-get install sqlite3`
 - configure web server settings in `plot_app/config.py`. This can be skipped for a local
