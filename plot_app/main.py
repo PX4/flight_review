@@ -1,11 +1,12 @@
-from bokeh.io import curdoc
-from bokeh.layouts import row, column, widgetbox
-from bokeh.models.widgets import Div
+""" module that gets executed on a plotting page request """
 
-import numpy as np
 from timeit import default_timer as timer
 import sys
 import sqlite3
+
+from bokeh.io import curdoc
+from bokeh.layouts import column, widgetbox
+from bokeh.models.widgets import Div
 
 from pyulog import *
 from pyulog.px4 import *
@@ -16,23 +17,24 @@ from colors import HTML_color_to_RGB
 from db_entry import *
 from configured_plots import generate_plots
 
-
+#pylint: disable=invalid-name, redefined-outer-name
 
 start_time = timer()
 
 
 def load_data(file_name):
+    """ load an ULog file """
     # load only the messages we really need
     msg_filter = ['battery_status', 'distance_sensor', 'estimator_status',
-            'sensor_combined', 'cpuload', 'commander_state',
-            'vehicle_gps_position', 'vehicle_local_position',
-            'vehicle_local_position_setpoint',
-            'vehicle_global_position', 'actuator_controls', 'actuator_controls_0',
-            'actuator_controls_1', 'actuator_outputs',
-            'vehicle_attitude', 'vehicle_attitude_setpoint',
-            'vehicle_rates_setpoint', 'rc_channels', 'input_rc',
-            'position_setpoint_triplet', 'vehicle_attitude_groundtruth',
-            'vehicle_local_position_groundtruth']
+                  'sensor_combined', 'cpuload', 'commander_state',
+                  'vehicle_gps_position', 'vehicle_local_position',
+                  'vehicle_local_position_setpoint',
+                  'vehicle_global_position', 'actuator_controls', 'actuator_controls_0',
+                  'actuator_controls_1', 'actuator_outputs',
+                  'vehicle_attitude', 'vehicle_attitude_setpoint',
+                  'vehicle_rates_setpoint', 'rc_channels', 'input_rc',
+                  'position_setpoint_triplet', 'vehicle_attitude_groundtruth',
+                  'vehicle_local_position_groundtruth']
     ulog = ULog(file_name, msg_filter)
     px4_ulog = PX4ULog(ulog)
     px4_ulog.add_roll_pitch_yaw()
@@ -83,11 +85,11 @@ if error_message == '':
 
     # initialize flight mode changes
     try:
-        cur_dataset = [ elem for elem in ulog.data_list
-                if elem.name == 'commander_state' and elem.multi_id == 0][0]
+        cur_dataset = [elem for elem in ulog.data_list
+                       if elem.name == 'commander_state' and elem.multi_id == 0][0]
         flight_mode_changes = cur_dataset.list_value_changes('main_state')
         flight_mode_changes.append((ulog.last_timestamp, -1))
-    except (KeyError,IndexError) as error:
+    except (KeyError, IndexError) as error:
         flight_mode_changes = []
 
 
@@ -97,7 +99,7 @@ if error_message == '':
         con = sqlite3.connect(get_db_filename(), detect_types=sqlite3.PARSE_DECLTYPES)
         cur = con.cursor()
         cur.execute('select Description, Feedback, Type, WindSpeed, Rating, VideoUrl '
-                'from Logs where Id = ?', [log_id])
+                    'from Logs where Id = ?', [log_id])
         db_tuple = cur.fetchone()
         if db_tuple != None:
             db_data.description = db_tuple[0]
@@ -124,7 +126,7 @@ if error_message == '':
         {'name': 'Offboard', 'color': HTML_color_to_RGB(flight_modes_table[7][1])},
         {'name': 'Rattitude', 'color': HTML_color_to_RGB(flight_modes_table[9][1])},
         {'name': 'Auto (Mission, RTL, Follow, ...)',
-            'color': HTML_color_to_RGB(flight_modes_table[3][1])}
+         'color': HTML_color_to_RGB(flight_modes_table[3][1])}
         ]
     curdoc().template_variables['flight_modes'] = flight_modes
 
@@ -138,7 +140,7 @@ else:
     title = 'Error'
 
     div = Div(text="<h3>"+error_message+"</h3>", width=int(plot_width*0.9))
-    plots = [ widgetbox(div, width = int(plot_width*0.9)) ]
+    plots = [widgetbox(div, width=int(plot_width*0.9))]
 
 
 # layout
