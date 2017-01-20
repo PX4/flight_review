@@ -5,7 +5,7 @@ import re
 import tempfile
 import shutil
 
-"""
+__copyright__ = """
 Copyright 2015 Laszlo Zsolt Nagy (nagylzs@gmail.com)
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,7 +22,7 @@ class SizeLimitError(Exception):
     pass
 
 
-class StreamedPart:
+class StreamedPart(object):
     """Represents a part of the multipart/form-data."""
 
     def __init__(self, streamer, headers):
@@ -31,9 +31,11 @@ class StreamedPart:
         self._size = 0
 
     def get_size(self):
+        """ return the size of this part """
         return self._size
 
-    size = property(get_size, doc="Size of the streamed part. It will be a growing value while the part is streamed.")
+    size = property(get_size, doc="Size of the streamed part. " +
+                    "It will be a growing value while the part is streamed.")
 
     def feed(self, data):
         """Feed data into the stream.
@@ -54,8 +56,9 @@ class StreamedPart:
     def get_payload(self):
         """Load part data and return it as a binary string.
 
-        Warning! This method will load the whole data into memory. First you should check the get_size() method
-        the see if the data fits into memory.
+        Warning! This method will load the whole data into memory.
+        First you should check the get_size() method the see if the data fits
+        into memory.
 
         .. note:: In the base class, this is not implemented.
         """
@@ -64,8 +67,10 @@ class StreamedPart:
     def get_ct_params(self):
         """Get Content-Disposition parameters.
 
-        :return:  If there is no content-disposition header for the part, then it returns an empty list.
-            Otherwise it returns a list of values given for Content-Disposition headers.
+        :return:  If there is no content-disposition header for the part, then
+                  it returns an empty list.
+                  Otherwise it returns a list of values given for
+                  Content-Disposition headers.
         :rtype: list
         """
         for header in self.headers:
@@ -88,31 +93,34 @@ class StreamedPart:
     def get_name(self):
         """Get name of the part.
 
-        If the multipart form data was sent by a web browser, then the name of the part is the name of the input
-        field in the form.
+        If the multipart form data was sent by a web browser, then the name of
+        the part is the name of the input field in the form.
 
-        :return: Name of the parameter (as given in the ``name`` parameter of the content-disposition header)
-            When there is no ``name``parameter, returns None. Although all parts in multipart/form-data
-            should have a name.
+        :return: Name of the parameter (as given in the ``name`` parameter of
+                 the content-disposition header)
+                 When there is no ``name``parameter, returns None. Although all
+                 parts in multipart/form-data should have a name.
         """
         return self.get_ct_param("name", None)
 
     def get_filename(self):
         """Get filename of the part.
 
-        If the multipart form data was sent by a web browser, then the name of the part is the filename of the input
-        field in the form.
+        If the multipart form data was sent by a web browser, then the name of
+        the part is the filename of the input field in the form.
 
-        :return: filename of the parameter (as given in the ``filename`` parameter of the content-disposition header)
-            When there is no ``filename``parameter, returns None. All browsers will send this parameter to all
-            file input fields.
+        :return: filename of the parameter (as given in the ``filename``
+                 parameter of the content-disposition header)
+                 When there is no ``filename``parameter, returns None. All
+                 browsers will send this parameter to all file input fields.
         """
         return self.get_ct_param("filename", None)
 
     def is_file(self):
         """Return if the part is a posted file.
 
-        Please note that a program can post huge amounts of data without giving a filename."""
+        Please note that a program can post huge amounts of data without giving
+        a filename."""
         return bool(self.get_filename())
 
 
@@ -126,14 +134,16 @@ class TemporaryFileStreamedPart(StreamedPart):
 
         :param streamer: The MultiPartStreamer that feeds this streamed part.
         :param headers: A dict of part headers
-        :param tmp_dir: Directory for the NamedTemporaryFile. Will be passed to NamedTemporaryFile constructor.
+        :param tmp_dir: Directory for the NamedTemporaryFile. Will be passed to
+        NamedTemporaryFile constructor.
 
-        The NamedTemporaryFile is available through the ``f_out`` attribute. It is created with delete=False, argument,
-        so the temporary file is not automatically deleted when closed. You can use the move() method to move the
-        temporary file to a different location. If you do not call the move() method, then the file will be deleted
-        when release() is called.
+        The NamedTemporaryFile is available through the ``f_out`` attribute. It
+        is created with delete=False, argument, so the temporary file is not
+        automatically deleted when closed. You can use the move() method to move
+        the temporary file to a different location. If you do not call the
+        move() method, then the file will be deleted when release() is called.
         """
-        super().__init__(streamer, headers)
+        super(TemporaryFileStreamedPart, self).__init__(streamer, headers)
         self.is_moved = False
         self.is_finalized = False
         self.f_out = tempfile.NamedTemporaryFile(dir=tmp_dir, delete=False)
@@ -151,7 +161,7 @@ class TemporaryFileStreamedPart(StreamedPart):
             self.f_out.flush()
             self.is_finalized = True
         finally:
-            super().finalize()
+            super(TemporaryFileStreamedPart, self).finalize()
 
     def move(self, file_path):
         """Move the temporary file to a new location.
@@ -171,14 +181,15 @@ class TemporaryFileStreamedPart(StreamedPart):
     def release(self):
         """Release resources assigned to the part.
 
-        If the temporary file has been moved with the move() method, then this method does nothing. Otherwise
-        it closes the temporary file and deletes it from disk."""
+        If the temporary file has been moved with the move() method, then this
+        method does nothing. Otherwise it closes the temporary file and deletes
+        it from disk."""
         try:
             if not self.is_moved:
                 self.f_out.close()
                 os.unlink(self.f_out.name)
         finally:
-            super().release()
+            super(TemporaryFileStreamedPart, self).release()
 
     def get_payload(self):
         """Load part data from disk and return it.
@@ -202,7 +213,7 @@ class TemporaryFileStreamedPart(StreamedPart):
         return self.f_out.read(num_bytes)
 
 
-class MultiPartStreamer:
+class MultiPartStreamer(object):
     """Parse a stream of multpart/form-data.
 
     Useful for request handlers decorated with ``tornado.web.stream_request_body``.
@@ -221,8 +232,8 @@ class MultiPartStreamer:
     def __init__(self, total):
         """Create a new PostDataStreamer
 
-        :param total: Total number of bytes in the stream. This is what the http client sends as
-            the Content-Length header of the whole form.
+        :param total: Total number of bytes in the stream. This is what the http
+                      client sends as the Content-Length header of the whole form.
         """
         self.buf = b""
         self.dlen = None
@@ -232,6 +243,7 @@ class MultiPartStreamer:
         self.parts = []
         self.total = total
         self.received = 0
+        self.part = None
 
     def _get_raw_header(self, data):
         """Return raw header data.
@@ -239,8 +251,9 @@ class MultiPartStreamer:
         Internal method. Do not call directly.
 
         :param data: A string containing raw data from the form part
-        :return: A tuple of (header_value, tail) where header_value is the first line of the form part.
-            If there is no first line yet (e.g. the whole data is a single line) then header_value will be None.
+        :return: A tuple of (header_value, tail) where header_value is the first
+                 line of the form part. If there is no first line yet (e.g. the
+                 whole data is a single line) then header_value will be None.
         """
         idx = data.find(self.SEP)
         if idx >= 0:
@@ -292,7 +305,8 @@ class MultiPartStreamer:
     def _end_part(self):
         """Internal method called when receiving the current part has finished.
 
-        The implementation of this does nothing, but it can be overriden to do something with ``self.fout``."""
+        The implementation of this does nothing, but it can be overriden to do
+        something with ``self.fout``."""
         self.part.finalize()
 
     def data_received(self, chunk):
@@ -300,8 +314,9 @@ class MultiPartStreamer:
 
         :param chunk: Binary string that was received from the http(s) client.
 
-        This method incrementally parses stream data, finds part headers and feeds binary data into created
-        StreamedPart instances. You need to call this when a chunk of data is available for the part.
+        This method incrementally parses stream data, finds part headers and
+        feeds binary data into created StreamedPart instances. You need to call
+        this when a chunk of data is available for the part.
 
         This method may raise a ParseError if the received data is malformed.
         """
@@ -374,17 +389,18 @@ class MultiPartStreamer:
         """Call this to release resources for all parts created.
 
          This method will call the release() method on all parts created for the stream."""
-        [part.release() for part in self.parts]
+        for part in self.parts:
+            part.release()
 
     def get_parts_by_name(self, part_name):
         """Get a parts by name.
 
         :param part_name: Name of the part. This is case sensitive!
 
-        Attention! A form may have posted multiple values for the same name. So the return value of this method is a
-        list of parts!
+        Attention! A form may have posted multiple values for the same name. So
+        the return value of this method is a list of parts!
         """
-        return [part for part in self.parts if (part.get_name() == part_name)]
+        return [part for part in self.parts if part.get_name() == part_name]
 
     def get_values(self, names, size_limit=10 * 1024):
         """Return a dictionary of values for the given field names.
@@ -396,11 +412,14 @@ class MultiPartStreamer:
         Caveats:
 
             * do not use this for big file values, because values are loaded into memory
-            * a form may have posted multiple values for a field name. This method returns the first available
-              value for that name. If the form might contain multiple values for the same name, then do not
-              use this method.  To get all values for a name, use the get_parts_by_name method instead.
+            * a form may have posted multiple values for a field name. This
+              method returns the first available value for that name. If the
+              form might contain multiple values for the same name, then do not
+              use this method. To get all values for a name, use the
+              get_parts_by_name method instead.
 
-        Tip: use get_nonfile_parts() to get a list of parts that are not originally files (read the docstring)
+        Tip: use get_nonfile_parts() to get a list of parts that are not
+        originally files (read the docstring)
         """
         res = {}
         for name in names:
@@ -416,8 +435,9 @@ class MultiPartStreamer:
     def get_nonfile_parts(self):
         """Get a list of parts that are originally not files.
 
-        It examines the filename attribute of the Content-Disposition header.  Be aware that these fields still may be
-        huge in size. A custom http client can post huge amounts of data without giving Content-Disposition.
+        It examines the filename attribute of the Content-Disposition header.
+        Be aware that these fields still may be huge in size. A custom http
+        client can post huge amounts of data without giving Content-Disposition.
         """
         return [part for part in self.parts if not part.is_file()]
 
