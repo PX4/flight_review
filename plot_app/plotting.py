@@ -1,5 +1,6 @@
-
+""" methods an classes used for plotting (wrappers around bokeh plots) """
 from bokeh.plotting import figure
+#pylint: disable=line-too-long, redefined-variable-type, arguments-differ, unused-import
 from bokeh.models import (
     ColumnDataSource, Range1d, DataRange1d, DatetimeAxis,
     TickFormatter, DatetimeTickFormatter, FuncTickFormatter,
@@ -10,7 +11,6 @@ from bokeh.models import (
     )
 from bokeh.models.widgets import DataTable, DateFormatter, TableColumn, Div
 
-
 from downsampling import DynamicDownsample
 import numpy as np
 from helper import map_projection, WGS84_to_mercator, flight_modes_table
@@ -20,7 +20,7 @@ TOOLS = "pan,wheel_zoom,box_zoom,reset,save"
 ACTIVE_SCROLL_TOOLS = "wheel_zoom"
 
 
-def plot_dropouts(p, dropouts, show_hover_tooltips = False):
+def plot_dropouts(p, dropouts, show_hover_tooltips=False):
     """ plot small rectangles that stick at the bottom of the plot """
 
     dropout_dict = {'left': [], 'right': [], 'top': [], 'bottom': [], 'duration' : []}
@@ -35,7 +35,7 @@ def plot_dropouts(p, dropouts, show_hover_tooltips = False):
 
     source = ColumnDataSource(dropout_dict)
     # fixate the top & bottom positions within the graph
-    jscode="""
+    jscode = """
         var data = source.get('data');
         var start = cb_obj.get('start');
         var end = cb_obj.get('end');
@@ -47,18 +47,18 @@ def plot_dropouts(p, dropouts, show_hover_tooltips = False):
         source.trigger('change');
     """
 
-    p.y_range.callback = CustomJS(
-            args=dict(source=source), code=jscode)
-    cr = p.quad(left='left', right='right', top='top', bottom='bottom', source=source,
-                line_color='black', line_alpha = 0.4, fill_color='black',
-                fill_alpha=0.3)
+    p.y_range.callback = CustomJS(args=dict(source=source), code=jscode)
+    quad = p.quad(left='left', right='right', top='top', bottom='bottom', source=source,
+                  line_color='black', line_alpha=0.4, fill_color='black',
+                  fill_alpha=0.3)
 
     if show_hover_tooltips:
         p.add_tools(HoverTool(tooltips=[('dropout', '@duration ms')],
-            renderers=[cr]))
+                              renderers=[quad]))
 
 
 def plot_parameter_changes(p, plots_height, changed_parameters):
+    """ plot changed parameters as text with value into bokeh plot p """
     timestamps = []
     names = []
     y_values = []
@@ -73,26 +73,28 @@ def plot_parameter_changes(p, plots_height, changed_parameters):
         y_values.append(plots_height - 50 - (i % 4) * 10)
         i += 1
 
-    if (len(names) > 0):
+    if len(names) > 0:
         source = ColumnDataSource(data=dict(x=timestamps, names=names, y=y_values))
 
         # plot as text with a fixed screen-space y offset
         labels = LabelSet(x='x', y='y', text='names',
-            y_units='screen', level='glyph', #text_alpha=0.9, text_color='black',
-            source=source, render_mode='canvas', text_font_size = '8pt')
+                          y_units='screen', level='glyph', #text_alpha=0.9, text_color='black',
+                          source=source, render_mode='canvas', text_font_size='8pt')
         p.add_layout(labels)
         return labels
     return None
 
 
 def plot_flight_modes_background(p, flight_mode_changes):
+    """ plot flight modes as filling background (with different colors) to bokeh
+        plot p """
     for i in range(len(flight_mode_changes)-1):
         t_start, mode = flight_mode_changes[i]
         t_end, mode_next = flight_mode_changes[i + 1]
         if mode in flight_modes_table:
             mode_name, color = flight_modes_table[mode]
             p.add_layout(BoxAnnotation(left=int(t_start), right=int(t_end),
-                fill_alpha=0.09, line_color=None, fill_color=color))
+                                       fill_alpha=0.09, line_color=None, fill_color=color))
 
 
 def plot_set_equal_aspect_ratio(p, x, y, zoom_out_factor=1.3, min_range=5):
@@ -102,11 +104,11 @@ def plot_set_equal_aspect_ratio(p, x, y, zoom_out_factor=1.3, min_range=5):
     """
     x_range = [np.amin(x), np.amax(x)]
     x_diff = x_range[1]-x_range[0]
-    if (x_diff < min_range): x_diff = min_range
+    if x_diff < min_range: x_diff = min_range
     x_center = (x_range[0]+x_range[1])/2
     y_range = [np.amin(y), np.amax(y)]
     y_diff = y_range[1]-y_range[0]
-    if (y_diff < min_range): y_diff = min_range
+    if y_diff < min_range: y_diff = min_range
     y_center = (y_range[0]+y_range[1])/2
 
     # keep same aspect ratio as the plot
@@ -117,9 +119,9 @@ def plot_set_equal_aspect_ratio(p, x, y, zoom_out_factor=1.3, min_range=5):
         y_diff = x_diff / aspect
 
     p.x_range = Range1d(start=x_center - x_diff/2 * zoom_out_factor,
-            end=x_center + x_diff/2 * zoom_out_factor, bounds=None)
+                        end=x_center + x_diff/2 * zoom_out_factor, bounds=None)
     p.y_range = Range1d(start=y_center - y_diff/2 * zoom_out_factor,
-            end=y_center + y_diff/2 * zoom_out_factor, bounds=None)
+                        end=y_center + y_diff/2 * zoom_out_factor, bounds=None)
 
     p.select_one(BoxZoomTool).match_aspect = True
 
@@ -128,8 +130,8 @@ def plot_set_equal_aspect_ratio(p, x, y, zoom_out_factor=1.3, min_range=5):
 
 # GPS map
 
-def plot_map(data, config, map_type = 'plain', api_key=None, setpoints=False,
-        bokeh_plot=None):
+def plot_map(data, config, map_type='plain', api_key=None, setpoints=False,
+             bokeh_plot=None):
     """
     Do a 2D position plot
 
@@ -141,8 +143,8 @@ def plot_map(data, config, map_type = 'plain', api_key=None, setpoints=False,
     """
 
     try:
-        cur_dataset = [ elem for elem in data
-                    if elem.name == 'vehicle_gps_position' and elem.multi_id == 0][0]
+        cur_dataset = [elem for elem in data
+                       if elem.name == 'vehicle_gps_position' and elem.multi_id == 0][0]
         t = cur_dataset.data['timestamp']
         indices = cur_dataset.data['fix_type'] > 2 # use only data with a fix
         t = t[indices]
@@ -155,24 +157,23 @@ def plot_map(data, config, map_type = 'plain', api_key=None, setpoints=False,
         anchor_lat = 0
         anchor_lon = 0
 
-        if (len(t) == 0):
+        if len(t) == 0:
             raise ValueError('No valid GPS position data')
 
 
         if map_type == 'google':
-            data_source = ColumnDataSource(data=dict(lat = lat, lon = lon))
+            data_source = ColumnDataSource(data=dict(lat=lat, lon=lon))
 
             lon_center = (np.amin(lon) + np.amax(lon)) / 2
             lat_center = (np.amin(lat) + np.amax(lat)) / 2
 
             map_options = GMapOptions(lat=lat_center, lng=lon_center,
-                    map_type="hybrid", zoom=19)
+                                      map_type="hybrid", zoom=19)
             # possible map types: satellite, roadmap, terrain, hybrid
 
             p = GMapPlot(
                 x_range=DataRange1d(), y_range=DataRange1d(), map_options=map_options,
-                api_key = api_key,
-                plot_width = plots_width, plot_height = plots_height
+                api_key=api_key, plot_width=plots_width, plot_height=plots_height
             )
 
             pan = PanTool()
@@ -180,7 +181,7 @@ def plot_map(data, config, map_type = 'plain', api_key=None, setpoints=False,
             p.add_tools(pan, wheel_zoom)
             p.toolbar.active_scroll = wheel_zoom
 
-            line = Line(x="lon", y="lat", line_width = 2, line_color=config['maps_line_color'])
+            line = Line(x="lon", y="lat", line_width=2, line_color=config['maps_line_color'])
             p.add_glyph(data_source, line)
 
         elif map_type == 'osm':
@@ -189,7 +190,7 @@ def plot_map(data, config, map_type = 'plain', api_key=None, setpoints=False,
 
             # transform coordinates
             lon, lat = WGS84_to_mercator(lon, lat)
-            data_source = ColumnDataSource(data=dict(lat = lat, lon = lon))
+            data_source = ColumnDataSource(data=dict(lat=lat, lon=lon))
 
             p = figure(tools=TOOLS, active_scroll=ACTIVE_SCROLL_TOOLS)
             p.plot_width = plots_width
@@ -203,11 +204,11 @@ def plot_map(data, config, map_type = 'plain', api_key=None, setpoints=False,
             tile_options = {}
             # thunderforest
             tile_options['url'] = 'http://b.tile.thunderforest.com/landscape/{z}/{x}/{y}.png'
-            tile_options['attribution']= 'Maps © <a href="http://www.thunderforest.com">Thunderforest</a>, Data © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors '
+            tile_options['attribution'] = 'Maps © <a href="http://www.thunderforest.com">Thunderforest</a>, Data © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors '
 
             # default OpenStreetMaps
 #            tile_options['url'] = 'http://c.tile.openstreetmap.org/{Z}/{X}/{Y}.png'
-#            tile_options['attribution']= '© <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors '
+#            tile_options['attribution'] = '© <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors '
 
             # FIXME: tiles disabled for now due to a rendering bug
 #            tile_source = WMTSTileSource(**tile_options)
@@ -227,7 +228,7 @@ def plot_map(data, config, map_type = 'plain', api_key=None, setpoints=False,
 #            p.add_tile(STAMEN_TONER)
 
             p.line(x='lon', y='lat', source=data_source, line_width=2,
-                        line_color=config['maps_line_color'])
+                   line_color=config['maps_line_color'])
 
         else: # plain
 
@@ -239,8 +240,8 @@ def plot_map(data, config, map_type = 'plain', api_key=None, setpoints=False,
 
             # try to get the anchor position from the dataset
             try:
-                local_pos_data = [ elem for elem in data
-                            if elem.name == 'vehicle_local_position' and elem.multi_id == 0][0]
+                local_pos_data = [elem for elem in data
+                                  if elem.name == 'vehicle_local_position' and elem.multi_id == 0][0]
                 indices = np.nonzero(local_pos_data.data['ref_timestamp'])
                 if len(indices[0]) > 0:
                     anchor_lat = np.deg2rad(local_pos_data.data['ref_lat'][indices[0][0]])
@@ -249,12 +250,12 @@ def plot_map(data, config, map_type = 'plain', api_key=None, setpoints=False,
                 pass
 
 
-            lat,lon = map_projection(lat, lon, anchor_lat, anchor_lon)
-            data_source = ColumnDataSource(data=dict(lat = lat, lon = lon))
+            lat, lon = map_projection(lat, lon, anchor_lat, anchor_lon)
+            data_source = ColumnDataSource(data=dict(lat=lat, lon=lon))
 
             if bokeh_plot is None:
                 p = figure(tools=TOOLS, active_scroll=ACTIVE_SCROLL_TOOLS,
-                        x_axis_label='[m]', y_axis_label='[m]')
+                           x_axis_label='[m]', y_axis_label='[m]')
                 p.plot_width = plots_width
                 p.plot_height = plots_height
 
@@ -264,14 +265,14 @@ def plot_map(data, config, map_type = 'plain', api_key=None, setpoints=False,
 
             # TODO: altitude line coloring
             p.line(x='lon', y='lat', source=data_source, line_width=2,
-                    line_color=config['maps_line_color'], legend='GPS (projected)')
+                   line_color=config['maps_line_color'], legend='GPS (projected)')
 
 
         if setpoints:
             # draw (mission) setpoint as circles
             try:
-                cur_dataset = [ elem for elem in data
-                    if elem.name == 'position_setpoint_triplet' and elem.multi_id == 0][0]
+                cur_dataset = [elem for elem in data
+                               if elem.name == 'position_setpoint_triplet' and elem.multi_id == 0][0]
                 lon = cur_dataset.data['current.lon'] # degrees
                 lat = cur_dataset.data['current.lat']
 
@@ -280,19 +281,19 @@ def plot_map(data, config, map_type = 'plain', api_key=None, setpoints=False,
                 elif map_type == 'plain':
                     lat = np.deg2rad(lat)
                     lon = np.deg2rad(lon)
-                    lat,lon = map_projection(lat, lon, anchor_lat, anchor_lon)
+                    lat, lon = map_projection(lat, lon, anchor_lat, anchor_lon)
 
-                data_source = ColumnDataSource(data=dict(lat = lat, lon = lon))
+                data_source = ColumnDataSource(data=dict(lat=lat, lon=lon))
 
                 p.circle(x='lon', y='lat', source=data_source,
-                        line_width=2, size=6, line_color=config['mission_setpoint_color'],
-                        fill_color=None, legend='Position Setpoints')
+                         line_width=2, size=6, line_color=config['mission_setpoint_color'],
+                         fill_color=None, legend='Position Setpoints')
             except:
                 pass
 
-    except (KeyError,IndexError,ValueError) as error:
+    except (KeyError, IndexError, ValueError) as error:
         # log does not contain the value we are looking for
-        print(type(error),"(vehicle_gps_position):",error)
+        print(type(error), "(vehicle_gps_position):", error)
         return None
     return p
 
@@ -304,9 +305,9 @@ class DataPlot:
     """
 
 
-    def __init__(self, data, config, data_name, x_axis_label = None,
-            y_axis_label = None, title = None, plot_height = 'normal',
-            y_range = None, y_start = None, changed_params = None):
+    def __init__(self, data, config, data_name, x_axis_label=None,
+                 y_axis_label=None, title=None, plot_height='normal',
+                 y_range=None, y_start=None, changed_params=None):
 
         self._had_error = False
         self._previous_success = False
@@ -318,39 +319,43 @@ class DataPlot:
         self._data_name = data_name
         self._cur_dataset = None
         try:
-            self._p = figure(title=title,
-                    x_axis_label=x_axis_label, y_axis_label=y_axis_label,
-                    tools=TOOLS, active_scroll=ACTIVE_SCROLL_TOOLS)
+            self._p = figure(title=title, x_axis_label=x_axis_label,
+                             y_axis_label=y_axis_label, tools=TOOLS,
+                             active_scroll=ACTIVE_SCROLL_TOOLS)
             if y_range is not None:
                 self._p.y_range = y_range
 
             if changed_params is not None:
-                self._param_change_label = plot_parameter_changes(self._p,
-                        config['plot_height'][plot_height], changed_params)
+                self._param_change_label = \
+                    plot_parameter_changes(self._p, config['plot_height'][plot_height],
+                                           changed_params)
 
-            self._cur_dataset = [ elem for elem in data
-                    if elem.name == data_name and elem.multi_id == 0][0]
+            self._cur_dataset = [elem for elem in data
+                                 if elem.name == data_name and elem.multi_id == 0][0]
 
             if y_start is not None:
                 # make sure y axis starts at 0. We do it by adding an invisible circle
                 self._p.circle(x=int(self._cur_dataset.data['timestamp'][0]),
-                        y=y_start, size=0, alpha=0)
+                               y=y_start, size=0, alpha=0)
 
-        except (KeyError,IndexError,ValueError) as error:
-            print(type(error),"("+self._data_name+"):",error)
+        except (KeyError, IndexError, ValueError) as error:
+            print(type(error), "("+self._data_name+"):", error)
             self._had_error = True
 
     @property
     def bokeh_plot(self):
+        """ return the bokeh plot """
         return self._p
 
     @property
     def param_change_label(self):
+        """ returns bokeh LabelSet or None """
         return self._param_change_label
 
 
     @property
     def dataset(self):
+        """ get current dataset """
         return self._cur_dataset
 
     def change_dataset(self, data_name):
@@ -359,10 +364,10 @@ class DataPlot:
         if not self._had_error: self._previous_success = True
         self._had_error = False
         try:
-            self._cur_dataset = [ elem for elem in self._data
-                    if elem.name == data_name and elem.multi_id == 0][0]
-        except (KeyError,IndexError,ValueError) as error:
-            print(type(error),"("+self._data_name+"):",error)
+            self._cur_dataset = [elem for elem in self._data
+                                 if elem.name == data_name and elem.multi_id == 0][0]
+        except (KeyError, IndexError, ValueError) as error:
+            print(type(error), "("+self._data_name+"):", error)
             self._had_error = True
             self._cur_dataset = None
 
@@ -384,13 +389,13 @@ class DataPlot:
 
             for field_name, color, legend in zip(field_names_expanded, colors, legends):
                 p.line(x='timestamp', y=field_name, source=data_source,
-                        legend=legend, line_width=2, line_color=color)
+                       legend=legend, line_width=2, line_color=color)
 
             if use_downsample:
                 DynamicDownsample(p, data_source, 'timestamp')
 
-        except (KeyError,IndexError,ValueError) as error:
-            print(type(error),"("+self._data_name+"):",error)
+        except (KeyError, IndexError, ValueError) as error:
+            print(type(error), "("+self._data_name+"):", error)
             self._had_error = True
 
     def add_circle(self, field_names, colors, legends):
@@ -408,11 +413,11 @@ class DataPlot:
 
             for field_name, color, legend in zip(field_names_expanded, colors, legends):
                 p.circle(x='timestamp', y=field_name, source=data_source,
-                        legend=legend, line_width=2, size=6, line_color=color,
-                        fill_color=None)
+                         legend=legend, line_width=2, size=6, line_color=color,
+                         fill_color=None)
 
-        except (KeyError,IndexError,ValueError) as error:
-            print(type(error),"("+self._data_name+"):",error)
+        except (KeyError, IndexError, ValueError) as error:
+            print(type(error), "("+self._data_name+"):", error)
             self._had_error = True
 
 
@@ -432,20 +437,20 @@ class DataPlot:
         return field_names_expanded
 
 
-    def add_span(self, field_name, accumulator_func = np.mean,
-            line_color = 'black', line_alpha = 0.5):
+    def add_span(self, field_name, accumulator_func=np.mean,
+                 line_color='black', line_alpha=0.5):
         """ Add a vertical line. Location is determined by accumulating a
         dataset """
         if self._had_error: return
         try:
             accumulated_data = accumulator_func(self._cur_dataset.data[field_name])
             data_span = Span(location=accumulated_data.item(),
-                            dimension='width', line_color=line_color,
-                            line_alpha = line_alpha, line_width=1)
+                             dimension='width', line_color=line_color,
+                             line_alpha=line_alpha, line_width=1)
             self._p.add_layout(data_span)
 
-        except (KeyError,IndexError,ValueError) as error:
-            print(type(error),"("+self._data_name+"):",error)
+        except (KeyError, IndexError, ValueError) as error:
+            print(type(error), "("+self._data_name+"):", error)
             self._had_error = True
 
 
@@ -479,7 +484,7 @@ class DataPlot:
         #p.lod_threshold=None # turn off level-of-detail
 
         # axis labels: format time
-        p.xaxis[0].formatter = FuncTickFormatter(code = '''
+        p.xaxis[0].formatter = FuncTickFormatter(code='''
                     //func arguments: ticks, x_range
                     // assume us ticks
                     ms = Math.round(tick / 1000)
@@ -505,7 +510,7 @@ class DataPlot:
                         ret_val = ret_val + "." + pad(ms, 3);
                     }
                     return ret_val;
-                ''', args={ 'x_range' : p.x_range })
+                ''', args={'x_range' : p.x_range})
 
 
 class DataPlot2D(DataPlot):
@@ -515,13 +520,14 @@ class DataPlot2D(DataPlot):
     """
 
 
-    def __init__(self, data, config, data_name, x_axis_label = None,
-            y_axis_label = None, title = None, plot_height = 'normal',
-            equal_aspect = True):
+    def __init__(self, data, config, data_name, x_axis_label=None,
+                 y_axis_label=None, title=None, plot_height='normal',
+                 equal_aspect=True):
 
         super(DataPlot2D, self).__init__(data, config, data_name,
-                x_axis_label = x_axis_label, y_axis_label = y_axis_label,
-                title = title, plot_height = plot_height)
+                                         x_axis_label=x_axis_label,
+                                         y_axis_label=y_axis_label,
+                                         title=title, plot_height=plot_height)
 
         self._equal_aspect = equal_aspect
         self._is_first_graph = True
@@ -530,7 +536,7 @@ class DataPlot2D(DataPlot):
         self._p.plot_height = self._config['plot_height'][self._plot_height_name]
 
 
-    def add_graph(self, dataset_x, dataset_y, color, legend, check_if_all_zero = False):
+    def add_graph(self, dataset_x, dataset_y, color, legend, check_if_all_zero=False):
         """ add a line to the graph
         """
         if self._had_error: return
@@ -550,18 +556,18 @@ class DataPlot2D(DataPlot):
                 if np.count_nonzero(x) == 0 and np.count_nonzero(y) == 0:
                     raise ValueError()
 
-            data_source = ColumnDataSource(data=dict(x = x, y = y))
+            data_source = ColumnDataSource(data=dict(x=x, y=y))
 
-            p.line(x="x", y="y", source=data_source, line_width = 2,
-                    line_color=color, legend=legend)
+            p.line(x="x", y="y", source=data_source, line_width=2,
+                   line_color=color, legend=legend)
 
             if self._is_first_graph:
                 self._is_first_graph = False
                 if self._equal_aspect:
                     plot_set_equal_aspect_ratio(p, x, y)
 
-        except (KeyError,IndexError,ValueError) as error:
-            print(type(error),"("+self._data_name+"):",error)
+        except (KeyError, IndexError, ValueError) as error:
+            print(type(error), "("+self._data_name+"):", error)
             self._had_error = True
 
 
