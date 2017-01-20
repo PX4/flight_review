@@ -6,6 +6,8 @@ import sqlite3 as lite
 import sys
 import os
 
+# this is needed for the following imports
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'plot_app'))
 from plot_app.config import get_db_filename, get_log_filepath, \
     get_cache_filepath, get_kml_filepath
 
