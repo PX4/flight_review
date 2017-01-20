@@ -1,40 +1,45 @@
+"""
+Request handlers for Tornado web server
+"""
 
+from __future__ import print_function
 import sys
 import os
 import binascii
-import tornado.web
-from tornado.ioloop import IOLoop
-# this is needed for the following imports
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'plot_app'))
-from plot_app.config import *
-from plot_app.db_entry import *
-from pyulog import *
-from pyulog.ulog2kml import convert_ulog2kml
-from multipart_streamer import MultiPartStreamer
-from plot_app.helper import get_log_filename, validate_log_id, \
-    flight_modes_table, get_airframe_data, html_long_word_force_break, \
-    validate_url
-from send_email import send_notification_email, send_flightreport_email
 import uuid
-from jinja2 import Environment, FileSystemLoader
 import shutil
 import sqlite3
 import datetime
 import cgi # for html escaping
+import tornado.web
+from tornado.ioloop import IOLoop
+from jinja2 import Environment, FileSystemLoader
+from pyulog import *
+from pyulog.ulog2kml import convert_ulog2kml
+# this is needed for the following imports
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'plot_app'))
+from plot_app.config import *
+from plot_app.db_entry import *
+from plot_app.helper import get_log_filename, validate_log_id, \
+    flight_modes_table, get_airframe_data, html_long_word_force_break, \
+    validate_url
+from multipart_streamer import MultiPartStreamer
+from send_email import send_notification_email, send_flightreport_email
 
+#pylint: disable=maybe-no-member,attribute-defined-outside-init,abstract-method
+# TODO: cgi.escape got deprecated in python 3.2
+#pylint: disable=deprecated-method
 
-"""
-Request handlers for Tornado web server
-"""
 
 UPLOAD_TEMPLATE = 'upload.html'
 BROWSE_TEMPLATE = 'browse.html'
 EDIT_TEMPLATE = 'edit.html'
 
-env = Environment(loader=FileSystemLoader(
+_ENV = Environment(loader=FileSystemLoader(
     os.path.join(os.path.dirname(os.path.realpath(__file__)), 'plot_app/templates')))
 
 class CustomHTTPError(tornado.web.HTTPError):
+    """ simple class for HTTP exceptions with a custom error message """
     def __init__(self, status_code, error_message=None):
         self.error_message = error_message
         super(CustomHTTPError, self).__init__(status_code, error_message)
@@ -46,34 +51,35 @@ class UploadHandler(tornado.web.RequestHandler):
     data """
 
     def initialize(self):
-        self.ps = None
+        self.multipart_streamer = None
 
     def prepare(self):
         if self.request.method.upper() == 'POST':
             if 'expected_size' in self.request.arguments:
                 self.request.connection.set_max_body_size(
-                        int(self.get_argument('expected_size')))
+                    int(self.get_argument('expected_size')))
             try:
                 total = int(self.request.headers.get("Content-Length", "0"))
             except KeyError:
                 total = 0
-            self.ps = MultiPartStreamer(total)
+            self.multipart_streamer = MultiPartStreamer(total)
 
     def data_received(self, data):
-        if self.ps:
-            self.ps.data_received(data)
+        if self.multipart_streamer:
+            self.multipart_streamer.data_received(data)
 
     def get(self):
-        template = env.get_template(UPLOAD_TEMPLATE)
+        template = _ENV.get_template(UPLOAD_TEMPLATE)
         self.write(template.render())
 
     def post(self):
-        if self.ps:
+        if self.multipart_streamer:
             try:
-                self.ps.data_complete()
-                form_data = self.ps.get_values(['description', 'email',
-                    'allowForAnalysis', 'obfuscated', 'source', 'type',
-                    'feedback', 'windSpeed', 'rating', 'videoUrl', 'public'])
+                self.multipart_streamer.data_complete()
+                form_data = self.multipart_streamer.get_values(
+                    ['description', 'email',
+                     'allowForAnalysis', 'obfuscated', 'source', 'type',
+                     'feedback', 'windSpeed', 'rating', 'videoUrl', 'public'])
                 description = cgi.escape(form_data['description'].decode("utf-8"))
                 email = form_data['email'].decode("utf-8")
                 upload_type = 'personal'
@@ -119,7 +125,7 @@ class UploadHandler(tornado.web.RequestHandler):
                         if form_data['public'].decode("utf-8") == 'true':
                             is_public = 1
 
-                file_obj = self.ps.get_parts_by_name('filearg')[0]
+                file_obj = self.multipart_streamer.get_parts_by_name('filearg')[0]
                 upload_file_name = file_obj.get_filename()
 
                 while True:
@@ -133,7 +139,8 @@ class UploadHandler(tornado.web.RequestHandler):
                 if (file_obj.get_payload_partial(header_len) !=
                         ULog.HEADER_BYTES):
                     if upload_file_name[-7:].lower() == '.px4log':
-                        raise CustomHTTPError(400,
+                        raise CustomHTTPError(
+                            400,
                             'Invalid File. This seems to be a px4log file. '
                             'Upload it to <a href="http://logs.uaventure.com" '
                             'target="_blank">logs.uaventure.com</a>.')
@@ -152,15 +159,16 @@ class UploadHandler(tornado.web.RequestHandler):
                 # put additional data into a DB
                 con = sqlite3.connect(get_db_filename())
                 cur = con.cursor()
-                cur.execute('insert into Logs (Id, Title, Description, '
-                        'OriginalFilename, Date, AllowForAnalysis, Obfuscated, '
-                        'Source, Email, WindSpeed, Rating, Feedback, Type, '
-                        'videoUrl, Public, Token) values '
-                        '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                        [log_id, title, description, upload_file_name,
-                            datetime.datetime.now(), allow_for_analysis,
-                            obfuscated, source, stored_email, wind_speed, rating,
-                            feedback, upload_type, video_url, is_public, token])
+                cur.execute(
+                    'insert into Logs (Id, Title, Description, '
+                    'OriginalFilename, Date, AllowForAnalysis, Obfuscated, '
+                    'Source, Email, WindSpeed, Rating, Feedback, Type, '
+                    'videoUrl, Public, Token) values '
+                    '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                    [log_id, title, description, upload_file_name,
+                     datetime.datetime.now(), allow_for_analysis,
+                     obfuscated, source, stored_email, wind_speed, rating,
+                     feedback, upload_type, video_url, is_public, token])
                 con.commit()
                 cur.close()
                 con.close()
@@ -173,25 +181,27 @@ class UploadHandler(tornado.web.RequestHandler):
 
                 # send notification emails
                 send_notification_email(email, full_plot_url, description,
-                        delete_url)
+                                        delete_url)
 
                 if upload_type == 'flightreport' and is_public:
-                    send_flightreport_email(email_notifications_config['public_flightreport'],
-                            full_plot_url, description, feedback,
-                            DBData.ratingStrStatic(rating),
-                            DBData.windSpeedStrStatic(wind_speed), delete_url,
-                            stored_email)
+                    send_flightreport_email(
+                        email_notifications_config['public_flightreport'],
+                        full_plot_url, description, feedback,
+                        DBData.rating_str_static(rating),
+                        DBData.wind_speed_str_static(wind_speed), delete_url,
+                        stored_email)
 
                     # also generate the additional DB entry
                     def generate_db_entry_cb(log_id):
+                        """ tornado callback to generate the DB entry """
                         ioloop = IOLoop.instance()
                         # use a timeout to minimize interference with other requests
-                        ioloop.call_later(20, generateDBDataFromLogFile, log_id)
+                        ioloop.call_later(20, generate_db_data_from_log_file, log_id)
                     ioloop = IOLoop.instance()
                     ioloop.spawn_callback(generate_db_entry_cb, log_id)
 
                 # do not redirect for QGC
-                if not source == 'QGroundControl':
+                if source != 'QGroundControl':
                     self.redirect(url)
 
             except CustomHTTPError:
@@ -199,25 +209,25 @@ class UploadHandler(tornado.web.RequestHandler):
 
             except:
                 print('Error when handling POST data', sys.exc_info()[0],
-                        sys.exc_info()[1])
+                      sys.exc_info()[1])
                 raise CustomHTTPError(500)
 
             finally:
-                self.ps.release_parts()
+                self.multipart_streamer.release_parts()
 
     def write_error(self, status_code, **kwargs):
-        html_template="""
+        html_template = """
 <html><title>Error {status_code}</title>
 <body>HTTP Error {status_code}{error_message}</body>
 </html>
 """
-        error_message=''
+        error_message = ''
         if 'exc_info' in kwargs:
             e = kwargs["exc_info"][1]
             if isinstance(e, CustomHTTPError) and e.error_message:
-                error_message=': '+e.error_message
+                error_message = ': '+e.error_message
         self.write(html_template.format(status_code=status_code,
-            error_message=error_message))
+                                        error_message=error_message))
 
 
 class DownloadHandler(tornado.web.RequestHandler):
@@ -254,11 +264,11 @@ class DownloadHandler(tornado.web.RequestHandler):
             if not os.path.exists(kml_file_name):
                 print('need to create kml file', kml_file_name)
 
-                def kml_colors(x):
+                def kml_colors(flight_mode):
                     """ flight mode colors for KML file """
-                    if not x in flight_modes_table: x = 0
+                    if not flight_mode in flight_modes_table: flight_mode = 0
 
-                    color_str = flight_modes_table[x][1][1:] # color in form 'ff00aa'
+                    color_str = flight_modes_table[flight_mode][1][1:] # color in form 'ff00aa'
 
                     # increase brightness to match colors with template
                     rgb = [int(color_str[2*x:2*x+2], 16) for x in range(3)]
@@ -266,7 +276,7 @@ class DownloadHandler(tornado.web.RequestHandler):
                         rgb[i] += 40
                         if rgb[i] > 255: rgb[i] = 255
 
-                    color_str = "".join(map(lambda x: format(x, '02x'),rgb))
+                    color_str = "".join(map(lambda x: format(x, '02x'), rgb))
 
                     return 'ff'+color_str[4:6]+color_str[2:4]+color_str[0:2] # KML uses aabbggrr
 
@@ -275,7 +285,7 @@ class DownloadHandler(tornado.web.RequestHandler):
                 try:
                     temp_file_name = kml_file_name+'.'+str(uuid.uuid4())
                     convert_ulog2kml(log_file_name, temp_file_name,
-                            'vehicle_global_position', kml_colors, style=style)
+                                     'vehicle_global_position', kml_colors, style=style)
                     shutil.move(temp_file_name, kml_file_name)
                 except:
                     print('Error creating KML file', sys.exc_info()[0], sys.exc_info()[1])
@@ -285,9 +295,9 @@ class DownloadHandler(tornado.web.RequestHandler):
             # send the whole KML file
             self.set_header("Content-Type", "application/vnd.google-earth.kml+xml")
             self.set_header('Content-Disposition', 'attachment; filename=track.kml')
-            with open(kml_file_name, 'rb') as f:
+            with open(kml_file_name, 'rb') as kml_file:
                 while True:
-                    data = f.read(4096)
+                    data = kml_file.read(4096)
                     if not data:
                         break
                     self.write(data)
@@ -298,9 +308,9 @@ class DownloadHandler(tornado.web.RequestHandler):
             self.set_header("Content-Description", "File Transfer")
             self.set_header('Content-Disposition', 'attachment; filename={}'.format(
                 os.path.basename(log_file_name)))
-            with open(log_file_name, 'rb') as f:
+            with open(log_file_name, 'rb') as log_file:
                 while True:
-                    data = f.read(4096)
+                    data = log_file.read(4096)
                     if not data:
                         break
                     self.write(data)
@@ -308,21 +318,21 @@ class DownloadHandler(tornado.web.RequestHandler):
 
 
     def write_error(self, status_code, **kwargs):
-        html_template="""
+        html_template = """
 <html><title>Error {status_code}</title>
 <body>HTTP Error {status_code}{error_message}</body>
 </html>
 """
-        error_message=''
+        error_message = ''
         if 'exc_info' in kwargs:
             e = kwargs["exc_info"][1]
             if isinstance(e, CustomHTTPError) and e.error_message:
-                error_message=': '+e.error_message
+                error_message = ': '+e.error_message
         self.write(html_template.format(status_code=status_code,
-            error_message=error_message))
+                                        error_message=error_message))
 
 
-def generateDBDataFromLogFile(log_id, db_connection = None):
+def generate_db_data_from_log_file(log_id, db_connection=None):
     """
     Extract necessary information from the log file and insert as an entry to
     the LogsGenerated table (faster information retrieval later on).
@@ -333,25 +343,26 @@ def generateDBDataFromLogFile(log_id, db_connection = None):
     :return: DBDataGenerated object
     """
 
-    db_data_gen = DBDataGenerated.fromLogFile(log_id)
+    db_data_gen = DBDataGenerated.from_log_file(log_id)
 
     if db_connection is None:
         db_connection = sqlite3.connect(get_db_filename())
 
     try:
         db_cursor = db_connection.cursor()
-        db_cursor.execute('insert into LogsGenerated (Id, Duration, '
-                'Mavtype, Estimator, AutostartId, Hardware, '
-                'Software, NumLoggedErrors, NumLoggedWarnings, '
-                'FlightModes, SoftwareVersion) values '
-                '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                [log_id, db_data_gen.duration_s, db_data_gen.mav_type,
-                db_data_gen.estimator, db_data_gen.sys_autostart_id,
-                db_data_gen.sys_hw, db_data_gen.ver_sw,
-                db_data_gen.num_logged_errors,
-                db_data_gen.num_logged_warnings,
-                ','.join(map(str, db_data_gen.flight_modes)),
-                db_data_gen.ver_sw_release])
+        db_cursor.execute(
+            'insert into LogsGenerated (Id, Duration, '
+            'Mavtype, Estimator, AutostartId, Hardware, '
+            'Software, NumLoggedErrors, NumLoggedWarnings, '
+            'FlightModes, SoftwareVersion) values '
+            '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [log_id, db_data_gen.duration_s, db_data_gen.mav_type,
+             db_data_gen.estimator, db_data_gen.sys_autostart_id,
+             db_data_gen.sys_hw, db_data_gen.ver_sw,
+             db_data_gen.num_logged_errors,
+             db_data_gen.num_logged_warnings,
+             ','.join(map(str, db_data_gen.flight_modes)),
+             db_data_gen.ver_sw_release])
         db_connection.commit()
     except sqlite3.IntegrityError:
         # someone else already inserted it (race). just ignore it
@@ -388,7 +399,7 @@ class BrowseHandler(tornado.web.RequestHandler):
         con = sqlite3.connect(get_db_filename(), detect_types=sqlite3.PARSE_DECLTYPES)
         cur = con.cursor()
         cur.execute('select Id, Date, Description, WindSpeed, Rating, VideoUrl '
-            'from Logs where Public = 1')
+                    'from Logs where Public = 1')
         # need to fetch all here, because we will do more SQL calls while
         # iterating (having multiple cursor's does not seem to work)
         db_tuples = cur.fetchall()
@@ -407,10 +418,10 @@ class BrowseHandler(tornado.web.RequestHandler):
             # try to get the additional data from the DB
             cur.execute('select * from LogsGenerated where Id = ?', [log_id])
             db_tuple = cur.fetchone()
-            if db_tuple == None: # need to generate from file
+            if db_tuple is None: # need to generate from file
                 # Note that this is not necessary in most cases, as the entry is
                 # also generated after uploading (but with a timeout)
-                db_data_gen = generateDBDataFromLogFile(log_id, con)
+                db_data_gen = generate_db_data_from_log_file(log_id, con)
             else: # get it from the DB
                 db_data_gen = DBDataGenerated()
                 db_data_gen.duration_s = db_tuple[1]
@@ -421,8 +432,8 @@ class BrowseHandler(tornado.web.RequestHandler):
                 db_data_gen.ver_sw = db_tuple[6]
                 db_data_gen.num_logged_errors = db_tuple[7]
                 db_data_gen.num_logged_warnings = db_tuple[8]
-                db_data_gen.flight_modes = set([int(x)
-                    for x in db_tuple[9].split(',') if len(x) > 0])
+                db_data_gen.flight_modes = \
+                    set([int(x) for x in db_tuple[9].split(',') if len(x) > 0])
                 db_data_gen.ver_sw_release = db_tuple[10]
 
             # bring it into displayable form
@@ -438,14 +449,14 @@ class BrowseHandler(tornado.web.RequestHandler):
                 except:
                     pass
             airframe_data = get_airframe_data(db_data_gen.sys_autostart_id)
-            if airframe_data == None:
+            if airframe_data is None:
                 airframe = db_data_gen.sys_autostart_id
             else:
                 airframe = airframe_data['name']
 
-            flight_modes = ', '.join([ flight_modes_table[x][0]
-                    for x in db_data_gen.flight_modes if x in
-                    flight_modes_table])
+            flight_modes = ', '.join([flight_modes_table[x][0]
+                                      for x in db_data_gen.flight_modes if x in
+                                      flight_modes_table])
 
             m, s = divmod(db_data_gen.duration_s, 60)
             h, m = divmod(m, 60)
@@ -470,26 +481,25 @@ class BrowseHandler(tornado.web.RequestHandler):
 <td>{flight_modes}</td>
 </tr>
 """.format(log_id=log_id, counter=counter,
-                    date=log_date,
-                    description=description,
-                    rating=db_data.ratingStr(),
-                    wind_speed=db_data.windSpeedStr(),
-                    mav_type=db_data_gen.mav_type,
-                    airframe=airframe,
-                    hw=db_data_gen.sys_hw,
-                    sw=ver_sw,
-                    duration=duration_str,
-                    num_errors=db_data_gen.num_logged_errors,
-                    flight_modes=flight_modes
-                    )
+           date=log_date,
+           description=description,
+           rating=db_data.rating_str(),
+           wind_speed=db_data.wind_speed_str(),
+           mav_type=db_data_gen.mav_type,
+           airframe=airframe,
+           hw=db_data_gen.sys_hw,
+           sw=ver_sw,
+           duration=duration_str,
+           num_errors=db_data_gen.num_logged_errors,
+           flight_modes=flight_modes
+          )
             counter += 1
 
         cur.close()
         con.close()
 
-        template = env.get_template(BROWSE_TEMPLATE)
-        self.write(template.render(table_data = table_header + table_data +
-            table_footer))
+        template = _ENV.get_template(BROWSE_TEMPLATE)
+        self.write(template.render(table_data=table_header + table_data + table_footer))
 
 
 
@@ -498,8 +508,8 @@ class EditEntryHandler(tornado.web.RequestHandler):
 
     def get(self):
         log_id = cgi.escape(self.get_argument('log'))
-        action =  self.get_argument('action')
-        confirmed = self.get_argument('confirm', default = '0')
+        action = self.get_argument('action')
+        confirmed = self.get_argument('confirm', default='0')
         token = cgi.escape(self.get_argument('token'))
 
         if action == 'delete':
@@ -531,11 +541,12 @@ Click <a href="{delete_url}">here</a> to confirm and delete the log {log_id}.
         else:
             raise tornado.web.HTTPError(400, 'Invalid Parameter')
 
-        template = env.get_template(EDIT_TEMPLATE)
-        self.write(template.render(content = content))
+        template = _ENV.get_template(EDIT_TEMPLATE)
+        self.write(template.render(content=content))
 
 
-    def delete_log_entry(self, log_id, token):
+    @staticmethod
+    def delete_log_entry(log_id, token):
         """
         delete a log entry (DB & file), validate token first
 

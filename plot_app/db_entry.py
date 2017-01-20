@@ -1,10 +1,13 @@
+""" Database entry classes """
+
+import cgi # for html escaping
+
 from helper import get_log_filename
 
 from pyulog import *
 from pyulog.px4 import *
 
-import cgi # for html escaping
-
+#pylint: disable=missing-docstring, deprecated-method
 
 class DBData:
     """ simple class that contains information from the DB entry of a single
@@ -17,18 +20,18 @@ class DBData:
         self.rating = ''
         self.video_url = ''
 
-    def windSpeedStr(self):
-        return self.windSpeedStrStatic(self.wind_speed)
+    def wind_speed_str(self):
+        return self.wind_speed_str_static(self.wind_speed)
 
     @staticmethod
-    def windSpeedStrStatic(wind_speed):
+    def wind_speed_str_static(wind_speed):
         return {0: 'Calm', 5: 'Breeze', 8: 'Gale', 10: 'Storm'}.get(wind_speed, '')
 
-    def ratingStr(self):
-        return self.ratingStrStatic(self.rating)
+    def rating_str(self):
+        return self.rating_str_static(self.rating)
 
     @staticmethod
-    def ratingStrStatic(rating):
+    def rating_str_static(rating):
         return {'crash_pilot': 'Crashed (Pilot error)',
                 'crash_sw_hw': 'Crashed (Software or Hardware issue)',
                 'unsatisfactory': 'Unsatisfactory',
@@ -53,7 +56,7 @@ class DBDataGenerated:
 
 
     @classmethod
-    def fromLogFile(cls, log_id):
+    def from_log_file(cls, log_id):
         """ initialize from a log file """
         obj = cls()
 
@@ -81,11 +84,11 @@ class DBDataGenerated:
                 obj.num_logged_warnings += 1
 
         try:
-            cur_dataset = [ elem for elem in ulog.data_list
-                    if elem.name == 'commander_state' and elem.multi_id == 0][0]
+            cur_dataset = [elem for elem in ulog.data_list
+                           if elem.name == 'commander_state' and elem.multi_id == 0][0]
             flight_mode_changes = cur_dataset.list_value_changes('main_state')
             obj.flight_modes = set([x[1] for x in flight_mode_changes])
-        except (KeyError,IndexError) as error:
+        except (KeyError, IndexError) as error:
             obj.flight_modes = set()
 
         return obj
