@@ -1,10 +1,18 @@
+""" Class for server-side dynamic data downsampling """
 
-import numpy as np
 from timeit import default_timer as timer
+import numpy as np
 from helper import print_timing
 
 
 class DynamicDownsample:
+    """ server-side dynamic data downsampling of bokeh time series plots
+        using numpy data sources.
+        Initializes the plot with a fixed number of samples per pixel and then
+        dynamically loads samples when zooming in or out based on density
+        thresholds.
+        Currently uses a very simple downsampling by picking every N-th sample
+    """
     def __init__(self, bokeh_plot, data_source, x_key):
         """ Initialize and setup callback
 
@@ -21,13 +29,13 @@ class DynamicDownsample:
 
         # parameters
         # minimum number of samples/pixel. Below that, we load new data
-        self.min_density = 2 #3
+        self.min_density = 2
         # density on startup: density used for initializing the plot. The
         # smaller this is, the less data needs to be loaded on page load (this
         # must still be >= min_density).
         self.startup_density = 3
         # when loading new data, number of samples/pixel is set to this value
-        self.init_density = 5 #6
+        self.init_density = 5
         # when loading new data, add a percentage of data on both sides
         self.range_margin = 0.2
 
@@ -40,7 +48,7 @@ class DynamicDownsample:
 
         # first downsampling
         self.downsample(self.cur_data, self.bokeh_plot.plot_width *
-                self.startup_density)
+                        self.startup_density)
         self.data_source.data = self.cur_data
 
         # register the callbacks
@@ -49,6 +57,7 @@ class DynamicDownsample:
 
 
     def x_range_change_cb(self, attr, old, new):
+        """ bokeh server-side callback when plot x-range changes (zooming) """
         cb_start_time = timer()
 
         new_range = [self.bokeh_plot.x_range.start, self.bokeh_plot.x_range.end]
@@ -67,7 +76,7 @@ class DynamicDownsample:
         visible_points = ((new_range[0] < cur_x) & (cur_x < new_range[1])).sum()
         if visible_points / plot_width < self.min_density:
             visible_points_all_data = ((new_range[0] < init_x) & (init_x < new_range[1])).sum()
-            if (visible_points_all_data > visible_points):
+            if visible_points_all_data > visible_points:
                 need_update = True
             # else: reached maximum zoom level
 
