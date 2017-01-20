@@ -1,4 +1,5 @@
 #! /usr/bin/env python3
+""" Script to run the bokeh server """
 
 from __future__ import absolute_import
 from __future__ import print_function
@@ -9,33 +10,36 @@ import sys
 
 from bokeh.application import Application
 from bokeh.server.server import Server
-from bokeh.application.handlers import ScriptHandler, DirectoryHandler, NotebookHandler
+from bokeh.application.handlers import DirectoryHandler
 # this is needed for the following imports
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'plot_app'))
 from plot_app.helper import set_log_id_is_filename
 from tornado_handlers import DownloadHandler, UploadHandler, BrowseHandler, \
     EditEntryHandler
 
+#pylint: disable=invalid-name
 
 parser = argparse.ArgumentParser(description='Start bokeh Server')
 
 parser.add_argument('-s', '--show', dest='show', action='store_true',
-        help='Open browser on startup')
+                    help='Open browser on startup')
 parser.add_argument('-f', '--file', metavar='file.ulg', action='store',
-        help='Directly show an ULog file, only for local use (implies -s)', default=None)
+                    help='Directly show an ULog file, only for local use (implies -s)',
+                    default=None)
 parser.add_argument('--num-procs', dest='numprocs', type=int, action='store',
-        help='Number of worker processes. Default to 1. 0 will autodetect number of cores',
-        default=1)
+                    help="""Number of worker processes. Default to 1.
+                    0 will autodetect number of cores""",
+                    default=1)
 parser.add_argument('--port', type=int, action='store',
-        help='Port to listen on', default=None)
+                    help='Port to listen on', default=None)
 parser.add_argument('--address', action='store',
-        help='Network address to listen to', default=None)
+                    help='Network address to listen to', default=None)
 parser.add_argument('--host', action='append', type=str, metavar='HOST[:PORT]',
-        help="""Hosts whitelist, that must match the Host header in new
-        requests. It has the form <host>[:<port>]. If no port is specified, 80
-        is used. You should use the DNS name of the public endpoint here. \'*\'
-        matches all hosts (for testing only) (default=localhost)""",
-        default=None)
+                    help="""Hosts whitelist, that must match the Host header in new
+                    requests. It has the form <host>[:<port>]. If no port is specified, 80
+                    is used. You should use the DNS name of the public endpoint here. \'*\'
+                    matches all hosts (for testing only) (default=localhost)""",
+                    default=None)
 
 args = parser.parse_args()
 
@@ -73,6 +77,7 @@ server = Server(applications, extra_patterns=extra_patterns, **server_kwargs)
 if args.show:
     # we have to defer opening in browser until we start up the server
     def show_callback():
+        """ callback to open a browser window after server is fully initialized"""
         if show_ulog_file:
             server.show('/plot_app?log='+ulog_file)
         else:
