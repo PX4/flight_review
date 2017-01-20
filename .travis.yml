@@ -1,0 +1,12 @@
+language: python
+python:
+  - "3.4"
+  - "3.5"
+# command to install dependencies
+install:
+    - "sudo apt-get install sqlite3"
+    - "pip install bokeh jinja2 pyulog"
+    - "pip install pylint"
+# command to run code checks
+script: ./run_pylint.sh
+
