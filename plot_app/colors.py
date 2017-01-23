@@ -16,6 +16,7 @@ def get_N_colors(N, s=0.8, v=0.9):
 def HTML_color_to_RGB(html_color):
     """ convert a HTML string color (eg. '#4422aa') into an RGB list (range 0-255)
     """
-    if html_color[0] == '#': html_color = html_color[2:]
+    if html_color[0] == '#': html_color = html_color[1:]
     r, g, b = html_color[:2], html_color[2:4], html_color[4:]
     return [int(n, 16) for n in (r, g, b)]
+
