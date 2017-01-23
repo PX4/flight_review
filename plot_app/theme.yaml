@@ -17,7 +17,7 @@ attrs:
   Legend:
     border_line_width: 3
     border_line_color: null
-    background_fill_alpha: 0.6
+    background_fill_alpha: 0.8
     background_fill_color: '#ffffff'
 
 #  Plot:
