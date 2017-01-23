@@ -271,9 +271,15 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
     if data_plot.dataset:
         max_channels = np.amax(data_plot.dataset.data['channel_count'])
         if max_channels < num_rc_channels: num_rc_channels = max_channels
+    legends = []
+    for i in range(num_rc_channels):
+        channel_names = px4_ulog.get_configured_rc_input_names(i)
+        if channel_names is None:
+            legends.append('Channel '+str(i))
+        else:
+            legends.append('Channel '+str(i)+' ('+', '.join(channel_names)+')')
     data_plot.add_graph(['channels['+str(i)+']' for i in range(num_rc_channels)],
-                        colors8[0:num_rc_channels],
-                        ['Channel '+str(i) for i in range(num_rc_channels)])
+                        colors8[0:num_rc_channels], legends)
     plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes)
 
     if data_plot.finalize() is not None: plots.append(data_plot)
