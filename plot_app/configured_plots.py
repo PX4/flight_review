@@ -112,14 +112,14 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
     # GPS map
 #    gps_plots = []
 #    gps_titles = []
-#    plot = plot_map(data, plot_config, map_type='google', api_key =
+#    plot = plot_map(ulog, plot_config, map_type='google', api_key =
 #            get_google_maps_api_key(), setpoints=False)
 #    plot = None
 #    if plot is not None:
 #        gps_plots.append(plot)
 #        gps_titles.append('GPS Map: Satellite')
 #
-#    plot = plot_map(data, plot_config, map_type='plain', setpoints=True)
+#    plot = plot_map(ulog, plot_config, map_type='plain', setpoints=True)
 #    if plot is not None:
 #        gps_plots.append(plot)
 #        gps_titles.append('GPS Map: Plain')
@@ -155,7 +155,7 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
     data_plot.change_dataset('vehicle_local_position_groundtruth')
     data_plot.add_graph('y', 'x', color_gray, 'Groundtruth')
     # GPS + position setpoints
-    plot_map(data, plot_config, map_type='plain', setpoints=True,
+    plot_map(ulog, plot_config, map_type='plain', setpoints=True,
              bokeh_plot=data_plot.bokeh_plot)
     if data_plot.finalize() is not None:
         plots.append(data_plot.bokeh_plot)

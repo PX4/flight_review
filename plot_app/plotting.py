@@ -130,7 +130,7 @@ def plot_set_equal_aspect_ratio(p, x, y, zoom_out_factor=1.3, min_range=5):
 
 # GPS map
 
-def plot_map(data, config, map_type='plain', api_key=None, setpoints=False,
+def plot_map(ulog, config, map_type='plain', api_key=None, setpoints=False,
              bokeh_plot=None):
     """
     Do a 2D position plot
@@ -143,8 +143,7 @@ def plot_map(data, config, map_type='plain', api_key=None, setpoints=False,
     """
 
     try:
-        cur_dataset = [elem for elem in data
-                       if elem.name == 'vehicle_gps_position' and elem.multi_id == 0][0]
+        cur_dataset = ulog.get_dataset('vehicle_gps_position')
         t = cur_dataset.data['timestamp']
         indices = cur_dataset.data['fix_type'] > 2 # use only data with a fix
         t = t[indices]
@@ -240,8 +239,7 @@ def plot_map(data, config, map_type='plain', api_key=None, setpoints=False,
 
             # try to get the anchor position from the dataset
             try:
-                local_pos_data = [elem for elem in data
-                                  if elem.name == 'vehicle_local_position' and elem.multi_id == 0][0]
+                local_pos_data = ulog.get_dataset('vehicle_local_position')
                 indices = np.nonzero(local_pos_data.data['ref_timestamp'])
                 if len(indices[0]) > 0:
                     anchor_lat = np.deg2rad(local_pos_data.data['ref_lat'][indices[0][0]])
@@ -271,8 +269,7 @@ def plot_map(data, config, map_type='plain', api_key=None, setpoints=False,
         if setpoints:
             # draw (mission) setpoint as circles
             try:
-                cur_dataset = [elem for elem in data
-                               if elem.name == 'position_setpoint_triplet' and elem.multi_id == 0][0]
+                cur_dataset = ulog.get_dataset('position_setpoint_triplet')
                 lon = cur_dataset.data['current.lon'] # degrees
                 lat = cur_dataset.data['current.lat']
 

@@ -85,8 +85,7 @@ if error_message == '':
 
     # initialize flight mode changes
     try:
-        cur_dataset = [elem for elem in ulog.data_list
-                       if elem.name == 'commander_state' and elem.multi_id == 0][0]
+        cur_dataset = ulog.get_dataset('commander_state')
         flight_mode_changes = cur_dataset.list_value_changes('main_state')
         flight_mode_changes.append((ulog.last_timestamp, -1))
     except (KeyError, IndexError) as error:

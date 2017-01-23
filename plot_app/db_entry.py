@@ -84,8 +84,7 @@ class DBDataGenerated:
                 obj.num_logged_warnings += 1
 
         try:
-            cur_dataset = [elem for elem in ulog.data_list
-                           if elem.name == 'commander_state' and elem.multi_id == 0][0]
+            cur_dataset = ulog.get_dataset('commander_state')
             flight_mode_changes = cur_dataset.list_value_changes('main_state')
             obj.flight_modes = set([x[1] for x in flight_mode_changes])
         except (KeyError, IndexError) as error:
