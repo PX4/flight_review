@@ -280,7 +280,16 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
 
 
 
-    # actuators
+    # actuator controls 0
+    data_plot = DataPlot(data, plot_config, 'actuator_controls_0',
+                         y_start=0, title='Actuator Controls 0', plot_height='small',
+                         changed_params=changed_params)
+    data_plot.add_graph(['control[0]', 'control[1]', 'control[2]', 'control[3]'],
+                        colors8[0:4], ['Roll', 'Pitch', 'Yaw', 'Thrust'])
+    plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes)
+    if data_plot.finalize() is not None: plots.append(data_plot)
+
+    # actuator outputs
     data_plot = DataPlot(data, plot_config, 'actuator_outputs',
                          y_start=0, title='Actuators', plot_height='small',
                          changed_params=changed_params)
