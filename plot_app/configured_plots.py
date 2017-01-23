@@ -291,7 +291,7 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
 
     # actuator outputs
     data_plot = DataPlot(data, plot_config, 'actuator_outputs',
-                         y_start=0, title='Actuators', plot_height='small',
+                         y_start=0, title='Actuator Outputs', plot_height='small',
                          changed_params=changed_params)
     num_actuator_outputs = 8
     if data_plot.dataset:

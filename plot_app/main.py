@@ -29,7 +29,7 @@ def load_data(file_name):
                   'sensor_combined', 'cpuload', 'commander_state',
                   'vehicle_gps_position', 'vehicle_local_position',
                   'vehicle_local_position_setpoint',
-                  'vehicle_global_position', 'actuator_controls', 'actuator_controls_0',
+                  'vehicle_global_position', 'actuator_controls_0',
                   'actuator_controls_1', 'actuator_outputs',
                   'vehicle_attitude', 'vehicle_attitude_setpoint',
                   'vehicle_rates_setpoint', 'rc_channels', 'input_rc',
