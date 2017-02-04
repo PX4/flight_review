@@ -81,7 +81,7 @@ def _send_email(destination, subject, content):
         sender = email_config['sender']
         msg['From'] = sender # some SMTP servers will do this automatically
 
-        conn = SMTP(email_config['SMTPserver'])
+        conn = SMTP(email_config['smtpserver'])
         conn.set_debuglevel(False)
         conn.login(email_config['user_name'], email_config['password'])
         try:

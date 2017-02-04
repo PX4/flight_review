@@ -1,38 +1,39 @@
 """ configuration variables """
 
+import configparser
 import os
 from colors import get_N_colors
 
+
 #pylint: disable=bad-whitespace, invalid-name
 
-email_config = dict(
-    SMTPserver = "smtp.my_email_domain.net", # This will use SSL, with port 465
-    sender     = "me@my_email_domain.net",
+# load the config
+_conf = configparser.ConfigParser()
+_cur_dir = os.path.dirname(os.path.realpath(__file__))
+_conf.read_file(open(os.path.join(_cur_dir, '../config_default.ini')))
+_user_config_file = os.path.join(_cur_dir, '../config_user.ini')
+if os.path.exists(_user_config_file):
+    _conf.read_file(open(_user_config_file))
 
-    user_name  = "USER_NAME_FOR_INTERNET_SERVICE_PROVIDER",
-    password   = "PASSWORD_INTERNET_SERVICE_PROVIDER",
-    )
+email_config = dict(_conf.items('email'))
 
-__DOMAIN_NAME = "localhost:5006" # web site url = eg. 'http://' + __DOMAIN_NAME + '/upload'
+email_notifications_config = dict(_conf.items('email_notifications'))
+email_notifications_config['public_flightreport'] = \
+    [ s.strip() for s in email_notifications_config['public_flightreport'].split(',')]
 
+__DOMAIN_NAME = _conf.get('general', 'domain_name')
+__AIRFRAMES_URL = _conf.get('general', 'airframes_url')
+__GMAPS_API_KEY = _conf.get('general', 'google_maps_api_key')
 
-__STORAGE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../data')
+__STORAGE_PATH = _conf.get('general', 'storage_path')
+if not os.path.isabs(__STORAGE_PATH):
+    __STORAGE_PATH = os.path.join(_cur_dir, '..', __STORAGE_PATH)
 
 __LOG_FILE_PATH = os.path.join(__STORAGE_PATH, 'log_files')
 __DB_FILENAME = os.path.join(__STORAGE_PATH, 'logs.sqlite')
 __CACHE_FILE_PATH = os.path.join(__STORAGE_PATH, 'cache')
 __AIRFRAMES_FILENAME = os.path.join(__CACHE_FILE_PATH, 'airframes.xml')
 
-__AIRFRAMES_URL = "http://px4-travis.s3.amazonaws.com/Firmware/master/airframes.xml"
-
-# https://developers.google.com/maps/documentation/javascript/get-api-key
-__GMAPS_API_KEY = ""
-
-
-# notification emails to send on uploading new logs
-email_notifications_config = dict(
-    public_flightreport = [] # list of email addresses
-    )
 
 # general configuration variables for plotting
 plot_width = 840
