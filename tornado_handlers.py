@@ -345,11 +345,13 @@ def generate_db_data_from_log_file(log_id, db_connection=None):
 
     db_data_gen = DBDataGenerated.from_log_file(log_id)
 
+    need_closing = False
     if db_connection is None:
         db_connection = sqlite3.connect(get_db_filename())
+        need_closing = True
 
+    db_cursor = db_connection.cursor()
     try:
-        db_cursor = db_connection.cursor()
         db_cursor.execute(
             'insert into LogsGenerated (Id, Duration, '
             'Mavtype, Estimator, AutostartId, Hardware, '
@@ -367,6 +369,11 @@ def generate_db_data_from_log_file(log_id, db_connection=None):
     except sqlite3.IntegrityError:
         # someone else already inserted it (race). just ignore it
         pass
+
+    db_cursor.close()
+    if need_closing:
+        db_connection.close()
+
     return db_data_gen
 
 
