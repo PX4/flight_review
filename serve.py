@@ -13,7 +13,7 @@ from bokeh.server.server import Server
 from bokeh.application.handlers import DirectoryHandler
 # this is needed for the following imports
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'plot_app'))
-from plot_app.helper import set_log_id_is_filename
+from helper import set_log_id_is_filename
 from tornado_handlers import DownloadHandler, UploadHandler, BrowseHandler, \
     EditEntryHandler
 

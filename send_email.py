@@ -12,7 +12,7 @@ from email.mime.text import MIMEText
 
 # this is needed for the following imports
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'plot_app'))
-from plot_app.config import *
+from config import *
 
 
 def send_notification_email(email_adress, plot_url, log_description,

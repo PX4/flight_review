@@ -18,9 +18,9 @@ from pyulog import *
 from pyulog.ulog2kml import convert_ulog2kml
 # this is needed for the following imports
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'plot_app'))
-from plot_app.config import *
-from plot_app.db_entry import *
-from plot_app.helper import get_log_filename, validate_log_id, \
+from config import *
+from db_entry import *
+from helper import get_log_filename, validate_log_id, \
     flight_modes_table, get_airframe_data, html_long_word_force_break, \
     validate_url
 from multipart_streamer import MultiPartStreamer
