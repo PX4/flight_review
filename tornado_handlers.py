@@ -22,7 +22,7 @@ from config import *
 from db_entry import *
 from helper import get_log_filename, validate_log_id, \
     flight_modes_table, get_airframe_data, html_long_word_force_break, \
-    validate_url
+    validate_url, load_ulog_file
 from multipart_streamer import MultiPartStreamer
 from send_email import send_notification_email, send_flightreport_email
 
@@ -243,7 +243,7 @@ class DownloadHandler(tornado.web.RequestHandler):
             raise tornado.web.HTTPError(404, 'Log not found')
 
         if download_type == '1': # download the parameters
-            ulog = ULog(log_file_name, [])
+            ulog = load_ulog_file(log_file_name)
             param_keys = sorted(ulog.initial_parameters.keys())
 
             self.set_header("Content-Type", "text/plain")

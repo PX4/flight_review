@@ -2,7 +2,7 @@
 
 import cgi # for html escaping
 
-from helper import get_log_filename
+from helper import get_log_filename, load_ulog_file
 
 from pyulog import *
 from pyulog.px4 import *
@@ -61,7 +61,7 @@ class DBDataGenerated:
         obj = cls()
 
         ulog_file_name = get_log_filename(log_id)
-        ulog = ULog(ulog_file_name)
+        ulog = load_ulog_file(ulog_file_name)
         px4_ulog = PX4ULog(ulog)
 
         # extract information

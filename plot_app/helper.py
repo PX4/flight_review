@@ -3,14 +3,18 @@ from timeit import default_timer as timer
 import time
 import re
 import os
+from functools import lru_cache
 from urllib.request import urlretrieve
 import xml.etree.ElementTree # airframe parsing
 import shutil
 import uuid
 import numpy as np
-from config import get_log_filepath, get_airframes_filename, get_airframes_url
+from config import get_log_filepath, get_airframes_filename, get_airframes_url, \
+                   get_log_cache_size
 
 #pylint: disable=line-too-long, global-variable-not-assigned,invalid-name
+from pyulog import *
+from pyulog.px4 import *
 
 __DO_PRINT_TIMING = False
 
@@ -198,3 +202,38 @@ def validate_url(url):
         r'(?::\d+)?' # optional port
         r'(?:/?|[/?]\S+)$', re.IGNORECASE)
     return regex.match(url) is not None
+
+
+@lru_cache(maxsize=get_log_cache_size())
+def load_ulog_file(file_name):
+    """ load an ULog file
+    :return: ULog object
+    """
+    # The reason to put this method into helper is that the main module gets
+    # (re)loaded on each page request. Thus the caching would not work there.
+
+    # load only the messages we really need
+    msg_filter = ['battery_status', 'distance_sensor', 'estimator_status',
+                  'sensor_combined', 'cpuload', 'commander_state',
+                  'vehicle_gps_position', 'vehicle_local_position',
+                  'vehicle_local_position_setpoint',
+                  'vehicle_global_position', 'actuator_controls_0',
+                  'actuator_controls_1', 'actuator_outputs',
+                  'vehicle_attitude', 'vehicle_attitude_setpoint',
+                  'vehicle_rates_setpoint', 'rc_channels', 'input_rc',
+                  'position_setpoint_triplet', 'vehicle_attitude_groundtruth',
+                  'vehicle_local_position_groundtruth']
+    ulog = ULog(file_name, msg_filter)
+
+    # filter messages with timestamp = 0 (these are invalid).
+    # The better way is not to publish such messages in the first place, and fix
+    # the code instead (it goes against the monotonicity requirement of ulog).
+    # So we display the values such that the problem becomes visible.
+#    for d in ulog.data_list:
+#        t = d.data['timestamp']
+#        non_zero_indices = t != 0
+#        if not np.all(non_zero_indices):
+#            d.data = np.compress(non_zero_indices, d.data, axis=0)
+
+    return ulog
+

@@ -24,6 +24,7 @@ email_notifications_config['public_flightreport'] = \
 __DOMAIN_NAME = _conf.get('general', 'domain_name')
 __AIRFRAMES_URL = _conf.get('general', 'airframes_url')
 __GMAPS_API_KEY = _conf.get('general', 'google_maps_api_key')
+__LOG_CACHE_SIZE = int(_conf.get('general', 'log_cache_size'))
 
 __STORAGE_PATH = _conf.get('general', 'storage_path')
 if not os.path.isabs(__STORAGE_PATH):
@@ -89,3 +90,7 @@ def get_airframes_url():
 def get_google_maps_api_key():
     """ get Google maps API key """
     return __GMAPS_API_KEY
+
+def get_log_cache_size():
+    """ get maximum number of cached logs in RAM """
+    return __LOG_CACHE_SIZE

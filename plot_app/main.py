@@ -8,9 +8,6 @@ from bokeh.io import curdoc
 from bokeh.layouts import column, widgetbox
 from bokeh.models.widgets import Div
 
-from pyulog import *
-from pyulog.px4 import *
-
 from helper import *
 from config import *
 from colors import HTML_color_to_RGB
@@ -20,38 +17,6 @@ from configured_plots import generate_plots
 #pylint: disable=invalid-name, redefined-outer-name
 
 start_time = timer()
-
-
-def load_data(file_name):
-    """ load an ULog file """
-    # load only the messages we really need
-    msg_filter = ['battery_status', 'distance_sensor', 'estimator_status',
-                  'sensor_combined', 'cpuload', 'commander_state',
-                  'vehicle_gps_position', 'vehicle_local_position',
-                  'vehicle_local_position_setpoint',
-                  'vehicle_global_position', 'actuator_controls_0',
-                  'actuator_controls_1', 'actuator_outputs',
-                  'vehicle_attitude', 'vehicle_attitude_setpoint',
-                  'vehicle_rates_setpoint', 'rc_channels', 'input_rc',
-                  'position_setpoint_triplet', 'vehicle_attitude_groundtruth',
-                  'vehicle_local_position_groundtruth']
-    ulog = ULog(file_name, msg_filter)
-    px4_ulog = PX4ULog(ulog)
-    px4_ulog.add_roll_pitch_yaw()
-
-    # filter messages with timestamp = 0 (these are invalid).
-    # The better way is not to publish such messages in the first place, and fix
-    # the code instead (it goes against the monotonicity requirement of ulog).
-    # So we display the values such that the problem becomes visible.
-#    for d in ulog.data_list:
-#        t = d.data['timestamp']
-#        non_zero_indices = t != 0
-#        if not np.all(non_zero_indices):
-#            d.data = np.compress(non_zero_indices, d.data, axis=0)
-
-    data = ulog.data_list
-    return ulog, px4_ulog
-
 
 ulog_file_name = 'test.ulg'
 
@@ -71,7 +36,9 @@ try:
             print('GET[log]={}'.format(log_id))
             ulog_file_name = get_log_filename(log_id)
 
-    ulog, px4_ulog = load_data(ulog_file_name)
+    ulog = load_ulog_file(ulog_file_name)
+    px4_ulog = PX4ULog(ulog)
+    px4_ulog.add_roll_pitch_yaw()
 except:
     print("Error loading file:", sys.exc_info()[0], sys.exc_info()[1])
     error_message = 'An Error occured when trying to read the file.'
