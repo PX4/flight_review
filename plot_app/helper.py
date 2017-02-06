@@ -10,18 +10,16 @@ import shutil
 import uuid
 import numpy as np
 from config import get_log_filepath, get_airframes_filename, get_airframes_url, \
-                   get_log_cache_size
+                   get_log_cache_size, debug_print_timing
 
-#pylint: disable=line-too-long, global-variable-not-assigned,invalid-name
 from pyulog import *
 from pyulog.px4 import *
 
-__DO_PRINT_TIMING = False
+#pylint: disable=line-too-long, global-variable-not-assigned,invalid-name
 
 def print_timing(name, start_time):
     """ for debugging: print elapsed time, with start_time = timer(). """
-    global __DO_PRINT_TIMING
-    if __DO_PRINT_TIMING:
+    if debug_print_timing():
         print(name + " took: {:.3} s".format(timer() - start_time))
 
 

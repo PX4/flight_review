@@ -35,6 +35,7 @@ __DB_FILENAME = os.path.join(__STORAGE_PATH, 'logs.sqlite')
 __CACHE_FILE_PATH = os.path.join(__STORAGE_PATH, 'cache')
 __AIRFRAMES_FILENAME = os.path.join(__CACHE_FILE_PATH, 'airframes.xml')
 
+__PRINT_TIMING = int(_conf.get('debug', 'print_timing'))
 
 # general configuration variables for plotting
 plot_width = 840
@@ -94,3 +95,7 @@ def get_google_maps_api_key():
 def get_log_cache_size():
     """ get maximum number of cached logs in RAM """
     return __LOG_CACHE_SIZE
+
+def debug_print_timing():
+    """ print timing information? """
+    return __PRINT_TIMING == 1
