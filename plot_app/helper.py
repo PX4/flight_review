@@ -22,24 +22,17 @@ def print_timing(name, start_time):
 
 
 # the following is for using the plotting app locally
-__LOG_ID_IS_FILENAME_TEST_FILE = '/tmp/.plotting_app_log_id_is_filename'
+__log_id_is_filename = {'enable': False}
 def set_log_id_is_filename(enable=False):
     """ treat the log_id as filename instead of id if enable=True.
 
     WARNING: this disables log id validation, so that all log id's are valid.
     Don't use it on a live server! """
 
-    # this is ugly but there seems to be no better way to pass some variable
-    # from the serve.py script to the plotting application
-    if enable:
-        with open(__LOG_ID_IS_FILENAME_TEST_FILE, 'w') as file_handle:
-            file_handle.write('enable')
-    else:
-        if os.path.exists(__LOG_ID_IS_FILENAME_TEST_FILE):
-            os.unlink(__LOG_ID_IS_FILENAME_TEST_FILE)
+    __log_id_is_filename['enable'] = enable
 
 def _check_log_id_is_filename():
-    return os.path.exists(__LOG_ID_IS_FILENAME_TEST_FILE)
+    return __log_id_is_filename['enable']
 
 
 
