@@ -382,14 +382,19 @@ class DataPlot:
             data_set = {}
             data_set['timestamp'] = self._cur_dataset.data['timestamp']
             field_names_expanded = self._expand_field_names(field_names, data_set)
-            data_source = ColumnDataSource(data=data_set)
+
+            if use_downsample:
+                # we directly pass the data_set, downsample and then create the
+                # ColumnDataSource object, which is much faster than
+                # first creating ColumnDataSource, and then downsample
+                downsample = DynamicDownsample(p, data_set, 'timestamp')
+                data_source = downsample.data_source
+            else:
+                data_source = ColumnDataSource(data=data_set)
 
             for field_name, color, legend in zip(field_names_expanded, colors, legends):
                 p.line(x='timestamp', y=field_name, source=data_source,
                        legend=legend, line_width=2, line_color=color)
-
-            if use_downsample:
-                DynamicDownsample(p, data_source, 'timestamp')
 
         except (KeyError, IndexError, ValueError) as error:
             print(type(error), "("+self._data_name+"):", error)

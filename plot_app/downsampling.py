@@ -3,6 +3,7 @@
 from timeit import default_timer as timer
 import numpy as np
 from helper import print_timing
+from bokeh.models import ColumnDataSource
 
 
 class DynamicDownsample:
@@ -13,18 +14,18 @@ class DynamicDownsample:
         thresholds.
         Currently uses a very simple downsampling by picking every N-th sample
     """
-    def __init__(self, bokeh_plot, data_source, x_key):
+    def __init__(self, bokeh_plot, data, x_key):
         """ Initialize and setup callback
 
         Args:
             bokeh_plot (bokeh.plotting.figure) : plot for downsampling
-            data_source (bokeh.models.ColumnDataSource) : data source of the
-                plots, contains all samples. Arrays are expected to be numpy
-            x_key (str): key for x axis in data_source
+            data (dict) : data source of the plots, contains all samples. Arrays
+                          are expected to be numpy
+            x_key (str): key for x axis in data
         """
         self.bokeh_plot = bokeh_plot
         self.x_key = x_key
-        self.data_source = data_source
+        self.data = data
         self.last_step_size = 1
 
         # parameters
@@ -42,14 +43,14 @@ class DynamicDownsample:
         # create a copy of the initial data
         self.init_data = {}
         self.cur_data = {}
-        for k in data_source.data:
-            self.init_data[k] = data_source.data[k]
-            self.cur_data[k] = data_source.data[k]
+        for k in data:
+            self.init_data[k] = data[k]
+            self.cur_data[k] = data[k]
 
         # first downsampling
         self.downsample(self.cur_data, self.bokeh_plot.plot_width *
                         self.startup_density)
-        self.data_source.data = self.cur_data
+        self.data_source = ColumnDataSource(data=self.cur_data)
 
         # register the callbacks
         bokeh_plot.x_range.on_change('start', self.x_range_change_cb)
