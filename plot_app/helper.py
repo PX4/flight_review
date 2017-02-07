@@ -235,3 +235,7 @@ def load_ulog_file(file_name):
 
     return ulog
 
+def print_cache_info():
+    """ print information about the ulog cache """
+    print(load_ulog_file.cache_info())
+
