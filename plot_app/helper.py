@@ -239,3 +239,6 @@ def print_cache_info():
     """ print information about the ulog cache """
     print(load_ulog_file.cache_info())
 
+def clear_ulog_cache():
+    """ clear/invalidate the ulog cache """
+    load_ulog_file.cache_clear()

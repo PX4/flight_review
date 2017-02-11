@@ -22,7 +22,7 @@ from config import *
 from db_entry import *
 from helper import get_log_filename, validate_log_id, \
     flight_modes_table, get_airframe_data, html_long_word_force_break, \
-    validate_url, load_ulog_file
+    validate_url, load_ulog_file, clear_ulog_cache
 from multipart_streamer import MultiPartStreamer
 from send_email import send_notification_email, send_flightreport_email
 
@@ -568,6 +568,12 @@ Click <a href="{delete_url}">here</a> to confirm and delete the log {log_id}.
         if token != db_tuple[0]: # validate token
             return False
 
+        # kml file
+        kml_path = get_kml_filepath()
+        kml_file_name = os.path.join(kml_path, log_id.replace('/', '.')+'.kml')
+        if os.path.exists(kml_file_name):
+            os.unlink(kml_file_name)
+
         log_file_name = get_log_filename(log_id)
         print('deleting log entry {} and file {}'.format(log_id, log_file_name))
         os.unlink(log_file_name)
@@ -576,5 +582,8 @@ Click <a href="{delete_url}">here</a> to confirm and delete the log {log_id}.
         con.commit()
         cur.close()
         con.close()
+
+        # need to clear the cache as well
+        clear_ulog_cache()
 
         return True
