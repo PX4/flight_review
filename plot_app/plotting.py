@@ -20,8 +20,11 @@ TOOLS = "pan,wheel_zoom,box_zoom,reset,save"
 ACTIVE_SCROLL_TOOLS = "wheel_zoom"
 
 
-def plot_dropouts(p, dropouts, show_hover_tooltips=False):
-    """ plot small rectangles that stick at the bottom of the plot """
+def plot_dropouts(p, dropouts, min_value, show_hover_tooltips=False):
+    """ plot small rectangles with given min_value offset """
+
+    if len(dropouts) == 0:
+        return
 
     dropout_dict = {'left': [], 'right': [], 'top': [], 'bottom': [], 'duration' : []}
     for dropout in dropouts:
@@ -29,28 +32,14 @@ def plot_dropouts(p, dropouts, show_hover_tooltips=False):
         d_end = dropout.timestamp + dropout.duration * 1000
         dropout_dict['left'].append(d_start)
         dropout_dict['right'].append(d_end)
-        dropout_dict['top'].append(0)
-        dropout_dict['bottom'].append(0)
+        dropout_dict['top'].append(min_value + dropout.duration * 1000)
+        dropout_dict['bottom'].append(min_value)
         dropout_dict['duration'].append(dropout.duration)
 
     source = ColumnDataSource(dropout_dict)
-    # fixate the top & bottom positions within the graph
-    jscode = """
-        var data = source.get('data');
-        var start = cb_obj.get('start');
-        var end = cb_obj.get('end');
-        data_start = start + (end - start) * 0.025
-        for (var i = 0; i < data['top'].length; ++i) {
-            data['top'][i] = data_start + (end - start) * 0.015;
-            data['bottom'][i] = data_start;
-        }
-        source.trigger('change');
-    """
-
-    p.y_range.callback = CustomJS(args=dict(source=source), code=jscode)
     quad = p.quad(left='left', right='right', top='top', bottom='bottom', source=source,
-                  line_color='black', line_alpha=0.4, fill_color='black',
-                  fill_alpha=0.3)
+                  line_color='black', line_alpha=0.3, fill_color='black',
+                  fill_alpha=0.15, legend='logging dropout')
 
     if show_hover_tooltips:
         p.add_tools(HoverTool(tooltips=[('dropout', '@duration ms')],

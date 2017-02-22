@@ -440,14 +440,22 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
 
 
     # sampling: time difference
-    data_plot = DataPlot(data, plot_config, 'sensor_combined',
-                         y_start=0, y_axis_label='delta t (between 2 samples) [us]',
-                         title='Sampling Regularity of Sensor Data', plot_height='small',
-                         changed_params=changed_params)
-    data_plot.add_graph(
-        [lambda data: ('timediff', np.append(np.diff(data['timestamp']), 0))],
-        [colors3[2]], [None])
-    if data_plot.finalize() is not None: plots.append(data_plot)
+    try:
+        data_plot = DataPlot(data, plot_config, 'sensor_combined', y_start=0,
+                             y_axis_label='[us]',
+                             title='Sampling Regularity of Sensor Data', plot_height='small',
+                             changed_params=changed_params)
+        sensor_combined = ulog.get_dataset('sensor_combined').data
+        sampling_diff = np.diff(sensor_combined['timestamp'])
+        min_sampling_diff = np.amin(sampling_diff)
+
+        plot_dropouts(data_plot.bokeh_plot, ulog.dropouts, min_sampling_diff)
+
+        data_plot.add_graph([lambda data: ('timediff', np.append(sampling_diff, 0))],
+            [colors3[2]], ['delta t (between 2 samples)'])
+        if data_plot.finalize() is not None: plots.append(data_plot)
+    except:
+        pass
 
 
 
