@@ -59,6 +59,29 @@ with immediate feedback.
 - download CSV option?
 - ...
 
+
+### Implementation ###
+Reading ULog files is expensive and thus should be avoided if not really
+necessary. There are two mechanisms helping with that:
+- Loaded ULog files are kept in RAM using an LRU cache with configurable size
+  (when using the helper method). This works from different requests and
+  sessions and from all source contexts.
+- There's a LogsGenerated DB table, which contains extracted data from ULog
+  for faster access.
+
+Tornado uses a single-threaded event loop. This means all operations should be
+non-blocking (see also http://www.tornadoweb.org/en/stable/guide/async.html).
+
+
+#### Notes about python imports ####
+Bokeh uses dynamic code loading and the `plot_app/main.py` gets loaded on each
+session (page load) to isolate requests. This also means we cannot use relative
+imports. We have to use `sys.path.append` to include modules in `plot_app` from
+the root directory (Eg `tornado_handlers.py`). Then to make sure the same module
+is only loaded once, we use `import xy` instead of `import plot_app.xy`.
+It's useful to look at `print('\n'.join(sys.modules.keys()))` to check this.
+
+
 #### Contributing ####
 Contributions are welcome! Just open a pull request with detailed description
 why the changes are needed, or open an issue for bugs, feature requests, etc...
