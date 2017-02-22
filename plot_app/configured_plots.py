@@ -452,7 +452,7 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
         plot_dropouts(data_plot.bokeh_plot, ulog.dropouts, min_sampling_diff)
 
         data_plot.add_graph([lambda data: ('timediff', np.append(sampling_diff, 0))],
-            [colors3[2]], ['delta t (between 2 samples)'])
+                            [colors3[2]], ['delta t (between 2 samples)'])
         if data_plot.finalize() is not None: plots.append(data_plot)
     except:
         pass
