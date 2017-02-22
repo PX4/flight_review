@@ -107,12 +107,12 @@ def get_airframe_data(airframe_id):
 
 flight_modes_table = {
     0: ('Manual', '#cc0000'), # red
-    1: ('Altitude', '#222222'), # gray
+    1: ('Altitude', '#eecc00'), # yellow
     2: ('Position', '#00cc33'), # green
     6: ('Acro', '#66cc00'), # olive
     8: ('Stabilized', '#0033cc'), # dark blue
     7: ('Offboard', '#00cccc'), # light blue
-    9: ('Rattitude', '#cc9900'), # orange
+    9: ('Rattitude', '#ee9900'), # orange
 
     3: ('Mission', '#6600cc'), # purple
     4: ('Loiter', '#6600cc'), # purple
