@@ -261,6 +261,26 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
+    # Airspeed vs Ground speed
+    try:
+        control_state = ulog.get_dataset('control_state').data
+        # only plot if valid airspeed
+        if np.amax(control_state['airspeed_valid']) == 1:
+            data_plot = DataPlot(data, plot_config, 'vehicle_global_position',
+                                 y_axis_label='[m/s]', title='Airspeed',
+                                 plot_height='small', changed_params=changed_params)
+            data_plot.add_graph([lambda data: ('groundspeed_estimated',
+                                               np.sqrt(data['vel_n']**2 + data['vel_e']**2))],
+                                colors3[2:3], ['Ground Speed Estimated'])
+            data_plot.change_dataset('control_state')
+            data_plot.add_graph(['airspeed'], colors2[0:1], ['Airspeed Estimated'])
+
+            plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes)
+
+            if data_plot.finalize() is not None: plots.append(data_plot)
+    except:
+        pass
+
 
     # raw radio control inputs
     data_plot = DataPlot(data, plot_config, 'rc_channels',
