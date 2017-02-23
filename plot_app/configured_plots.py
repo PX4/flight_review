@@ -260,6 +260,55 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
+    # Vision position (only if topic found)
+    if any(elem.name == 'vehicle_vision_position' for elem in data):
+        data_plot = DataPlot(data, plot_config, 'vehicle_vision_position',
+                             y_axis_label='[m]', title='Vision Position',
+                             plot_height='small', changed_params=changed_params)
+        data_plot.add_graph(['x', 'y', 'z'], colors3, ['X', 'Y', 'Z'])
+        plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes)
+
+        data_plot.change_dataset('vehicle_local_position_groundtruth')
+        data_plot.add_graph(['x', 'y', 'z'], colors8[2:5],
+                            ['Groundtruth X', 'Groundtruth Y', 'Groundtruth Z'])
+
+        if data_plot.finalize() is not None: plots.append(data_plot)
+
+
+        # Vision velocity
+        data_plot = DataPlot(data, plot_config, 'vehicle_vision_position',
+                             y_axis_label='[m]', title='Vision Velocity',
+                             plot_height='small', changed_params=changed_params)
+        data_plot.add_graph(['vx', 'vy', 'vz'], colors3, ['X', 'Y', 'Z'])
+        plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes)
+
+        data_plot.change_dataset('vehicle_local_position_groundtruth')
+        data_plot.add_graph(['vx', 'vy', 'vz'], colors8[2:5],
+                            ['Groundtruth X', 'Groundtruth Y', 'Groundtruth Z'])
+        if data_plot.finalize() is not None: plots.append(data_plot)
+
+
+    # Vision attitude
+    if any(elem.name == 'vehicle_vision_attitude' for elem in data):
+        data_plot = DataPlot(data, plot_config, 'vehicle_vision_attitude',
+                             y_axis_label='[deg]', title='Vision Attitude',
+                             plot_height='small', changed_params=changed_params)
+        data_plot.add_graph([lambda data: ('roll', np.rad2deg(data['roll'])),
+                             lambda data: ('pitch', np.rad2deg(data['pitch'])),
+                             lambda data: ('yaw', np.rad2deg(data['yaw']))],
+                            colors3, ['Roll', 'Pitch', 'Yaw'])
+        plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes)
+
+        data_plot.change_dataset('vehicle_attitude_groundtruth')
+        data_plot.add_graph([lambda data: ('roll', np.rad2deg(data['roll'])),
+                             lambda data: ('pitch', np.rad2deg(data['pitch'])),
+                             lambda data: ('yaw', np.rad2deg(data['yaw']))],
+                            colors8[2:5],
+                            ['Roll Groundtruth', 'Pitch Groundtruth', 'Yaw Groundtruth'])
+
+        if data_plot.finalize() is not None: plots.append(data_plot)
+
+
     # Airspeed vs Ground speed
     try:
         control_state = ulog.get_dataset('control_state').data
@@ -279,58 +328,6 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
             if data_plot.finalize() is not None: plots.append(data_plot)
     except:
         pass
-
-
-    # Vision position
-    data_plot = DataPlot(data, plot_config, 'vehicle_vision_position',
-                         y_axis_label='[m]', title='Vision Position',
-                         plot_height='small', changed_params=changed_params)
-    data_plot.add_graph(['x', 'y', 'z'], colors3, ['X', 'Y', 'Z'])
-    plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes)
-
-    if data_plot.finalize() is not None: 
-        data_plot.change_dataset('vehicle_local_position_groundtruth')
-        data_plot.add_graph(['x', 'y', 'z'], colors8[2:5], ['Groundtruth X', 'Groundtruth Y', 'Groundtruth Z'])
-
-        plots.append(data_plot)
-
-
-
-    # Vision velocity
-    data_plot = DataPlot(data, plot_config, 'vehicle_vision_position',
-                         y_axis_label='[m]', title='Vision Velocity',
-                         plot_height='small', changed_params=changed_params)
-    data_plot.add_graph(['vx', 'vy', 'vz'], colors3, ['X', 'Y', 'Z'])
-    plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes)    
-
-    if data_plot.finalize() is not None: 
-        data_plot.change_dataset('vehicle_local_position_groundtruth')
-        data_plot.add_graph(['vx', 'vy', 'vz'], colors8[2:5], ['Groundtruth X', 'Groundtruth Y', 'Groundtruth Z'])
-
-        plots.append(data_plot)
-
-
-
-    # Vision attitude
-    data_plot = DataPlot(data, plot_config, 'vehicle_vision_attitude',
-                         y_axis_label='[deg]', title='Vision Attitude',
-                         plot_height='small', changed_params=changed_params)
-    data_plot.add_graph([
-        lambda data: ('roll', np.rad2deg(data['roll'])),
-        lambda data: ('pitch', np.rad2deg(data['pitch'])),
-        lambda data: ('yaw', np.rad2deg(data['yaw']))],
-        colors3, ['Roll', 'Pitch', 'Yaw'])
-    plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes)
-
-    if data_plot.finalize() is not None: 
-        data_plot.change_dataset('vehicle_attitude_groundtruth')
-        data_plot.add_graph([
-            lambda data: ('roll', np.rad2deg(data['roll'])),
-            lambda data: ('pitch', np.rad2deg(data['pitch'])),
-            lambda data: ('yaw', np.rad2deg(data['yaw']))], 
-            colors8[2:5], ['Roll Groundtruth', 'Pitch Groundtruth', 'Yaw Groundtruth'])
-
-        plots.append(data_plot)
 
 
 
