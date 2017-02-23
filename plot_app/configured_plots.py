@@ -266,11 +266,13 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
                          y_axis_label='[m]', title='Vision Position',
                          plot_height='small', changed_params=changed_params)
     data_plot.add_graph(['x', 'y', 'z'], colors3, ['X', 'Y', 'Z'])
-    data_plot.change_dataset('vehicle_local_position_groundtruth')
-    data_plot.add_graph(['x', 'y', 'z'], colors8[2:5], ['Groundtruth X', 'Groundtruth Y', 'Groundtruth Z'])
     plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes)
 
-    if data_plot.finalize() is not None: plots.append(data_plot)
+    if data_plot.finalize() is not None: 
+        data_plot.change_dataset('vehicle_local_position_groundtruth')
+        data_plot.add_graph(['x', 'y', 'z'], colors8[2:5], ['Groundtruth X', 'Groundtruth Y', 'Groundtruth Z'])
+
+        plots.append(data_plot)
 
 
 
@@ -279,11 +281,13 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
                          y_axis_label='[m]', title='Vision Velocity',
                          plot_height='small', changed_params=changed_params)
     data_plot.add_graph(['vx', 'vy', 'vz'], colors3, ['X', 'Y', 'Z'])
-    data_plot.change_dataset('vehicle_local_position_groundtruth')
-    data_plot.add_graph(['vx', 'vy', 'vz'], colors8[2:5], ['Groundtruth X', 'Groundtruth Y', 'Groundtruth Z'])
-    plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes)
+    plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes)    
 
-    if data_plot.finalize() is not None: plots.append(data_plot)
+    if data_plot.finalize() is not None: 
+        data_plot.change_dataset('vehicle_local_position_groundtruth')
+        data_plot.add_graph(['vx', 'vy', 'vz'], colors8[2:5], ['Groundtruth X', 'Groundtruth Y', 'Groundtruth Z'])
+
+        plots.append(data_plot)
 
 
 
@@ -296,15 +300,17 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
         lambda data: ('pitch', np.rad2deg(data['pitch'])),
         lambda data: ('yaw', np.rad2deg(data['yaw']))],
         colors3, ['Roll', 'Pitch', 'Yaw'])
-    data_plot.change_dataset('vehicle_attitude_groundtruth')
-    data_plot.add_graph([
-        lambda data: ('roll', np.rad2deg(data['roll'])),
-        lambda data: ('pitch', np.rad2deg(data['pitch'])),
-        lambda data: ('yaw', np.rad2deg(data['yaw']))], 
-        colors8[2:5], ['Roll Groundtruth', 'Pitch Groundtruth', 'Yaw Groundtruth'])
     plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes)
 
-    if data_plot.finalize() is not None: plots.append(data_plot)
+    if data_plot.finalize() is not None: 
+        data_plot.change_dataset('vehicle_attitude_groundtruth')
+        data_plot.add_graph([
+            lambda data: ('roll', np.rad2deg(data['roll'])),
+            lambda data: ('pitch', np.rad2deg(data['pitch'])),
+            lambda data: ('yaw', np.rad2deg(data['yaw']))], 
+            colors8[2:5], ['Roll Groundtruth', 'Pitch Groundtruth', 'Yaw Groundtruth'])
+
+        plots.append(data_plot)
 
 
 
