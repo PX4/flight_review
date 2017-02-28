@@ -22,7 +22,7 @@ from config import *
 from db_entry import *
 from helper import get_log_filename, validate_log_id, \
     flight_modes_table, get_airframe_data, html_long_word_force_break, \
-    validate_url, load_ulog_file, clear_ulog_cache
+    validate_url, load_ulog_file, clear_ulog_cache, get_default_parameters
 from multipart_streamer import MultiPartStreamer
 from send_email import send_notification_email, send_flightreport_email
 
@@ -302,6 +302,37 @@ class DownloadHandler(tornado.web.RequestHandler):
                         break
                     self.write(data)
                 self.finish()
+
+        elif download_type == '3': # download the non-default parameters
+            ulog = load_ulog_file(log_file_name)
+            param_keys = sorted(ulog.initial_parameters.keys())
+
+            self.set_header("Content-Type", "text/plain")
+            self.set_header('Content-Disposition', 'inline; filename=params.txt')
+
+            default_params = get_default_parameters()
+
+            delimiter = ', '
+            for param_key in param_keys:
+                try:
+                    param_value = str(ulog.initial_parameters[param_key])
+                    is_default = False
+
+                    if param_key in default_params:
+                        default_param = default_params[param_key]
+                        if default_param['type'] == 'FLOAT':
+                            is_default = abs(float(default_param['default']) -
+                                             float(param_value)) < 0.00001
+                        else:
+                            is_default = int(default_param['default']) == int(param_value)
+
+                    if not is_default:
+                        self.write(param_key)
+                        self.write(delimiter)
+                        self.write(param_value)
+                        self.write('\n')
+                except:
+                    pass
 
         else: # download the log file
             self.set_header('Content-Type', 'application/octet-stream')
