@@ -567,6 +567,74 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
                 })
 
 
+    # changed parameters
+    param_names = []
+    param_values = []
+    param_defaults = []
+    param_mins = []
+    param_maxs = []
+    param_descriptions = []
+    default_params = get_default_parameters()
+    for param_name in sorted(ulog.initial_parameters):
+        param_value = ulog.initial_parameters[param_name]
+
+        if param_name.startswith('RC') or param_name.startswith('CAL_'):
+            continue
+
+        try:
+            if param_name in default_params:
+                default_param = default_params[param_name]
+                if default_param['type'] == 'FLOAT':
+                    is_default = abs(float(default_param['default']) - float(param_value)) < 0.00001
+                    if 'decimal' in default_param:
+                        param_value = round(param_value, int(default_param['decimal']))
+                else:
+                    is_default = int(default_param['default']) == int(param_value)
+                if not is_default:
+                    param_names.append(param_name)
+                    param_values.append(param_value)
+                    param_defaults.append(default_param['default'])
+                    param_mins.append(default_param.get('min', ''))
+                    param_maxs.append(default_param.get('max', ''))
+                    param_descriptions.append(default_param.get('short_desc', ''))
+            else:
+                # not found: add it as if it were changed
+                param_names.append(param_name)
+                param_values.append(param_value)
+                param_defaults.append('')
+                param_mins.append('')
+                param_maxs.append('')
+                param_descriptions.append('(unknown)')
+        except Exception as error:
+            print(type(error), error)
+    param_data = dict(
+        names=param_names,
+        values=param_values,
+        defaults=param_defaults,
+        mins=param_mins,
+        maxs=param_maxs,
+        descriptions=param_descriptions)
+    source = ColumnDataSource(param_data)
+    columns = [
+        TableColumn(field="names", title="Name",
+                    width=int(plot_width*0.2), sortable=False),
+        TableColumn(field="values", title="Value",
+                    width=int(plot_width*0.15), sortable=False),
+        TableColumn(field="defaults", title="Default",
+                    width=int(plot_width*0.1), sortable=False),
+        TableColumn(field="mins", title="Min",
+                    width=int(plot_width*0.075), sortable=False),
+        TableColumn(field="maxs", title="Max",
+                    width=int(plot_width*0.075), sortable=False),
+        TableColumn(field="descriptions", title="Description",
+                    width=int(plot_width*0.40), sortable=False),
+        ]
+    data_table = DataTable(source=source, columns=columns, width=plot_width,
+                           height=300, sortable=False, selectable=False)
+    div = Div(text="""<b>Non-default Parameters</b> (except RC and sensor calibration)""",
+              width=int(plot_width/2))
+    plots.append(widgetbox(div, data_table, width=plot_width))
+
 
     # log messages
     log_times = []
