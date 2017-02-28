@@ -10,6 +10,7 @@ import shutil
 import uuid
 import numpy as np
 from config import get_log_filepath, get_airframes_filename, get_airframes_url, \
+                   get_parameters_filename, get_parameters_url, \
                    get_log_cache_size, debug_print_timing
 
 from pyulog import *
@@ -56,41 +57,41 @@ def get_log_filename(log_id):
         return log_id
     return os.path.join(get_log_filepath(), log_id + '.ulg')
 
-
-def download_airframes_maybe():
-    """ download the airframes.xml if it does not exist or it's older than a day.
+def download_file_maybe(filename, url):
+    """ download an url to filename if it does not exist or it's older than a day.
         returns True if the file can be used
     """
-    airframes_file = get_airframes_filename()
     need_download = False
-    if os.path.exists(airframes_file):
-        elapsed_sec = time.time() - os.path.getmtime(airframes_file)
+    if os.path.exists(filename):
+        elapsed_sec = time.time() - os.path.getmtime(filename)
         if elapsed_sec / 3600 > 24:
             need_download = True
-            os.unlink(airframes_file)
+            os.unlink(filename)
     else:
         need_download = True
     if need_download:
-        print("Downloading airframes from "+get_airframes_url())
+        print("Downloading "+url)
         try:
             # download to a temporary random file, then move to avoid race
             # conditions
-            temp_file_name = airframes_file+'.'+str(uuid.uuid4())
-            urlretrieve(get_airframes_url(), temp_file_name)
-            shutil.move(temp_file_name, airframes_file)
+            temp_file_name = filename+'.'+str(uuid.uuid4())
+            urlretrieve(url, temp_file_name)
+            shutil.move(temp_file_name, filename)
         except Exception as e:
             print("Download error: "+str(e))
             return False
     return True
 
+
 def get_airframe_data(airframe_id):
     """ return a dict of aiframe data ('name' & 'type') from an autostart id.
     Downloads aiframes if necessary. Returns None on error
     """
+#    download_file_maybe(get_parameters_filename(), get_parameters_url())
 
-    if download_airframes_maybe():
+    airframe_xml = get_airframes_filename()
+    if download_file_maybe(airframe_xml, get_airframes_url()):
         try:
-            airframe_xml = get_airframes_filename()
             e = xml.etree.ElementTree.parse(airframe_xml).getroot()
             for airframe_group in e.findall('airframe_group'):
                 for airframe in airframe_group.findall('airframe'):
@@ -104,6 +105,56 @@ def get_airframe_data(airframe_id):
         except:
             pass
     return None
+
+def get_default_parameters():
+    """ get the default parameters
+
+        :return: dict with params (key is param name, value is a dict with
+                 'default', 'min', 'max', ...)
+    """
+    parameters_xml = get_parameters_filename()
+    param_dict = {}
+    if download_file_maybe(parameters_xml, get_parameters_url()):
+        try:
+            e = xml.etree.ElementTree.parse(parameters_xml).getroot()
+            for group in e.findall('group'):
+                group_name = group.get('name')
+                try:
+                    for param in group.findall('parameter'):
+                        param_name = param.get('name')
+                        param_type = param.get('type')
+                        param_default = param.get('default')
+                        cur_param_dict = {
+                            'default': param_default,
+                            'type': param_type,
+                            'group_name': group_name,
+                            }
+                        try:
+                            cur_param_dict['min'] = param.find('min').text
+                        except:
+                            pass
+                        try:
+                            cur_param_dict['max'] = param.find('max').text
+                        except:
+                            pass
+                        try:
+                            cur_param_dict['short_desc'] = param.find('short_desc').text
+                        except:
+                            pass
+                        try:
+                            cur_param_dict['long_desc'] = param.find('long_desc').text
+                        except:
+                            pass
+                        try:
+                            cur_param_dict['decimal'] = param.find('decimal').text
+                        except:
+                            pass
+                        param_dict[param_name] = cur_param_dict
+                except:
+                    pass
+        except:
+            pass
+    return param_dict
 
 flight_modes_table = {
     0: ('Manual', '#cc0000'), # red

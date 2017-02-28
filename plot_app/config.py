@@ -23,6 +23,7 @@ email_notifications_config['public_flightreport'] = \
 
 __DOMAIN_NAME = _conf.get('general', 'domain_name')
 __AIRFRAMES_URL = _conf.get('general', 'airframes_url')
+__PARAMETERS_URL = _conf.get('general', 'parameters_url')
 __GMAPS_API_KEY = _conf.get('general', 'google_maps_api_key')
 __LOG_CACHE_SIZE = int(_conf.get('general', 'log_cache_size'))
 
@@ -34,6 +35,7 @@ __LOG_FILE_PATH = os.path.join(__STORAGE_PATH, 'log_files')
 __DB_FILENAME = os.path.join(__STORAGE_PATH, 'logs.sqlite')
 __CACHE_FILE_PATH = os.path.join(__STORAGE_PATH, 'cache')
 __AIRFRAMES_FILENAME = os.path.join(__CACHE_FILE_PATH, 'airframes.xml')
+__PARAMETERS_FILENAME = os.path.join(__CACHE_FILE_PATH, 'parameters.xml')
 
 __PRINT_TIMING = int(_conf.get('debug', 'print_timing'))
 
@@ -87,6 +89,14 @@ def get_airframes_filename():
 def get_airframes_url():
     """ get airframes download URL """
     return __AIRFRAMES_URL
+
+def get_parameters_filename():
+    """ get configured parameters file name """
+    return __PARAMETERS_FILENAME
+
+def get_parameters_url():
+    """ get parameters download URL """
+    return __PARAMETERS_URL
 
 def get_google_maps_api_key():
     """ get Google maps API key """
