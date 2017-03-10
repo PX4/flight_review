@@ -88,6 +88,19 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
     h, m = divmod(m, 60)
     table_text.append(('Logging duration', '{:d}:{:02d}:{:02d}'.format(h, m, s)))
 
+    # total vehicle flight time
+    flight_time_s = get_total_flight_time(ulog)
+    if flight_time_s is not None:
+        m, s = divmod(int(flight_time_s), 60)
+        h, m = divmod(m, 60)
+        days, h = divmod(h, 24)
+        flight_time_str = ''
+        if days > 0: flight_time_str += '{:d} days '.format(days)
+        if h > 0: flight_time_str += '{:d} hours '.format(h)
+        if m > 0: flight_time_str += '{:d} minutes '.format(m)
+        flight_time_str += '{:d} seconds '.format(s)
+        table_text.append(('Vehicle flight time', flight_time_str))
+
     # Wind speed, rating, feedback
     if db_data.wind_speed >= 0:
         table_text.append(('Wind Speed', db_data.wind_speed_str()))
@@ -188,11 +201,8 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
                          ['Altitude Setpoint'])
     data_plot.change_dataset('actuator_controls_0')
     data_plot.add_graph([lambda data: ('thrust', data['control[3]']*100)],
-                        colors8[6:7], ['Thrust * 100'])
+                        colors8[6:7], ['Thrust [0, 100]'])
     plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes)
-
-    #plot_dropouts(data_plot.bokeh_plot, ulog.dropouts)
-    # TODO: call range update callback on startup when plot loaded...
 
     if data_plot.finalize() is not None: plots.append(data_plot)
 

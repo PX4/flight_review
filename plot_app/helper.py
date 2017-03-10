@@ -287,6 +287,19 @@ def load_ulog_file(file_name):
 
     return ulog
 
+def get_total_flight_time(ulog):
+    """
+    get the total flight time from an ulog in seconds
+    :return: integer or None if not set
+    """
+    if ('LND_FLIGHT_T_HI' in ulog.initial_parameters and
+            'LND_FLIGHT_T_LO' in ulog.initial_parameters):
+        flight_time_s = ((ulog.initial_parameters['LND_FLIGHT_T_HI'] << 32) |
+                         ulog.initial_parameters['LND_FLIGHT_T_HI']) / 1e6
+        return flight_time_s
+    return None
+
+
 def print_cache_info():
     """ print information about the ulog cache """
     print(load_ulog_file.cache_info())
