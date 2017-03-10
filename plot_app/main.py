@@ -14,7 +14,7 @@ from colors import HTML_color_to_RGB
 from db_entry import *
 from configured_plots import generate_plots
 
-#pylint: disable=invalid-name, redefined-outer-name
+#pylint: disable=invalid-name, redefined-outer-name, deprecated-method
 
 start_time = timer()
 
@@ -61,23 +61,43 @@ if error_message == '':
 
     # read the data from DB
     db_data = DBData()
+    vehicle_data = None
     try:
         con = sqlite3.connect(get_db_filename(), detect_types=sqlite3.PARSE_DECLTYPES)
         cur = con.cursor()
         cur.execute('select Description, Feedback, Type, WindSpeed, Rating, VideoUrl '
                     'from Logs where Id = ?', [log_id])
         db_tuple = cur.fetchone()
-        if db_tuple != None:
+        if db_tuple is not None:
             db_data.description = db_tuple[0]
             db_data.feedback = db_tuple[1]
             db_data.type = db_tuple[2]
             db_data.wind_speed = db_tuple[3]
             db_data.rating = db_tuple[4]
             db_data.video_url = db_tuple[5]
+
+        # vehicle data
+        if 'sys_uuid' in ulog.msg_info_dict:
+            sys_uuid = cgi.escape(ulog.msg_info_dict['sys_uuid'])
+
+            cur.execute('select LatestLogId, Name, FlightTime '
+                        'from Vehicle where UUID = ?', [sys_uuid])
+            db_tuple = cur.fetchone()
+            if db_tuple is not None:
+                vehicle_data = DBVehicleData()
+                vehicle_data.log_id = db_tuple[0]
+                if len(db_tuple[1]) > 0:
+                    vehicle_data.name = db_tuple[1]
+                try:
+                    vehicle_data.flight_time = int(db_tuple[2])
+                except:
+                    pass
+
         cur.close()
         con.close()
     except:
         print("DB access failed:", sys.exc_info()[0], sys.exc_info()[1])
+
 
     # template variables
     curdoc().template_variables['google_maps_api_key'] = get_google_maps_api_key()
@@ -96,7 +116,8 @@ if error_message == '':
         ]
     curdoc().template_variables['flight_modes'] = flight_modes
 
-    plots = generate_plots(ulog, px4_ulog, flight_mode_changes, db_data)
+    plots = generate_plots(ulog, px4_ulog, flight_mode_changes, db_data,
+                           vehicle_data)
 
     title = 'Flight Review - '+px4_ulog.get_mav_type()
 

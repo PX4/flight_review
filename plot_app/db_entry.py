@@ -7,7 +7,7 @@ from helper import get_log_filename, load_ulog_file
 from pyulog import *
 from pyulog.px4 import *
 
-#pylint: disable=missing-docstring, deprecated-method
+#pylint: disable=missing-docstring, deprecated-method, too-few-public-methods
 
 class DBData:
     """ simple class that contains information from the DB entry of a single
@@ -53,6 +53,7 @@ class DBDataGenerated:
         self.num_logged_errors = 0
         self.num_logged_warnings = 0
         self.flight_modes = set()
+        self.vehicle_uuid = ''
 
 
     @classmethod
@@ -76,6 +77,8 @@ class DBDataGenerated:
             obj.ver_sw_release = 'v{}.{}.{} {}'.format(*version_info)
         obj.num_logged_errors = 0
         obj.num_logged_warnings = 0
+        if 'sys_uuid' in ulog.msg_info_dict:
+            obj.vehicle_uuid = cgi.escape(ulog.msg_info_dict['sys_uuid'])
 
         for m in ulog.logged_messages:
             if m.log_level <= ord('3'):
@@ -91,4 +94,12 @@ class DBDataGenerated:
             obj.flight_modes = set()
 
         return obj
+
+class DBVehicleData:
+    """ simple class that contains information from the DB entry of a vehicle """
+    def __init__(self):
+        self.uuid = None
+        self.log_id = ''
+        self.name = ''
+        self.flight_time = 0
 

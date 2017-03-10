@@ -12,7 +12,6 @@ import sqlite3
 import datetime
 import cgi # for html escaping
 import tornado.web
-from tornado.ioloop import IOLoop
 from jinja2 import Environment, FileSystemLoader
 from pyulog import *
 from pyulog.ulog2kml import convert_ulog2kml
@@ -22,7 +21,8 @@ from config import *
 from db_entry import *
 from helper import get_log_filename, validate_log_id, \
     flight_modes_table, get_airframe_data, html_long_word_force_break, \
-    validate_url, load_ulog_file, clear_ulog_cache, get_default_parameters
+    validate_url, load_ulog_file, clear_ulog_cache, get_default_parameters, \
+    get_total_flight_time
 from multipart_streamer import MultiPartStreamer
 from send_email import send_notification_email, send_flightreport_email
 
@@ -79,7 +79,8 @@ class UploadHandler(tornado.web.RequestHandler):
                 form_data = self.multipart_streamer.get_values(
                     ['description', 'email',
                      'allowForAnalysis', 'obfuscated', 'source', 'type',
-                     'feedback', 'windSpeed', 'rating', 'videoUrl', 'public'])
+                     'feedback', 'windSpeed', 'rating', 'videoUrl', 'public',
+                     'vehicleName'])
                 description = cgi.escape(form_data['description'].decode("utf-8"))
                 email = form_data['email'].decode("utf-8")
                 upload_type = 'personal'
@@ -105,6 +106,7 @@ class UploadHandler(tornado.web.RequestHandler):
                 stored_email = ''
                 video_url = ''
                 is_public = 0
+                vehicle_name = ''
 
                 if upload_type == 'flightreport':
                     try:
@@ -118,6 +120,8 @@ class UploadHandler(tornado.web.RequestHandler):
                     video_url = cgi.escape(form_data['videoUrl'].decode("utf-8"), quote=True)
                     if not validate_url(video_url):
                         video_url = ''
+                    if 'vehicleName' in form_data:
+                        vehicle_name = cgi.escape(form_data['vehicleName'].decode("utf-8"))
 
                     # always allow for statistical analysis
                     allow_for_analysis = 1
@@ -156,6 +160,14 @@ class UploadHandler(tornado.web.RequestHandler):
                 # generate a token: secure random string (url-safe)
                 token = str(binascii.hexlify(os.urandom(16)), 'ascii')
 
+                # Load the ulog file but only if not uploaded via CI.
+                # Then we open the DB connection.
+                ulog = None
+                if source != 'CI':
+                    ulog_file_name = get_log_filename(log_id)
+                    ulog = load_ulog_file(ulog_file_name)
+
+
                 # put additional data into a DB
                 con = sqlite3.connect(get_db_filename())
                 cur = con.cursor()
@@ -169,19 +181,17 @@ class UploadHandler(tornado.web.RequestHandler):
                      datetime.datetime.now(), allow_for_analysis,
                      obfuscated, source, stored_email, wind_speed, rating,
                      feedback, upload_type, video_url, is_public, token])
+
+                if ulog is not None:
+                    update_vehicle_db_entry(cur, ulog, log_id, vehicle_name)
+
                 con.commit()
-                cur.close()
-                con.close()
 
                 url = '/plot_app?log='+log_id
                 full_plot_url = 'http://'+get_domain_name()+url
 
                 delete_url = 'http://'+get_domain_name()+ \
                     '/edit_entry?action=delete&log='+log_id+'&token='+token
-
-                # send notification emails
-                send_notification_email(email, full_plot_url, description,
-                                        delete_url)
 
                 if upload_type == 'flightreport' and is_public:
                     send_flightreport_email(
@@ -192,13 +202,20 @@ class UploadHandler(tornado.web.RequestHandler):
                         stored_email)
 
                     # also generate the additional DB entry
-                    def generate_db_entry_cb(log_id):
-                        """ tornado callback to generate the DB entry """
-                        ioloop = IOLoop.instance()
-                        # use a timeout to minimize interference with other requests
-                        ioloop.call_later(20, generate_db_data_from_log_file, log_id)
-                    ioloop = IOLoop.instance()
-                    ioloop.spawn_callback(generate_db_entry_cb, log_id)
+                    # (we may have the log already loaded in 'ulog', however the
+                    # lru cache will make it very quick to load it again)
+                    generate_db_data_from_log_file(log_id, con)
+
+                con.commit()
+                cur.close()
+                con.close()
+
+                # TODO: now that we have loaded the ulog already, add more
+                # information to the notification email (airframe, ...)
+
+                # send notification emails
+                send_notification_email(email, full_plot_url, description,
+                                        delete_url)
 
                 # do not redirect for QGC
                 if source != 'QGroundControl':
@@ -362,6 +379,41 @@ class DownloadHandler(tornado.web.RequestHandler):
         self.write(html_template.format(status_code=status_code,
                                         error_message=error_message))
 
+def update_vehicle_db_entry(cur, ulog, log_id, vehicle_name):
+    """
+    Update the Vehicle DB entry
+    :param cur: DB cursor
+    :param ulog: ULog object
+    :param vehicle_name: new vehicle name or '' if not updated
+    """
+
+    vehicle_data = DBVehicleData()
+    if 'sys_uuid' in ulog.msg_info_dict:
+        vehicle_data.uuid = cgi.escape(ulog.msg_info_dict['sys_uuid'])
+
+        if vehicle_name == '':
+            cur.execute('select Name '
+                        'from Vehicle where UUID = ?', [vehicle_data.uuid])
+            db_tuple = cur.fetchone()
+            if db_tuple is not None:
+                vehicle_data.name = db_tuple[0]
+            print('reading vehicle name from db:'+vehicle_data.name)
+        else:
+            vehicle_data.name = vehicle_name
+            print('vehicle name from uploader:'+vehicle_data.name)
+
+        vehicle_data.log_id = log_id
+        flight_time = get_total_flight_time(ulog)
+        if flight_time is not None:
+            vehicle_data.flight_time = flight_time
+
+        # update or insert the DB entry
+        cur.execute('insert or replace into Vehicle (UUID, LatestLogId, Name, FlightTime)'
+                    'values (?, ?, ?, ?)',
+                    [vehicle_data.uuid, vehicle_data.log_id, vehicle_data.name,
+                     vehicle_data.flight_time])
+
+
 
 def generate_db_data_from_log_file(log_id, db_connection=None):
     """
@@ -387,15 +439,15 @@ def generate_db_data_from_log_file(log_id, db_connection=None):
             'insert into LogsGenerated (Id, Duration, '
             'Mavtype, Estimator, AutostartId, Hardware, '
             'Software, NumLoggedErrors, NumLoggedWarnings, '
-            'FlightModes, SoftwareVersion) values '
-            '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            'FlightModes, SoftwareVersion, UUID) values '
+            '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [log_id, db_data_gen.duration_s, db_data_gen.mav_type,
              db_data_gen.estimator, db_data_gen.sys_autostart_id,
              db_data_gen.sys_hw, db_data_gen.ver_sw,
              db_data_gen.num_logged_errors,
              db_data_gen.num_logged_warnings,
              ','.join(map(str, db_data_gen.flight_modes)),
-             db_data_gen.ver_sw_release])
+             db_data_gen.ver_sw_release, db_data_gen.vehicle_uuid])
         db_connection.commit()
     except sqlite3.IntegrityError:
         # someone else already inserted it (race). just ignore it
@@ -473,6 +525,7 @@ class BrowseHandler(tornado.web.RequestHandler):
                 db_data_gen.flight_modes = \
                     set([int(x) for x in db_tuple[9].split(',') if len(x) > 0])
                 db_data_gen.ver_sw_release = db_tuple[10]
+                db_data_gen.vehicle_uuid = db_tuple[11]
 
             # bring it into displayable form
             ver_sw = db_data_gen.ver_sw

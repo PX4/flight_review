@@ -15,7 +15,7 @@ from plotting import *
 #pylint: disable=redefined-variable-type, consider-using-enumerate
 
 
-def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
+def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data, vehicle_data):
     """ create a list of bokeh plots (and widgets) to show """
 
     plots = []
@@ -47,9 +47,10 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
                                airframe_type+' <small>('+str(sys_autostart)+')</small>'))
 
     # HW & SW
+    sys_hardware = ''
     if 'ver_hw' in ulog.msg_info_dict:
-        sys_hw = cgi.escape(ulog.msg_info_dict['ver_hw'])
-        table_text.append(('Hardware', sys_hw))
+        sys_hardware = cgi.escape(ulog.msg_info_dict['ver_hw'])
+        table_text.append(('Hardware', sys_hardware))
 
     release_str = ulog.get_version_info_str()
     if release_str is None:
@@ -100,6 +101,15 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data):
         if m > 0: flight_time_str += '{:d} minutes '.format(m)
         flight_time_str += '{:d} seconds '.format(s)
         table_text.append(('Vehicle flight time', flight_time_str))
+
+    # vehicle UUID (and name if provided). SITL does not have a UUID
+    if 'sys_uuid' in ulog.msg_info_dict and sys_hardware != 'SITL':
+        sys_uuid = cgi.escape(ulog.msg_info_dict['sys_uuid'])
+        if vehicle_data is not None and vehicle_data.name != '':
+            sys_uuid = sys_uuid + ' (' + vehicle_data.name + ')'
+        if len(sys_uuid) > 0:
+            table_text.append(('Vehicle UUID', sys_uuid))
+
 
     # Wind speed, rating, feedback
     if db_data.wind_speed >= 0:
