@@ -20,6 +20,7 @@ if not os.path.exists('backups'):
 
 os.system('sqlite3 '+db_filename+' ".backup '+backup_file+'.sqlite"')
 os.system('sqlite3 '+db_filename+' "SELECT * from Logs" >'+backup_file+'.sql')
+os.system('sqlite3 '+db_filename+' "SELECT * from Vehicle" >'+backup_file+'_vehicle.sql')
 
 num_lines = sum(1 for line in open(backup_file+'.sql'))
 print('Backed up {} records to {}'.format(num_lines, backup_file+'.sqlite'))
