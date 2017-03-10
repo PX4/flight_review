@@ -101,6 +101,7 @@ with con:
                 "NumLoggedWarnings INT, "
                 "FlightModes TEXT, " # all flight modes as comma-separated int's
                 "SoftwareVersion TEXT, " # release version
+                "UUID TEXT, " # vehicle UUID (sys_uuid in log)
                 "CONSTRAINT Id_PK PRIMARY KEY (Id))")
 
     else:
@@ -110,6 +111,22 @@ with con:
         if not 'SoftwareVersion' in column_names:
             print('Adding column SoftwareVersion')
             cur.execute("ALTER TABLE LogsGenerated ADD COLUMN SoftwareVersion TEXT DEFAULT ''")
+        if not 'UUID' in column_names:
+            print('Adding column UUID')
+            cur.execute("ALTER TABLE LogsGenerated ADD COLUMN UUID TEXT DEFAULT ''")
+
+
+    # Vehicle table (contains information about a vehicle)
+    cur.execute("PRAGMA table_info('Vehicle')")
+    columns = cur.fetchall()
+
+    if len(columns) == 0:
+        cur.execute("CREATE TABLE Vehicle("
+                "UUID TEXT, " # vehicle UUID (sys_uuid in log)
+                "LatestLogId TEXT, " # log id of latest uploaded log file
+                "Name TEXT, " # vehicle Name (as provided by the uploader)
+                "FlightTime INTEGER, " # latest flight time in seconds
+                "CONSTRAINT UUID_PK PRIMARY KEY (UUID))")
 
 con.close()
 
