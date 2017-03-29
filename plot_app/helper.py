@@ -295,7 +295,7 @@ def get_total_flight_time(ulog):
     if ('LND_FLIGHT_T_HI' in ulog.initial_parameters and
             'LND_FLIGHT_T_LO' in ulog.initial_parameters):
         flight_time_s = ((ulog.initial_parameters['LND_FLIGHT_T_HI'] << 32) |
-                         ulog.initial_parameters['LND_FLIGHT_T_HI']) / 1e6
+                         ulog.initial_parameters['LND_FLIGHT_T_LO']) / 1e6
         return flight_time_s
     return None
 
