@@ -98,6 +98,11 @@ function setSize(size) {
 	simpler way? */
 	bokeh_doc = Bokeh.index[Object.keys(Bokeh.index)[0]].model.document
 	bokeh_doc.resize(); //trigger resize event
+
+	/* google maps resize */
+	if (typeof(g_google_map) !== "undefined" && g_google_map != null) {
+		google.maps.event.trigger(g_google_map, "resize");
+	}
 }
 
 {% endif %} {# is_plot_page #}

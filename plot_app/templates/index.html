@@ -6,6 +6,8 @@
 <div id="google-map"></div>
 <script>
 
+var g_google_map = null;
+
 function initMap() {
 
 	var map = new google.maps.Map(document.getElementById('google-map'), {
@@ -15,6 +17,7 @@ function initMap() {
 		panControl: true,
 		mapTypeId: google.maps.MapTypeId.HYBRID,
 	});
+	g_google_map = map;
 
 	if(window.location.hostname == 'localhost') {
 		console.log('KML files do not work locally!'); //<-- important to know
