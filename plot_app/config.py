@@ -59,7 +59,7 @@ colors8 = [colors3[0], colors3[1], colors3[2], '#333333', '#999999', '#e58C33',
            '#33e5e5', '#e533e5']
 color_gray = '#464646'
 
-plot_config['mission_setpoint_color'] = colors8[4]
+plot_config['mission_setpoint_color'] = colors8[5]
 
 
 def get_domain_name():
