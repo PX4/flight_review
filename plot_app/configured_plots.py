@@ -106,7 +106,7 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data, vehicle_data):
     # logging duration
     m, s = divmod(int((ulog.last_timestamp - ulog.start_timestamp)/1e6), 60)
     h, m = divmod(m, 60)
-    table_text.append(('Logging duration', '{:d}:{:02d}:{:02d}'.format(h, m, s)))
+    table_text.append(('Logging Duration', '{:d}:{:02d}:{:02d}'.format(h, m, s)))
 
     # dropouts
     dropout_durations = [dropout.duration for dropout in ulog.dropouts]
@@ -130,7 +130,7 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data, vehicle_data):
         if h > 0: flight_time_str += '{:d} hours '.format(h)
         if m > 0: flight_time_str += '{:d} minutes '.format(m)
         flight_time_str += '{:d} seconds '.format(s)
-        table_text.append(('Vehicle flight time', flight_time_str))
+        table_text.append(('Vehicle Flight Time', flight_time_str))
 
     # vehicle UUID (and name if provided). SITL does not have a UUID
     if 'sys_uuid' in ulog.msg_info_dict and sys_hardware != 'SITL':
