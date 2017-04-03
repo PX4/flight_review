@@ -73,6 +73,41 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data, vehicle_data):
             table_text.append(('OS Version', os_name + ', ' + os_ver))
 
     table_text.append(('Estimator', px4_ulog.get_estimator()))
+
+    # logging start time & date
+    try:
+        # get the first non-zero timestamp
+        gps_data = ulog.get_dataset('vehicle_gps_position')
+        indices = np.nonzero(gps_data.data['time_utc_usec'])
+        if len(indices[0]) > 0:
+            # we use the timestamp from the log and then convert it with JS to
+            # display with local timezone
+            logging_start_time = int(gps_data.data['time_utc_usec'][indices[0][0]] / 1000000)
+            js_code = """
+<script type="text/javascript">
+    var logging_span = $('#logging-start-element');
+    var d = new Date(0);
+    d.setUTCSeconds(logging_span.text());
+    var date_str = ("0" + d.getDate()).slice(-2) + "-" +
+                   ("0"+(d.getMonth()+1)).slice(-2) + "-" + d.getFullYear() + " " +
+                   ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
+    logging_span.text(date_str);
+    logging_span.show();
+</script>
+"""
+            table_text.append(('Logging Start',
+                               '<span style="display:none" id="logging-start-element">'+
+                               str(logging_start_time)+'</span>'+js_code))
+    except:
+        # Ignore. Eg. if topic not found
+        pass
+
+
+    # logging duration
+    m, s = divmod(int((ulog.last_timestamp - ulog.start_timestamp)/1e6), 60)
+    h, m = divmod(m, 60)
+    table_text.append(('Logging duration', '{:d}:{:02d}:{:02d}'.format(h, m, s)))
+
     # dropouts
     dropout_durations = [dropout.duration for dropout in ulog.dropouts]
     if len(dropout_durations) > 0:
@@ -83,11 +118,6 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data, vehicle_data):
             total_duration_str = '{:.2f}'.format(total_duration)
         table_text.append(('Dropouts', '{:} ({:} s)'.format(
             len(dropout_durations), total_duration_str)))
-
-    # logging duration
-    m, s = divmod(int((ulog.last_timestamp - ulog.start_timestamp)/1e6), 60)
-    h, m = divmod(m, 60)
-    table_text.append(('Logging duration', '{:d}:{:02d}:{:02d}'.format(h, m, s)))
 
     # total vehicle flight time
     flight_time_s = get_total_flight_time(ulog)
