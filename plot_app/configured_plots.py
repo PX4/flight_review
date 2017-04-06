@@ -540,8 +540,10 @@ def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data, vehicle_data):
     data_plot = DataPlot(data, plot_config, 'input_rc',
                          title='RC Quality', plot_height='small', y_range=Range1d(0, 1),
                          changed_params=changed_params)
-    data_plot.add_graph(['rc_lost', lambda data: ('rssi', data['rssi']/100)],
-                        colors3[0:2], ['RC Lost', 'RSSI [0, 1]'])
+    data_plot.add_graph([lambda data: ('rssi', data['rssi']/100), 'rc_lost'],
+            colors3[0:2], ['RSSI [0, 1]', 'RC Lost (Indicator)'])
+    data_plot.change_dataset('vehicle_status')
+    data_plot.add_graph(['rc_signal_lost'], colors3[2:3], ['RC Lost (Detected)'])
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 

@@ -272,7 +272,7 @@ def load_ulog_file(file_name):
                   'vehicle_rates_setpoint', 'rc_channels', 'input_rc',
                   'position_setpoint_triplet', 'vehicle_attitude_groundtruth',
                   'vehicle_local_position_groundtruth', 'vehicle_vision_position',
-                  'vehicle_vision_attitude', 'control_state']
+                  'vehicle_vision_attitude', 'vehicle_status', 'control_state']
     ulog = ULog(file_name, msg_filter)
 
     # filter messages with timestamp = 0 (these are invalid).
