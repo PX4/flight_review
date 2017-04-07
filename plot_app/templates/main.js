@@ -93,16 +93,16 @@ function setSize(size) {
 	if (slider_value > 2) slider_value = 2;
 	$(document.body).css('width', Math.floor(75+(slider_value-1)*15)+'%')
 
+	/* google maps resize */
+	if (typeof(g_google_map) !== "undefined" && g_google_map != null) {
+		google.maps.event.trigger(g_google_map, "resize");
+	}
+
 	/* get the bokeh document. If we had a bokeh object, like a plot, we
 	could use plot.document. The following works w/o, but maybe there's a
 	simpler way? */
 	bokeh_doc = Bokeh.index[Object.keys(Bokeh.index)[0]].model.document
 	bokeh_doc.resize(); //trigger resize event
-
-	/* google maps resize */
-	if (typeof(g_google_map) !== "undefined" && g_google_map != null) {
-		google.maps.event.trigger(g_google_map, "resize");
-	}
 }
 
 {% endif %} {# is_plot_page #}
