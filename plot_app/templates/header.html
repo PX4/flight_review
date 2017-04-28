@@ -68,9 +68,18 @@
                         </li>
                         <li class="dropdown" id="plot-legend-menu"><a href="javascript:;">Plot Legend <i class="fa fa-angle-down"></i></a>
                             <ul role="menu" class="sub-menu">
+								<li><a href="javascript:;"><b>Flight Modes:</b></a></li>
 {% for cur_flight_mode in flight_modes %}
 {% set cur_name = cur_flight_mode.name %}
 {% set cur_color = cur_flight_mode.color %}
+                                <li><a href="javascript:;">
+								<div class="plot-legend-box"
+									style="border-left-color: rgba({{ cur_color[0] }}, {{ cur_color[1] }}, {{ cur_color[2] }}, 0.15);">{{ cur_name }}</div></a></li>
+{% endfor %}
+								<li><a href="javascript:;"><b>VTOL Modes:</b></a></li>
+{% for cur_vtol_mode in vtol_modes %}
+{% set cur_name = cur_vtol_mode.name %}
+{% set cur_color = cur_vtol_mode.color %}
                                 <li><a href="javascript:;">
 								<div class="plot-legend-box"
 									style="border-left-color: rgba({{ cur_color[0] }}, {{ cur_color[1] }}, {{ cur_color[2] }}, 0.15);">{{ cur_name }}</div></a></li>

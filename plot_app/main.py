@@ -106,6 +106,12 @@ if error_message == '':
          'color': HTML_color_to_RGB(flight_modes_table[3][1])}
         ]
     curdoc().template_variables['flight_modes'] = flight_modes
+    vtol_modes = [
+        {'name': 'Transition', 'color': HTML_color_to_RGB(vtol_modes_table[1][1])},
+        {'name': 'Fixed-Wing', 'color': HTML_color_to_RGB(vtol_modes_table[2][1])},
+        {'name': 'Multicopter', 'color': HTML_color_to_RGB(vtol_modes_table[3][1])},
+        ]
+    curdoc().template_variables['vtol_modes'] = vtol_modes
 
     plots = generate_plots(ulog, px4_ulog, db_data, vehicle_data)
 
