@@ -50,15 +50,6 @@ start_time = timer()
 
 if error_message == '':
 
-    # initialize flight mode changes
-    try:
-        cur_dataset = ulog.get_dataset('commander_state')
-        flight_mode_changes = cur_dataset.list_value_changes('main_state')
-        flight_mode_changes.append((ulog.last_timestamp, -1))
-    except (KeyError, IndexError) as error:
-        flight_mode_changes = []
-
-
     # read the data from DB
     db_data = DBData()
     vehicle_data = None
@@ -116,8 +107,7 @@ if error_message == '':
         ]
     curdoc().template_variables['flight_modes'] = flight_modes
 
-    plots = generate_plots(ulog, px4_ulog, flight_mode_changes, db_data,
-                           vehicle_data)
+    plots = generate_plots(ulog, px4_ulog, db_data, vehicle_data)
 
     title = 'Flight Review - '+px4_ulog.get_mav_type()
 

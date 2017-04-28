@@ -15,11 +15,20 @@ from plotting import *
 #pylint: disable=redefined-variable-type, consider-using-enumerate
 
 
-def generate_plots(ulog, px4_ulog, flight_mode_changes, db_data, vehicle_data):
+def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
     """ create a list of bokeh plots (and widgets) to show """
 
     plots = []
     data = ulog.data_list
+
+
+    # initialize flight mode changes
+    try:
+        cur_dataset = ulog.get_dataset('commander_state')
+        flight_mode_changes = cur_dataset.list_value_changes('main_state')
+        flight_mode_changes.append((ulog.last_timestamp, -1))
+    except (KeyError, IndexError) as error:
+        flight_mode_changes = []
 
     # Heading
     sys_name = ''
