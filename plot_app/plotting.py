@@ -316,7 +316,8 @@ class DataPlot:
 
     def __init__(self, data, config, data_name, x_axis_label=None,
                  y_axis_label=None, title=None, plot_height='normal',
-                 y_range=None, y_start=None, changed_params=None):
+                 y_range=None, y_start=None, changed_params=None,
+                 topic_instance=0):
 
         self._had_error = False
         self._previous_success = False
@@ -340,7 +341,7 @@ class DataPlot:
                                            changed_params)
 
             self._cur_dataset = [elem for elem in data
-                                 if elem.name == data_name and elem.multi_id == 0][0]
+                                 if elem.name == data_name and elem.multi_id == topic_instance][0]
 
             if y_start is not None:
                 # make sure y axis starts at 0. We do it by adding an invisible circle
@@ -367,14 +368,14 @@ class DataPlot:
         """ get current dataset """
         return self._cur_dataset
 
-    def change_dataset(self, data_name):
+    def change_dataset(self, data_name, topic_instance=0):
         """ select a new dataset. Afterwards, call add_graph etc """
         self._data_name = data_name
         if not self._had_error: self._previous_success = True
         self._had_error = False
         try:
             self._cur_dataset = [elem for elem in self._data
-                                 if elem.name == data_name and elem.multi_id == 0][0]
+                                 if elem.name == data_name and elem.multi_id == topic_instance][0]
         except (KeyError, IndexError, ValueError) as error:
             print(type(error), "("+self._data_name+"):", error)
             self._had_error = True
