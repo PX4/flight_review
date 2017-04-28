@@ -173,6 +173,12 @@ flight_modes_table = {
     12: ('Follow Target', '#6600cc'), # purple
     }
 
+vtol_modes_table = {
+    1: ('Transition', '#cc0000'), # red
+    2: ('Fixed-Wing', '#eecc00'), # yellow
+    3: ('Multicopter', '#0033cc'), # dark blue
+    }
+
 
 def WGS84_to_mercator(lon, lat):
     """ Convert lon, lat in [deg] to Mercator projection """

@@ -7,13 +7,15 @@ from bokeh.models import (
     Grid, Legend, Plot, BoxAnnotation, Span, CustomJS, Rect, Circle, Line,
     HoverTool, BoxZoomTool, PanTool, WheelZoomTool,
     WMTSTileSource, GMapPlot, GMapOptions,
-    LabelSet
+    LabelSet, Label
     )
 from bokeh.models.widgets import DataTable, DateFormatter, TableColumn, Div
 
 from downsampling import DynamicDownsample
 import numpy as np
-from helper import map_projection, WGS84_to_mercator, flight_modes_table
+from helper import (
+    map_projection, WGS84_to_mercator, flight_modes_table, vtol_modes_table
+    )
 
 
 TOOLS = "pan,wheel_zoom,box_zoom,reset,save"
@@ -74,16 +76,37 @@ def plot_parameter_changes(p, plots_height, changed_parameters):
     return None
 
 
-def plot_flight_modes_background(p, flight_mode_changes):
+def plot_flight_modes_background(p, flight_mode_changes, vtol_states=None):
     """ plot flight modes as filling background (with different colors) to bokeh
         plot p """
+    vtol_state_height = 60
+    added_box_annotation_args = {}
+    if vtol_states is not None:
+        added_box_annotation_args['bottom'] = vtol_state_height
+        added_box_annotation_args['bottom_units'] = 'screen'
     for i in range(len(flight_mode_changes)-1):
         t_start, mode = flight_mode_changes[i]
         t_end, mode_next = flight_mode_changes[i + 1]
         if mode in flight_modes_table:
             mode_name, color = flight_modes_table[mode]
             p.add_layout(BoxAnnotation(left=int(t_start), right=int(t_end),
-                                       fill_alpha=0.09, line_color=None, fill_color=color))
+                                       fill_alpha=0.09, line_color=None,
+                                       fill_color=color,
+                                       **added_box_annotation_args))
+    if vtol_states is not None:
+        for i in range(len(vtol_states)-1):
+            t_start, mode = vtol_states[i]
+            t_end, mode_next = vtol_states[i + 1]
+            if mode in vtol_modes_table:
+                mode_name, color = vtol_modes_table[mode]
+                p.add_layout(BoxAnnotation(left=int(t_start), right=int(t_end),
+                                           fill_alpha=0.09, line_color=None,
+                                           fill_color=color,
+                                           top=vtol_state_height, top_units='screen'))
+        label = Label(x=78, y=32, x_units='screen', y_units='screen',
+                      text='VTOL mode', text_font_size='10pt', level='glyph',
+                      background_fill_color='white', background_fill_alpha=0.8)
+        p.add_layout(label)
 
 
 def plot_set_equal_aspect_ratio(p, x, y, zoom_out_factor=1.3, min_range=5):

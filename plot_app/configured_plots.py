@@ -30,6 +30,23 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
     except (KeyError, IndexError) as error:
         flight_mode_changes = []
 
+    # VTOL state changes
+    vtol_states = None
+    try:
+        cur_dataset = ulog.get_dataset('vehicle_status')
+        if np.amax(cur_dataset.data['is_vtol']) == 1:
+            vtol_states = cur_dataset.list_value_changes('in_transition_mode')
+            # find mode after transitions (states: 1=transition, 2=FW, 3=MC)
+            for i in range(len(vtol_states)):
+                if vtol_states[i][1] == 0:
+                    t = vtol_states[i][0]
+                    idx = np.argmax(cur_dataset.data['timestamp'] >= t) + 1
+                    vtol_states[i] = (t, 2 + cur_dataset.data['is_rotary_wing'][idx])
+            vtol_states.append((ulog.last_timestamp, -1))
+    except (KeyError, IndexError) as error:
+        vtol_states = None
+
+
     # Heading
     sys_name = ''
     if 'sys_name' in ulog.msg_info_dict:
