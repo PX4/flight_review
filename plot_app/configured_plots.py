@@ -268,7 +268,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
     data_plot.change_dataset('actuator_controls_0')
     data_plot.add_graph([lambda data: ('thrust', data['control[3]']*100)],
                         colors8[6:7], ['Thrust [0, 100]'])
-    plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes)
+    plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
 
     if data_plot.finalize() is not None: plots.append(data_plot)
 
@@ -290,7 +290,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
         data_plot.change_dataset('vehicle_attitude_groundtruth')
         data_plot.add_graph([lambda data: (axis, np.rad2deg(data[axis]))],
                             [color_gray], [axis_name+' Groundtruth'])
-        plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes)
+        plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
 
         if data_plot.finalize() is not None: plots.append(data_plot)
 
@@ -306,7 +306,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
         data_plot.change_dataset('vehicle_attitude_groundtruth')
         data_plot.add_graph([lambda data: (axis+'speed', np.rad2deg(data[axis+'speed']))],
                             [color_gray], [axis_name+' Rate Groundtruth'])
-        plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes)
+        plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
 
         if data_plot.finalize() is not None: plots.append(data_plot)
 
@@ -320,7 +320,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
         data_plot.add_graph([axis], colors2[0:1], [axis.upper()+' Estimated'])
         data_plot.change_dataset('vehicle_local_position_setpoint')
         data_plot.add_graph([axis], colors2[1:2], [axis.upper()+' Setpoint'])
-        plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes)
+        plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
 
         if data_plot.finalize() is not None: plots.append(data_plot)
 
@@ -331,7 +331,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
                          y_axis_label='[m/s]', title='Velocity',
                          plot_height='small', changed_params=changed_params)
     data_plot.add_graph(['vx', 'vy', 'vz'], colors3, ['X', 'Y', 'Z'])
-    plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes)
+    plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
 
     if data_plot.finalize() is not None: plots.append(data_plot)
 
@@ -342,7 +342,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
                              y_axis_label='[m]', title='Vision Position',
                              plot_height='small', changed_params=changed_params)
         data_plot.add_graph(['x', 'y', 'z'], colors3, ['X', 'Y', 'Z'])
-        plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes)
+        plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
 
         data_plot.change_dataset('vehicle_local_position_groundtruth')
         data_plot.add_graph(['x', 'y', 'z'], colors8[2:5],
@@ -356,7 +356,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
                              y_axis_label='[m]', title='Vision Velocity',
                              plot_height='small', changed_params=changed_params)
         data_plot.add_graph(['vx', 'vy', 'vz'], colors3, ['X', 'Y', 'Z'])
-        plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes)
+        plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
 
         data_plot.change_dataset('vehicle_local_position_groundtruth')
         data_plot.add_graph(['vx', 'vy', 'vz'], colors8[2:5],
@@ -373,7 +373,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
                              lambda data: ('pitch', np.rad2deg(data['pitch'])),
                              lambda data: ('yaw', np.rad2deg(data['yaw']))],
                             colors3, ['Roll', 'Pitch', 'Yaw'])
-        plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes)
+        plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
 
         data_plot.change_dataset('vehicle_attitude_groundtruth')
         data_plot.add_graph([lambda data: ('roll', np.rad2deg(data['roll'])),
@@ -399,7 +399,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
             data_plot.change_dataset('control_state')
             data_plot.add_graph(['airspeed'], colors2[0:1], ['Airspeed Estimated'])
 
-            plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes)
+            plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
 
             if data_plot.finalize() is not None: plots.append(data_plot)
     except:
@@ -425,7 +425,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
             legends.append('Channel '+str(i)+' ('+', '.join(channel_names)+')')
     data_plot.add_graph(['channels['+str(i)+']' for i in range(num_rc_channels)],
                         colors8[0:num_rc_channels], legends)
-    plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes)
+    plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
 
     if data_plot.finalize() is not None: plots.append(data_plot)
 
@@ -437,7 +437,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
                          changed_params=changed_params)
     data_plot.add_graph(['control[0]', 'control[1]', 'control[2]', 'control[3]'],
                         colors8[0:4], ['Roll', 'Pitch', 'Yaw', 'Thrust'])
-    plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes)
+    plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
     if data_plot.finalize() is not None: plots.append(data_plot)
 
     # actuator outputs
@@ -451,7 +451,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
     data_plot.add_graph(['output['+str(i)+']' for i in
                          range(num_actuator_outputs)], colors8[0:num_actuator_outputs],
                         ['Output '+str(i) for i in range(num_actuator_outputs)])
-    plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes)
+    plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
 
     if data_plot.finalize() is not None: plots.append(data_plot)
 
@@ -582,7 +582,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
                         ['RAM Usage', 'CPU Load'])
     data_plot.add_span('load', line_color=colors3[2])
     data_plot.add_span('ram_usage', line_color=colors3[1])
-    plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes)
+    plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
