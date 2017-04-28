@@ -440,9 +440,20 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
     plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
     if data_plot.finalize() is not None: plots.append(data_plot)
 
-    # actuator outputs
+    # actuator controls 1
+    # (only present on VTOL, Fixed-wing config)
+    data_plot = DataPlot(data, plot_config, 'actuator_controls_1',
+                         y_start=0, title='Actuator Controls 1 (VTOL in Fixed-Wing mode)',
+                         plot_height='small', changed_params=changed_params)
+    data_plot.add_graph(['control[0]', 'control[1]', 'control[2]', 'control[3]'],
+                        colors8[0:4], ['Roll', 'Pitch', 'Yaw', 'Thrust'])
+    plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
+    if data_plot.finalize() is not None: plots.append(data_plot)
+
+
+    # actuator outputs 0: Main
     data_plot = DataPlot(data, plot_config, 'actuator_outputs',
-                         y_start=0, title='Actuator Outputs', plot_height='small',
+                         y_start=0, title='Actuator Outputs (Main)', plot_height='small',
                          changed_params=changed_params)
     num_actuator_outputs = 8
     if data_plot.dataset:
@@ -455,6 +466,20 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
 
     if data_plot.finalize() is not None: plots.append(data_plot)
 
+    # actuator outputs 1: AUX
+    data_plot = DataPlot(data, plot_config, 'actuator_outputs',
+                         y_start=0, title='Actuator Outputs (AUX)', plot_height='small',
+                         changed_params=changed_params, topic_instance=1)
+    num_actuator_outputs = 8
+    if data_plot.dataset:
+        max_outputs = np.amax(data_plot.dataset.data['noutputs'])
+        if max_outputs < num_actuator_outputs: num_actuator_outputs = max_outputs
+    data_plot.add_graph(['output['+str(i)+']' for i in
+                         range(num_actuator_outputs)], colors8[0:num_actuator_outputs],
+                        ['Output '+str(i) for i in range(num_actuator_outputs)])
+    plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
+
+    if data_plot.finalize() is not None: plots.append(data_plot)
 
 
     # raw acceleration
