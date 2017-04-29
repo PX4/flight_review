@@ -12,7 +12,7 @@ from config import *
 from plotting import *
 
 #pylint: disable=deprecated-method, cell-var-from-loop, undefined-loop-variable,
-#pylint: disable=redefined-variable-type, consider-using-enumerate
+#pylint: disable=consider-using-enumerate
 
 
 def generate_plots(ulog, px4_ulog, db_data, vehicle_data):

@@ -64,15 +64,15 @@ class UploadHandler(tornado.web.RequestHandler):
                 total = 0
             self.multipart_streamer = MultiPartStreamer(total)
 
-    def data_received(self, data):
+    def data_received(self, chunk):
         if self.multipart_streamer:
-            self.multipart_streamer.data_received(data)
+            self.multipart_streamer.data_received(chunk)
 
-    def get(self):
+    def get(self, *args, **kwargs):
         template = _ENV.get_template(UPLOAD_TEMPLATE)
         self.write(template.render())
 
-    def post(self):
+    def post(self, *args, **kwargs):
         if self.multipart_streamer:
             try:
                 self.multipart_streamer.data_complete()
@@ -250,7 +250,7 @@ class UploadHandler(tornado.web.RequestHandler):
 class DownloadHandler(tornado.web.RequestHandler):
     """ Download log file Tornado request handler """
 
-    def get(self):
+    def get(self, *args, **kwargs):
         log_id = self.get_argument('log')
         if not validate_log_id(log_id):
             raise tornado.web.HTTPError(400, 'Invalid Parameter')
@@ -463,7 +463,7 @@ def generate_db_data_from_log_file(log_id, db_connection=None):
 class BrowseHandler(tornado.web.RequestHandler):
     """ Browse public log file Tornado request handler """
 
-    def get(self):
+    def get(self, *args, **kwargs):
         table_header = """
         <thead>
             <tr>
@@ -597,7 +597,7 @@ class BrowseHandler(tornado.web.RequestHandler):
 class EditEntryHandler(tornado.web.RequestHandler):
     """ Edit a log entry, with confirmation (currently only delete) """
 
-    def get(self):
+    def get(self, *args, **kwargs):
         log_id = cgi.escape(self.get_argument('log'))
         action = self.get_argument('action')
         confirmed = self.get_argument('confirm', default='0')

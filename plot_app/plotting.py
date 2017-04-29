@@ -1,6 +1,6 @@
 """ methods an classes used for plotting (wrappers around bokeh plots) """
 from bokeh.plotting import figure
-#pylint: disable=line-too-long, redefined-variable-type, arguments-differ, unused-import
+#pylint: disable=line-too-long, arguments-differ, unused-import
 from bokeh.models import (
     ColumnDataSource, Range1d, DataRange1d, DatetimeAxis,
     TickFormatter, DatetimeTickFormatter, FuncTickFormatter,

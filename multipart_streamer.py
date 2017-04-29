@@ -258,8 +258,7 @@ class MultiPartStreamer(object):
         idx = data.find(self.SEP)
         if idx >= 0:
             return data[:idx], data[idx + self.L_SEP:]
-        else:
-            return None, data
+        return None, data
 
     def _parse_header(self, header):
         """Parse raw header data.
@@ -283,8 +282,7 @@ class MultiPartStreamer(object):
                 hdr_name, hdr_value, tail = res.groups()
                 params[hdr_name] = hdr_value
             return hdr
-        else:
-            return {"value": header}
+        return {"value": header}
 
     def _begin_part(self, headers):
         """Internal method called when a new part is started in the stream.
