@@ -50,6 +50,9 @@ parser.add_argument('--host', action='append', type=str, metavar='HOST[:PORT]',
                     is used. You should use the DNS name of the public endpoint here. \'*\'
                     matches all hosts (for testing only) (default=localhost)""",
                     default=None)
+parser.add_argument('--allow-websocket-origin', action='append', type=str, metavar='HOST[:PORT]',
+                    help="""Public hostnames which may connect to the Bokeh websocket""",
+                    default=None)
 
 args = parser.parse_args()
 
@@ -66,6 +69,8 @@ if args.port != None: server_kwargs['port'] = args.port
 server_kwargs['num_procs'] = args.numprocs
 if args.address != None: server_kwargs['address'] = args.address
 if args.host != None: server_kwargs['host'] = args.host
+if args.allow_websocket_origin != None:
+    server_kwargs['allow_websocket_origin'] = args.allow_websocket_origin
 
 
 show_ulog_file = False
