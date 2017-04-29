@@ -527,6 +527,9 @@ class DataPlot:
                     return ret_val;
                 ''', args={'x_range' : p.x_range})
 
+        # make it possible to hide graphs by clicking on the label
+        p.legend.click_policy = "hide"
+
 
 class DataPlot2D(DataPlot):
     """
