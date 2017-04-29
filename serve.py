@@ -20,6 +20,15 @@ from tornado_handlers import DownloadHandler, UploadHandler, BrowseHandler, \
 
 #pylint: disable=invalid-name
 
+def _fixup_deprecated_host_args(args):
+    # --host is deprecated since bokeh 0.12.5. You might want to use
+    # --allow-websocket-origin instead
+    if args.host is not None and len(args.host) > 0:
+        if args.allow_websocket_origin is None:
+            args.allow_websocket_origin = []
+        args.allow_websocket_origin += args.host
+        args.allow_websocket_origin = list(set(args.allow_websocket_origin))
+
 parser = argparse.ArgumentParser(description='Start bokeh Server')
 
 parser.add_argument('-s', '--show', dest='show', action='store_true',
@@ -43,6 +52,9 @@ parser.add_argument('--host', action='append', type=str, metavar='HOST[:PORT]',
                     default=None)
 
 args = parser.parse_args()
+
+# This should remain here until --host is removed entirely
+_fixup_deprecated_host_args(args)
 
 applications = {}
 main_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'plot_app')
