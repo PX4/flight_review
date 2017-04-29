@@ -20,14 +20,14 @@ from tornado_handlers import DownloadHandler, UploadHandler, BrowseHandler, \
 
 #pylint: disable=invalid-name
 
-def _fixup_deprecated_host_args(args):
+def _fixup_deprecated_host_args(arguments):
     # --host is deprecated since bokeh 0.12.5. You might want to use
     # --allow-websocket-origin instead
-    if args.host is not None and len(args.host) > 0:
-        if args.allow_websocket_origin is None:
-            args.allow_websocket_origin = []
-        args.allow_websocket_origin += args.host
-        args.allow_websocket_origin = list(set(args.allow_websocket_origin))
+    if arguments.host is not None and len(arguments.host) > 0:
+        if arguments.allow_websocket_origin is None:
+            arguments.allow_websocket_origin = []
+        arguments.allow_websocket_origin += arguments.host
+        arguments.allow_websocket_origin = list(set(arguments.allow_websocket_origin))
 
 parser = argparse.ArgumentParser(description='Start bokeh Server')
 
