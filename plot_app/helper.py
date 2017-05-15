@@ -3,6 +3,8 @@ from timeit import default_timer as timer
 import time
 import re
 import os
+import traceback
+import sys
 from functools import lru_cache
 from urllib.request import urlretrieve
 import xml.etree.ElementTree # airframe parsing
@@ -258,6 +260,12 @@ def validate_url(url):
         r'(?:/?|[/?]\S+)$', re.IGNORECASE)
     return regex.match(url) is not None
 
+class ULogException(Exception):
+    """
+    Exception to indicate an ULog parsing error. It is most likely a corrupt log
+    file, but could also be a bug in the parser.
+    """
+    pass
 
 @lru_cache(maxsize=get_log_cache_size())
 def load_ulog_file(file_name):
@@ -279,7 +287,16 @@ def load_ulog_file(file_name):
                   'position_setpoint_triplet', 'vehicle_attitude_groundtruth',
                   'vehicle_local_position_groundtruth', 'vehicle_vision_position',
                   'vehicle_vision_attitude', 'vehicle_status', 'control_state']
-    ulog = ULog(file_name, msg_filter)
+    try:
+        ulog = ULog(file_name, msg_filter)
+    except FileNotFoundError:
+        print("Error: file %s not found" % file_name)
+        raise
+
+    # catch all other exceptions and turn them into an ULogException
+    except Exception as error:
+        traceback.print_exception(*sys.exc_info())
+        raise ULogException()
 
     # filter messages with timestamp = 0 (these are invalid).
     # The better way is not to publish such messages in the first place, and fix

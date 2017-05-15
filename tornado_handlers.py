@@ -22,7 +22,7 @@ from db_entry import *
 from helper import get_log_filename, validate_log_id, \
     flight_modes_table, get_airframe_data, html_long_word_force_break, \
     validate_url, load_ulog_file, clear_ulog_cache, get_default_parameters, \
-    get_total_flight_time
+    get_total_flight_time, ULogException
 from multipart_streamer import MultiPartStreamer
 from send_email import send_notification_email, send_flightreport_email
 
@@ -224,6 +224,10 @@ class UploadHandler(tornado.web.RequestHandler):
             except CustomHTTPError:
                 raise
 
+            except ULogException:
+                raise CustomHTTPError(
+                    400,
+                    'Failed to parse the file. It is most likely corrupt.')
             except:
                 print('Error when handling POST data', sys.exc_info()[0],
                       sys.exc_info()[1])
