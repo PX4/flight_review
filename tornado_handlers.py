@@ -306,7 +306,9 @@ class DownloadHandler(tornado.web.RequestHandler):
                 try:
                     temp_file_name = kml_file_name+'.'+str(uuid.uuid4())
                     convert_ulog2kml(log_file_name, temp_file_name,
-                                     'vehicle_global_position', kml_colors, style=style)
+                                     'vehicle_global_position', kml_colors,
+                                     style=style,
+                                     camera_trigger_topic_name='camera_capture')
                     shutil.move(temp_file_name, kml_file_name)
                 except:
                     print('Error creating KML file', sys.exc_info()[0], sys.exc_info()[1])
