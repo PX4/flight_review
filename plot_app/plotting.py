@@ -164,7 +164,7 @@ def plot_map(ulog, config, map_type='plain', api_key=None, setpoints=False,
         altitude = cur_dataset.data['alt'][indices] / 1e3 # meters
 
         plots_width = config['plot_width']
-        plots_height = config['plot_height']['gps_map']
+        plots_height = config['plot_height']['large']
         anchor_lat = 0
         anchor_lon = 0
 
