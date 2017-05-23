@@ -304,8 +304,8 @@ def plot_map(ulog, config, map_type='plain', api_key=None, setpoints=False,
         # log does not contain the value we are looking for
         print(type(error), "(vehicle_gps_position):", error)
         return None
+    p.toolbar.logo = None
     return p
-
 
 
 class DataPlot:
@@ -495,6 +495,9 @@ class DataPlot:
         p.ygrid.grid_line_alpha = 0.13
         p.ygrid.minor_grid_line_color = 'navy'
         p.ygrid.minor_grid_line_alpha = 0.05
+
+        p.toolbar.logo = None # hide the bokeh logo (we give credit at the
+                            # bottom of the page)
 
         #p.lod_threshold=None # turn off level-of-detail
 
