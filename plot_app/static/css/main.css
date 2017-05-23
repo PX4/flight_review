@@ -86,11 +86,6 @@ td.left {
 }
 
 
-/* bokeh logo */
-.bk-logo-small {
-/*	filter: saturate(70%); */
-	display: none !important; /* hide it: looks much better. We give credit to bokeh on the page */
-}
 /* bokeh plots */
 .bk-plot-layout {
 	/* spacing between plots */
