@@ -204,7 +204,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
 #        gps_titles.append('GPS Map: Plain')
 #
 #    data_plot = DataPlot2D(data, plot_config, 'vehicle_local_position',
-#        x_axis_label = '[m]', y_axis_label='[m]', plot_height='gps_map')
+#        x_axis_label = '[m]', y_axis_label='[m]', plot_height='large')
 #    data_plot.add_graph('y', 'x', colors2[0], 'Estimated')
 #    data_plot.change_dataset('vehicle_local_position_setpoint')
 #    data_plot.add_graph('y', 'x', colors2[1], 'Setpoint')
@@ -217,7 +217,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
 #        tabs = []
 #        for i in range(len(gps_plots)):
 #            tabs.append(Panel(child=gps_plots[i], title=gps_titles[i]))
-#        gps_plot_height=plot_config['plot_height']['gps_map'] + 30
+#        gps_plot_height=plot_config['plot_height']['large'] + 30
 #        plots.append(Tabs(tabs=tabs, width=plot_width, height=gps_plot_height))
 #    elif len(gps_plots) == 1:
 #        plots.extend(gps_plots)
@@ -225,7 +225,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
 
     # Position plot
     data_plot = DataPlot2D(data, plot_config, 'vehicle_local_position',
-                           x_axis_label='[m]', y_axis_label='[m]', plot_height='gps_map')
+                           x_axis_label='[m]', y_axis_label='[m]', plot_height='large')
     data_plot.add_graph('y', 'x', colors2[0], 'Estimated',
                         check_if_all_zero=True)
     data_plot.change_dataset('vehicle_local_position_setpoint')

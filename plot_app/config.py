@@ -49,7 +49,7 @@ plot_config = dict(
     plot_height = dict(
         normal = int(plot_width / 2.1),
         small = int(plot_width / 2.5),
-        gps_map = int(plot_width / 1.61803398874989484),
+        large = int(plot_width / 1.61803398874989484), # used for the gps map
         ),
     )
 
