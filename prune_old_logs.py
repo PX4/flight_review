@@ -14,7 +14,7 @@ from plot_app.config import get_db_filename
 from plot_app.helper import get_log_filename
 
 
-parser = argparse.ArgumentParser(description='Remove a DB entry (but not the log file)')
+parser = argparse.ArgumentParser(description='Remove old log files & DB entries')
 
 parser.add_argument('--max-age', action='store', type=int, default=30,
         help='maximum age in days (delete logs older than this, default=30)')
