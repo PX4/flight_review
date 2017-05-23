@@ -102,6 +102,7 @@ with con:
                 "FlightModes TEXT, " # all flight modes as comma-separated int's
                 "SoftwareVersion TEXT, " # release version
                 "UUID TEXT, " # vehicle UUID (sys_uuid in log)
+                "FlightModeDurations TEXT, " # comma-separated list of <flight_mode_int>:<duration_sec>
                 "CONSTRAINT Id_PK PRIMARY KEY (Id))")
 
     else:
@@ -114,6 +115,9 @@ with con:
         if not 'UUID' in column_names:
             print('Adding column UUID')
             cur.execute("ALTER TABLE LogsGenerated ADD COLUMN UUID TEXT DEFAULT ''")
+        if not 'FlightModeDurations' in column_names:
+            print('Adding column FlightModeDurations')
+            cur.execute("ALTER TABLE LogsGenerated ADD COLUMN FlightModeDurations TEXT DEFAULT ''")
 
 
     # Vehicle table (contains information about a vehicle)
