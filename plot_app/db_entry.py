@@ -54,7 +54,13 @@ class DBDataGenerated:
         self.num_logged_warnings = 0
         self.flight_modes = set()
         self.vehicle_uuid = ''
+        self.flight_mode_durations = [] # list of tuples of (mode, duration sec)
 
+    def flight_mode_durations_str(self):
+        ret = []
+        for duration in self.flight_mode_durations:
+            ret.append(str(duration[0])+':'+str(duration[1]))
+        return ','.join(ret)
 
     @classmethod
     def from_log_file(cls, log_id):
@@ -90,6 +96,18 @@ class DBDataGenerated:
             cur_dataset = ulog.get_dataset('commander_state')
             flight_mode_changes = cur_dataset.list_value_changes('main_state')
             obj.flight_modes = set([x[1] for x in flight_mode_changes])
+
+            # get the durations
+            # make sure the first entry matches the start of the logging
+            if len(flight_mode_changes) > 0:
+                flight_mode_changes[0] = (ulog.start_timestamp, flight_mode_changes[0][1])
+            flight_mode_changes.append((ulog.last_timestamp, -1))
+            for i in range(len(flight_mode_changes)-1):
+                flight_mode = flight_mode_changes[i][1]
+                flight_mode_duration = int((flight_mode_changes[i+1][0] -
+                                            flight_mode_changes[i][0]) / 1e6)
+                obj.flight_mode_durations.append((flight_mode, flight_mode_duration))
+
         except (KeyError, IndexError) as error:
             obj.flight_modes = set()
 
