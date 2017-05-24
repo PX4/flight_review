@@ -38,8 +38,9 @@ function initMap() {
 {% endif %}
 
 
-
+{% if is_plot_page %}
 <div id="loading-plots" style="height: 50px;"><p><big>Loading Plots...</big></p></div>
+{% endif %}
 
 {{ plot_div|indent(8) }}
 
