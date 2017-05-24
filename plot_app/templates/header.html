@@ -36,6 +36,9 @@
                 <div class="col-xs-">
                     <ul class="nav navbar-nav navbar-right">
                         <li _class="active"><a href="upload">Upload</a></li>
+{% if not is_plot_page %}
+                        <li ><a href="stats">Statistics</a></li>
+{% endif %}
                         <li ><a href="browse">Browse</a></li>
 
 {% if is_plot_page %}
