@@ -15,6 +15,7 @@ from bokeh.application.handlers import DirectoryHandler
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'plot_app'))
 from helper import set_log_id_is_filename, print_cache_info
 from config import debug_print_timing
+from tornado.web import RedirectHandler
 from tornado_handlers import DownloadHandler, UploadHandler, BrowseHandler, \
     EditEntryHandler
 
@@ -87,7 +88,8 @@ extra_patterns = [
     (r'/browse', BrowseHandler),
     (r'/edit_entry', EditEntryHandler),
     (r'/?', UploadHandler), #root should point to upload
-    (r'/download', DownloadHandler)
+    (r'/download', DownloadHandler),
+    (r"/stats", RedirectHandler, {"url": "/plot_app?stats=1"}),
 ]
 
 server = Server(applications, extra_patterns=extra_patterns, **server_kwargs)
