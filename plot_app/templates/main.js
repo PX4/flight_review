@@ -108,6 +108,21 @@ function setSize(size) {
 {% endif %} {# is_plot_page #}
 
 
+{% if is_stats_page %}
+// ok, this is ugly: there are too many hover tools (one per airframe in a
+// single plot), so hide them from the toolbar here. Some actions like resetting
+// the plot make them reappear, so we continuously repeat the call.
+function hide_bokeh_hover_tool() {
+	$(".bk-tool-icon-hover").parent('div').css("display", "none");
+	window.setTimeout(hide_bokeh_hover_tool, 200);
+}
+
+$(function() { //on startup
+	window.setTimeout(hide_bokeh_hover_tool, 500);
+});
+
+{% endif %} {# is_stats_page #}
+
 // auto-hide sticky header when scrolling down, show when scrolling up
 // source: http://osvaldas.info/auto-hide-sticky-header
 ;( function( $, window, document, undefined )
