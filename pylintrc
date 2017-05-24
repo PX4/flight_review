@@ -99,7 +99,7 @@ evaluation=10.0 - ((float(5 * error + warning + refactor + convention) / stateme
 [BASIC]
 
 # Good variable names which should always be accepted, separated by a comma
-good-names=i,j,k,ex,Run,_,e,h,m,s,m1,s1,h1,p,x,y,t,_p
+good-names=i,j,k,ex,Run,_,e,h,m,s,m1,s1,h1,p,x,y,t,_p,d
 
 # Bad variable names which should always be refused, separated by a comma
 bad-names=foo,bar,baz,toto,tutu,tata
@@ -269,7 +269,7 @@ ignore-mixin-members=yes
 # (useful for modules/projects where namespaces are manipulated during runtime
 # and thus existing member attributes cannot be deduced by static analysis. It
 # supports qualified module names, as well as Unix pattern matching.
-ignored-modules=numpy
+ignored-modules=numpy,bokeh.palettes
 
 # List of class names for which member attributes should not be checked (useful
 # for classes with dynamically set attributes). This supports the use of
