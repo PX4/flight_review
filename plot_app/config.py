@@ -37,6 +37,7 @@ __AIRFRAMES_FILENAME = os.path.join(__CACHE_FILE_PATH, 'airframes.xml')
 __PARAMETERS_FILENAME = os.path.join(__CACHE_FILE_PATH, 'parameters.xml')
 
 __PRINT_TIMING = int(_conf.get('debug', 'print_timing'))
+__VERBOSE_OUTPUT = int(_conf.get('debug', 'verbose_output'))
 
 # general configuration variables for plotting
 plot_width = 840
@@ -109,3 +110,7 @@ def get_log_cache_size():
 def debug_print_timing():
     """ print timing information? """
     return __PRINT_TIMING == 1
+
+def debug_verbose_output():
+    """ print verbose output? """
+    return __VERBOSE_OUTPUT == 1
