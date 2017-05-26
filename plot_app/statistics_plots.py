@@ -2,6 +2,7 @@
 import functools
 import re
 import sqlite3
+import datetime
 
 import numpy as np
 
@@ -11,12 +12,12 @@ from bokeh.palettes import viridis # alternatives: magma, inferno
 import bokeh.core.properties as props
 from bokeh.models import (
     DatetimeTickFormatter, FixedTicker, FuncTickFormatter,
-    HoverTool, ColumnDataSource
+    HoverTool, ColumnDataSource, LabelSet, CustomJS
     )
 
 from plotting import TOOLS, ACTIVE_SCROLL_TOOLS
 from config import get_db_filename
-from helper import get_airframe_data, flight_modes_table
+from helper import get_airframe_data, flight_modes_table, get_sw_releases
 
 
 #pylint: disable=too-few-public-methods,invalid-name,unused-argument,consider-using-enumerate
@@ -261,6 +262,56 @@ class StatisticsPlots(object):
             months=["%d %b %Y"],
             years=["%d %b %Y"],
             )
+
+
+        # show the release versions as text markers
+        release_dict = dict(dates=[], tags=[], y=[], y_offset=[])
+        if len(self._all_logs_dates) > 0:
+            first_date = self._all_logs_dates[0]
+            y_max = len(self._all_logs_dates)
+            y_pos = -y_max*0.08
+
+            releases = get_sw_releases()
+            if releases:
+                y_offset = True
+                for release in reversed(releases):
+                    tag = release['tag_name']
+                    release_date_str = release['published_at']
+                    release_date = datetime.datetime.strptime(release_date_str,
+                                                              "%Y-%m-%dT%H:%M:%SZ")
+                    if release_date > first_date and not 'rc' in tag.lower():
+                        release_dict['dates'].append(release_date)
+                        release_dict['tags'].append(tag)
+                        release_dict['y'].append(y_pos)
+                        if y_offset:
+                            release_dict['y_offset'].append(5)
+                        else:
+                            release_dict['y_offset'].append(-18)
+                        y_offset = not y_offset
+
+            if len(release_dict['dates']) > 0:
+                source = ColumnDataSource(data=release_dict)
+                x=p.scatter(x='dates', y='y', size=4, source=source, color='#000000')
+                labels = LabelSet(x='dates', y='y',
+                                  text='tags', level='glyph',
+                                  x_offset=2, y_offset='y_offset', source=source,
+                                  text_font_size="10pt")
+                p.add_layout(labels)
+
+                # fixate the y position within the graph (screen coordinates).
+                # the y_units='screen' does not work for p.scatter
+                jscode = """
+                    var data = source.get('data');
+                    var start = cb_obj.get('start');
+                    var end = cb_obj.get('end');
+                    data_start = start + (end - start) * 0.05;
+                    for (var i = 0; i < data['y'].length; ++i) {
+                        data['y'][i] = data_start;
+                    }
+                    source.trigger('change');
+                """
+                p.y_range.callback = CustomJS(args=dict(source=source), code=jscode)
+
         self._setup_plot(p, 'large')
 
         return p
