@@ -5,7 +5,7 @@ python:
 # command to install dependencies
 install:
     - "sudo apt-get install sqlite3"
-    - "pip install bokeh jinja2 pyulog"
+    - "pip install bokeh jinja2 pyulog pandas"
     - "pip install pylint"
 # command to run code checks
 script: ./run_pylint.sh

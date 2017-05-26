@@ -6,7 +6,7 @@ import sqlite3
 import numpy as np
 
 from bokeh.plotting import figure
-from bokeh.charts import Area
+from bokeh.charts import Area # this requires pandas
 from bokeh.palettes import viridis # alternatives: magma, inferno
 import bokeh.core.properties as props
 from bokeh.models import (

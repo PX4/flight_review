@@ -13,8 +13,8 @@ It uses the [bokeh](http://bokeh.pydata.org) library for plotting and the
 
 - clone the repository
 - use python3
-- `pip3 install bokeh jinja2 pyulog simplekml` (at least version 0.12.4 of bokeh is
-  required)
+- `pip3 install bokeh jinja2 pyulog pandas simplekml` (at least version 0.12.5
+  of bokeh is required)
 - `sudo apt-get install sqlite3`
 - configure web server config (this can be skipped for a local installation):
   create a file `config_user.ini` and copy and adjust the sections and values
