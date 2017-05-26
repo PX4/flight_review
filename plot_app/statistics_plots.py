@@ -291,7 +291,7 @@ class StatisticsPlots(object):
 
             if len(release_dict['dates']) > 0:
                 source = ColumnDataSource(data=release_dict)
-                x=p.scatter(x='dates', y='y', size=4, source=source, color='#000000')
+                x = p.scatter(x='dates', y='y', size=4, source=source, color='#000000')
                 labels = LabelSet(x='dates', y='y',
                                   text='tags', level='glyph',
                                   x_offset=2, y_offset='y_offset', source=source,
