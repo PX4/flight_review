@@ -35,6 +35,7 @@ __DB_FILENAME = os.path.join(__STORAGE_PATH, 'logs.sqlite')
 __CACHE_FILE_PATH = os.path.join(__STORAGE_PATH, 'cache')
 __AIRFRAMES_FILENAME = os.path.join(__CACHE_FILE_PATH, 'airframes.xml')
 __PARAMETERS_FILENAME = os.path.join(__CACHE_FILE_PATH, 'parameters.xml')
+__RELEASES_FILENAME = os.path.join(__CACHE_FILE_PATH, 'releases.json')
 
 __PRINT_TIMING = int(_conf.get('debug', 'print_timing'))
 __VERBOSE_OUTPUT = int(_conf.get('debug', 'verbose_output'))
@@ -90,6 +91,10 @@ def get_airframes_filename():
 def get_airframes_url():
     """ get airframes download URL """
     return __AIRFRAMES_URL
+
+def get_releases_filename():
+    """ get configured releases file name """
+    return __RELEASES_FILENAME
 
 def get_parameters_filename():
     """ get configured parameters file name """

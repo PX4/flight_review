@@ -1,4 +1,5 @@
 """ some helper methods that don't fit in elsewhere """
+import json
 from timeit import default_timer as timer
 import time
 import re
@@ -13,7 +14,8 @@ import uuid
 import numpy as np
 from config import get_log_filepath, get_airframes_filename, get_airframes_url, \
                    get_parameters_filename, get_parameters_url, \
-                   get_log_cache_size, debug_print_timing
+                   get_log_cache_size, debug_print_timing, \
+                   get_releases_filename
 
 from pyulog import *
 from pyulog.px4 import *
@@ -89,7 +91,6 @@ def get_airframe_data(airframe_id):
     """ return a dict of aiframe data ('name' & 'type') from an autostart id.
     Downloads aiframes if necessary. Returns None on error
     """
-#    download_file_maybe(get_parameters_filename(), get_parameters_url())
 
     airframe_xml = get_airframes_filename()
     if download_file_maybe(airframe_xml, get_airframes_url()):
@@ -106,6 +107,17 @@ def get_airframe_data(airframe_id):
                         return ret
         except:
             pass
+    return None
+
+def get_sw_releases():
+    """ return a JSON object of public releases.
+    Downloads releases from github if necessary. Returns None on error
+    """
+
+    releases_json = get_releases_filename()
+    if download_file_maybe(releases_json, 'https://api.github.com/repos/PX4/Firmware/releases'):
+        with open(releases_json) as data_file:
+            return json.load(data_file)
     return None
 
 def get_default_parameters():
