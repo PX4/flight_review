@@ -7,7 +7,8 @@ import sys
 import os
 
 # this is needed for the following imports
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'plot_app'))
+plot_app_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'plot_app')
+sys.path.append(plot_app_dir)
 from plot_app.config import get_db_filename, get_log_filepath, \
     get_cache_filepath, get_kml_filepath
 
@@ -15,6 +16,11 @@ log_dir = get_log_filepath()
 if not os.path.exists(log_dir):
     print('creating log directory '+log_dir)
     os.makedirs(log_dir)
+
+upload_plot_cache_dir = os.path.join(plot_app_dir, 'static/cached')
+if not os.path.exists(upload_plot_cache_dir):
+    print('creating upload cache directory '+upload_plot_cache_dir)
+    os.makedirs(upload_plot_cache_dir)
 
 cur_dir = get_cache_filepath()
 if not os.path.exists(cur_dir):

@@ -173,7 +173,7 @@ else:
             ]
         curdoc().template_variables['vtol_modes'] = vtol_modes
 
-        plots = generate_plots(ulog, px4_ulog, db_data, vehicle_data)
+        plots = generate_plots(log_id, ulog, px4_ulog, db_data, vehicle_data)
 
         title = 'Flight Review - '+px4_ulog.get_mav_type()
 
@@ -187,7 +187,7 @@ else:
 
 
     # layout
-    layout = column(plots, sizing_mode='scale_width')
+    layout = column(plots, name='main_layout')
     curdoc().add_root(layout)
     curdoc().title = title
 

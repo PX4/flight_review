@@ -17,7 +17,7 @@ from helper import set_log_id_is_filename, print_cache_info
 from config import debug_print_timing
 from tornado.web import RedirectHandler
 from tornado_handlers import DownloadHandler, UploadHandler, BrowseHandler, \
-    EditEntryHandler
+    EditEntryHandler, UploadPlotHandler
 
 #pylint: disable=invalid-name
 
@@ -85,6 +85,7 @@ set_log_id_is_filename(show_ulog_file)
 # additional request handlers
 extra_patterns = [
     (r'/upload', UploadHandler),
+    (r'/upload_plot', UploadPlotHandler),
     (r'/browse', BrowseHandler),
     (r'/edit_entry', EditEntryHandler),
     (r'/?', UploadHandler), #root should point to upload

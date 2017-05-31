@@ -61,6 +61,12 @@ def get_log_filename(log_id):
         return log_id
     return os.path.join(get_log_filepath(), log_id + '.ulg')
 
+def get_plot_cache_filename(log_id, plot_name):
+    """
+    get the file name for the cached png plot image
+    """
+    return 'plot_app/static/cached/%s/%s.png' % (log_id, plot_name)
+
 def download_file_maybe(filename, url):
     """ download an url to filename if it does not exist or it's older than a day.
         returns True if the file can be used

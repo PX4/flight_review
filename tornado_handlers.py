@@ -3,6 +3,7 @@ Request handlers for Tornado web server
 """
 
 from __future__ import print_function
+import base64
 import sys
 import os
 import binascii
@@ -11,6 +12,8 @@ import shutil
 import sqlite3
 import datetime
 import cgi # for html escaping
+import urllib.parse # for url escaping
+import re
 import tornado.web
 from jinja2 import Environment, FileSystemLoader
 from pyulog import *
@@ -22,7 +25,8 @@ from db_entry import *
 from helper import get_log_filename, validate_log_id, \
     flight_modes_table, get_airframe_data, html_long_word_force_break, \
     validate_url, load_ulog_file, clear_ulog_cache, get_default_parameters, \
-    get_total_flight_time, ULogException
+    get_total_flight_time, ULogException, validate_log_id, \
+    get_plot_cache_filename
 from multipart_streamer import MultiPartStreamer
 from send_email import send_notification_email, send_flightreport_email
 
@@ -684,3 +688,58 @@ Click <a href="{delete_url}">here</a> to confirm and delete the log {log_id}.
         clear_ulog_cache()
 
         return True
+
+
+@tornado.web.stream_request_body
+class UploadPlotHandler(tornado.web.RequestHandler):
+    """ Upload bokeh plot (canvas as png) for caching
+    data """
+
+    def initialize(self):
+        self._data = b"" 
+
+    def prepare(self):
+        if self.request.method.upper() == 'POST':
+            if 'expected_size' in self.request.arguments:
+                self.request.connection.set_max_body_size(
+                    int(self.get_argument('expected_size')))
+            try:
+                total = int(self.request.headers.get("Content-Length", "0"))
+            except KeyError:
+                total = 0
+
+    def data_received(self, chunk):
+        self._data += chunk
+
+    def post(self, *args, **kwargs):
+        arguments = self._data.decode("utf-8").split('&')
+        image_base64 = None
+        log_id = None
+        plot_name = None
+        for argument in arguments:
+            if argument.startswith('image='):
+                # argument is an encoded data URI, starting with image=data:image/png;base64,
+                image_base64 = urllib.parse.unquote(argument).split(',')[1]
+            elif argument.startswith('log_id'):
+                log_id = argument.split('=')[1]
+            elif argument.startswith('plot_name'):
+                plot_name = argument.split('=')[1]
+
+        if image_base64 is None or log_id is None or plot_name is None:
+            print("Error: invalid arguments")
+            return
+
+        if not validate_log_id(log_id):
+            return
+        if not re.match(r'^[0-9a-zA-Z_-]+$', plot_name):
+            return
+        
+        image_name = get_plot_cache_filename(log_id, plot_name)
+        dir_name = os.path.dirname(image_name)
+        if not os.path.isdir(dir_name):
+            os.mkdir(dir_name)
+        image_file = open(image_name,"wb") 
+        image_file.write(base64.b64decode(image_base64))
+        image_file.close()
+
+

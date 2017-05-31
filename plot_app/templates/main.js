@@ -69,6 +69,52 @@ function checkPlotsInitialized() {
 	if (cur_frag.length > 0) {
 		window.setTimeout(function() { $('#'+cur_frag).scrollView(); }, 1000);
 	}
+
+
+
+	window.setTimeout(upload_plots, 1000);
+}
+
+
+function upload_plots() {
+	// TODO: move into a global list?
+	// or better: separate list with only plots that we want to cache...
+	var plot_ids = [
+{% set comma = joiner(",") %}
+{% for cur_plot in plots %}
+	{{ comma() }} "{{ cur_plot.model_id }}"
+{% endfor %}
+	];
+
+	var plot_names = [
+{% set comma = joiner(",") %}
+{% for cur_plot in plots %}
+	{{ comma() }} "{{ cur_plot.name }}"
+{% endfor %}
+	];
+
+
+	var all_plots = [];
+	for (var i = 0; i < plot_ids.length; ++i) {
+		var plot = $('#modelid_'+plot_ids[i]);
+		var canvas = plot.find('canvas')[0];
+		var data_url = canvas.toDataURL();
+		all_plots.push(data_url);
+	}
+	// TODO: disallow inputs until rendered & copied?
+
+	for (var i = 0; i < all_plots.length; ++i) {
+		var data_url = all_plots[i];
+		var log_id = '{{ log_id }}';
+		$.ajax({
+			type: "POST",
+			url: "upload_plot",
+			data: { image: data_url, log_id: log_id, plot_name: plot_names[i] }
+			// TODO: session id?
+		}).done(function( respond ) {
+			// console.log(respond);
+		});
+	}
 }
 
 $(function() { //on startup
@@ -104,6 +150,7 @@ function setSize(size) {
 	bokeh_doc = Bokeh.index[Object.keys(Bokeh.index)[0]].model.document
 	bokeh_doc.resize(); //trigger resize event
 }
+
 
 {% endif %} {# is_plot_page #}
 
