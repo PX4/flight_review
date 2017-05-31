@@ -103,7 +103,10 @@ def plot_flight_modes_background(p, flight_mode_changes, vtol_states=None):
                                            fill_alpha=0.09, line_color=None,
                                            fill_color=color,
                                            top=vtol_state_height, top_units='screen'))
-        label = Label(x=78, y=32, x_units='screen', y_units='screen',
+        # use screen coords so that the label always stays. It's a bit
+        # unfortunate that the x position includes the x-offset of the y-axis,
+        # which depends on the axis labels (e.g. 4.000e+5 creates a large offset)
+        label = Label(x=83, y=32, x_units='screen', y_units='screen',
                       text='VTOL mode', text_font_size='10pt', level='glyph',
                       background_fill_color='white', background_fill_alpha=0.8)
         p.add_layout(label)
