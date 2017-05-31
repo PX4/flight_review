@@ -228,17 +228,18 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
                            x_axis_label='[m]', y_axis_label='[m]', plot_height='large')
     data_plot.add_graph('y', 'x', colors2[0], 'Estimated',
                         check_if_all_zero=True)
-    data_plot.change_dataset('vehicle_local_position_setpoint')
-    data_plot.add_graph('y', 'x', colors2[1], 'Setpoint')
-    # groundtruth (SITL only)
-    data_plot.change_dataset('vehicle_local_position_groundtruth')
-    data_plot.add_graph('y', 'x', color_gray, 'Groundtruth')
-    # GPS + position setpoints
-    plot_map(ulog, plot_config, map_type='plain', setpoints=True,
-             bokeh_plot=data_plot.bokeh_plot)
-    if data_plot.finalize() is not None:
-        plots.append(data_plot.bokeh_plot)
-        curdoc().template_variables['has_position_data'] = True
+    if not data_plot.had_error: # vehicle_local_position is required
+        data_plot.change_dataset('vehicle_local_position_setpoint')
+        data_plot.add_graph('y', 'x', colors2[1], 'Setpoint')
+        # groundtruth (SITL only)
+        data_plot.change_dataset('vehicle_local_position_groundtruth')
+        data_plot.add_graph('y', 'x', color_gray, 'Groundtruth')
+        # GPS + position setpoints
+        plot_map(ulog, plot_config, map_type='plain', setpoints=True,
+                 bokeh_plot=data_plot.bokeh_plot)
+        if data_plot.finalize() is not None:
+            plots.append(data_plot.bokeh_plot)
+            curdoc().template_variables['has_position_data'] = True
 
 
     # initialize parameter changes

@@ -362,6 +362,12 @@ class DataPlot:
         """ returns bokeh LabelSet or None """
         return self._param_change_label
 
+    @property
+    def had_error(self):
+        """ Returns true if the previous plotting calls had an error (e.g. due
+        to missing data in the log) """
+        return self._had_error
+
 
     @property
     def dataset(self):
