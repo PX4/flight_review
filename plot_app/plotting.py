@@ -331,6 +331,7 @@ class DataPlot:
         self._plot_height_name = plot_height
         self._data_name = data_name
         self._cur_dataset = None
+        self._name = ''
         try:
             self._p = figure(title=title, x_axis_label=x_axis_label,
                              y_axis_label=y_axis_label, tools=TOOLS,
@@ -376,6 +377,15 @@ class DataPlot:
     def dataset(self):
         """ get current dataset """
         return self._cur_dataset
+
+    @property
+    def name(self):
+        """ get the plot name (unique for each plot, can be used as a file name) """
+        return self._name
+
+    def set_name(self, name):
+        """ set the plot name """
+        self._name = name
 
     def change_dataset(self, data_name, topic_instance=0):
         """ select a new dataset. Afterwards, call add_graph etc """
@@ -484,7 +494,8 @@ class DataPlot:
         if self._had_error and not self._previous_success:
             return None
         self._setup_plot()
-        return self._p
+        #return self._p
+        return self
 
 
     def _setup_plot(self):
