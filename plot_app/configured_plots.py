@@ -252,11 +252,14 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
 
     ### Add all data plots ###
 
+    x_range_offset = (ulog.last_timestamp - ulog.start_timestamp) * 0.05
+    x_range = Range1d(ulog.start_timestamp - x_range_offset, ulog.last_timestamp + x_range_offset)
+
 
     # Altitude estimate
     data_plot = DataPlot(data, plot_config, 'vehicle_gps_position',
                          y_axis_label='[m]', title='Altitude Estimate',
-                         changed_params=changed_params)
+                         changed_params=changed_params, x_range=x_range)
     data_plot.add_graph([lambda data: ('alt', data['alt']*0.001)],
                         colors8[0:1], ['GPS Altitude'])
     data_plot.change_dataset('sensor_combined')
@@ -282,7 +285,8 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
         axis_name = axis.capitalize()
         data_plot = DataPlot(data, plot_config, 'vehicle_attitude',
                              y_axis_label='[deg]', title=axis_name+' Angle',
-                             plot_height='small', changed_params=changed_params)
+                             plot_height='small', changed_params=changed_params,
+                             x_range=x_range)
         data_plot.add_graph([lambda data: (axis, np.rad2deg(data[axis]))],
                             colors2[0:1], [axis_name+' Estimated'])
         data_plot.change_dataset('vehicle_attitude_setpoint')
@@ -298,7 +302,8 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
         # rate
         data_plot = DataPlot(data, plot_config, 'vehicle_attitude',
                              y_axis_label='[deg/s]', title=axis_name+' Angular Rate',
-                             plot_height='small', changed_params=changed_params)
+                             plot_height='small', changed_params=changed_params,
+                             x_range=x_range)
         data_plot.add_graph([lambda data: (axis+'speed', np.rad2deg(data[axis+'speed']))],
                             colors2[0:1], [axis_name+' Rate Estimated'])
         data_plot.change_dataset('vehicle_rates_setpoint')
@@ -317,7 +322,8 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
     for axis in ['x', 'y', 'z']:
         data_plot = DataPlot(data, plot_config, 'vehicle_local_position',
                              y_axis_label='[m]', title='Local Position '+axis.upper(),
-                             plot_height='small', changed_params=changed_params)
+                             plot_height='small', changed_params=changed_params,
+                             x_range=x_range)
         data_plot.add_graph([axis], colors2[0:1], [axis.upper()+' Estimated'])
         data_plot.change_dataset('vehicle_local_position_setpoint')
         data_plot.add_graph([axis], colors2[1:2], [axis.upper()+' Setpoint'])
@@ -330,7 +336,8 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
     # Velocity
     data_plot = DataPlot(data, plot_config, 'vehicle_local_position',
                          y_axis_label='[m/s]', title='Velocity',
-                         plot_height='small', changed_params=changed_params)
+                         plot_height='small', changed_params=changed_params,
+                         x_range=x_range)
     data_plot.add_graph(['vx', 'vy', 'vz'], colors3, ['X', 'Y', 'Z'])
     plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
 
@@ -341,7 +348,8 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
     if any(elem.name == 'vehicle_vision_position' for elem in data):
         data_plot = DataPlot(data, plot_config, 'vehicle_vision_position',
                              y_axis_label='[m]', title='Vision Position',
-                             plot_height='small', changed_params=changed_params)
+                             plot_height='small', changed_params=changed_params,
+                             x_range=x_range)
         data_plot.add_graph(['x', 'y', 'z'], colors3, ['X', 'Y', 'Z'])
         plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
 
@@ -355,7 +363,8 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
         # Vision velocity
         data_plot = DataPlot(data, plot_config, 'vehicle_vision_position',
                              y_axis_label='[m]', title='Vision Velocity',
-                             plot_height='small', changed_params=changed_params)
+                             plot_height='small', changed_params=changed_params,
+                             x_range=x_range)
         data_plot.add_graph(['vx', 'vy', 'vz'], colors3, ['X', 'Y', 'Z'])
         plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
 
@@ -369,7 +378,8 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
     if any(elem.name == 'vehicle_vision_attitude' for elem in data):
         data_plot = DataPlot(data, plot_config, 'vehicle_vision_attitude',
                              y_axis_label='[deg]', title='Vision Attitude',
-                             plot_height='small', changed_params=changed_params)
+                             plot_height='small', changed_params=changed_params,
+                             x_range=x_range)
         data_plot.add_graph([lambda data: ('roll', np.rad2deg(data['roll'])),
                              lambda data: ('pitch', np.rad2deg(data['pitch'])),
                              lambda data: ('yaw', np.rad2deg(data['yaw']))],
@@ -393,7 +403,8 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
         if np.amax(control_state['airspeed_valid']) == 1:
             data_plot = DataPlot(data, plot_config, 'vehicle_global_position',
                                  y_axis_label='[m/s]', title='Airspeed',
-                                 plot_height='small', changed_params=changed_params)
+                                 plot_height='small',
+                                 changed_params=changed_params, x_range=x_range)
             data_plot.add_graph([lambda data: ('groundspeed_estimated',
                                                np.sqrt(data['vel_n']**2 + data['vel_e']**2))],
                                 colors3[2:3], ['Ground Speed Estimated'])
@@ -412,7 +423,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
     data_plot = DataPlot(data, plot_config, 'rc_channels',
                          title='Raw Radio Control Inputs',
                          plot_height='small', y_range=Range1d(-1.1, 1.1),
-                         changed_params=changed_params)
+                         changed_params=changed_params, x_range=x_range)
     num_rc_channels = 8
     if data_plot.dataset:
         max_channels = np.amax(data_plot.dataset.data['channel_count'])
@@ -435,7 +446,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
     # actuator controls 0
     data_plot = DataPlot(data, plot_config, 'actuator_controls_0',
                          y_start=0, title='Actuator Controls 0', plot_height='small',
-                         changed_params=changed_params)
+                         changed_params=changed_params, x_range=x_range)
     data_plot.add_graph(['control[0]', 'control[1]', 'control[2]', 'control[3]'],
                         colors8[0:4], ['Roll', 'Pitch', 'Yaw', 'Thrust'])
     plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
@@ -445,7 +456,8 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
     # (only present on VTOL, Fixed-wing config)
     data_plot = DataPlot(data, plot_config, 'actuator_controls_1',
                          y_start=0, title='Actuator Controls 1 (VTOL in Fixed-Wing mode)',
-                         plot_height='small', changed_params=changed_params)
+                         plot_height='small', changed_params=changed_params,
+                         x_range=x_range)
     data_plot.add_graph(['control[0]', 'control[1]', 'control[2]', 'control[3]'],
                         colors8[0:4], ['Roll', 'Pitch', 'Yaw', 'Thrust'])
     plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
@@ -455,7 +467,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
     # actuator outputs 0: Main
     data_plot = DataPlot(data, plot_config, 'actuator_outputs',
                          y_start=0, title='Actuator Outputs (Main)', plot_height='small',
-                         changed_params=changed_params)
+                         changed_params=changed_params, x_range=x_range)
     num_actuator_outputs = 8
     if data_plot.dataset:
         max_outputs = np.amax(data_plot.dataset.data['noutputs'])
@@ -470,7 +482,8 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
     # actuator outputs 1: AUX
     data_plot = DataPlot(data, plot_config, 'actuator_outputs',
                          y_start=0, title='Actuator Outputs (AUX)', plot_height='small',
-                         changed_params=changed_params, topic_instance=1)
+                         changed_params=changed_params, topic_instance=1,
+                         x_range=x_range)
     num_actuator_outputs = 8
     if data_plot.dataset:
         max_outputs = np.amax(data_plot.dataset.data['noutputs'])
@@ -486,7 +499,8 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
     # raw acceleration
     data_plot = DataPlot(data, plot_config, 'sensor_combined',
                          y_axis_label='[m/s^2]', title='Raw Acceleration',
-                         plot_height='small', changed_params=changed_params)
+                         plot_height='small', changed_params=changed_params,
+                         x_range=x_range)
     data_plot.add_graph(['accelerometer_m_s2[0]', 'accelerometer_m_s2[1]',
                          'accelerometer_m_s2[2]'], colors3, ['X', 'Y', 'Z'])
     if data_plot.finalize() is not None: plots.append(data_plot)
@@ -496,7 +510,8 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
     # raw angular speed
     data_plot = DataPlot(data, plot_config, 'sensor_combined',
                          y_axis_label='[deg/s]', title='Raw Angular Speed (Gyroscope)',
-                         plot_height='small', changed_params=changed_params)
+                         plot_height='small', changed_params=changed_params,
+                         x_range=x_range)
     data_plot.add_graph([
         lambda data: ('gyro_rad[0]', np.rad2deg(data['gyro_rad[0]'])),
         lambda data: ('gyro_rad[1]', np.rad2deg(data['gyro_rad[1]'])),
@@ -509,7 +524,8 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
     # magnetic field strength
     data_plot = DataPlot(data, plot_config, 'sensor_combined',
                          y_axis_label='[gauss]', title='Raw Magnetic Field Strength',
-                         plot_height='small', changed_params=changed_params)
+                         plot_height='small', changed_params=changed_params,
+                         x_range=x_range)
     data_plot.add_graph(['magnetometer_ga[0]', 'magnetometer_ga[1]',
                          'magnetometer_ga[2]'], colors3,
                         ['X', 'Y', 'Z'])
@@ -519,7 +535,8 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
     # distance sensor
     data_plot = DataPlot(data, plot_config, 'distance_sensor',
                          y_start=0, y_axis_label='[m]', title='Distance Sensor',
-                         plot_height='small', changed_params=changed_params)
+                         plot_height='small', changed_params=changed_params,
+                         x_range=x_range)
     data_plot.add_graph(['current_distance', 'covariance'], colors3[0:2],
                         ['Distance', 'Covariance'])
     if data_plot.finalize() is not None: plots.append(data_plot)
@@ -531,7 +548,8 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
     # y axis range to some sane values
     data_plot = DataPlot(data, plot_config, 'vehicle_gps_position',
                          title='GPS Uncertainty', y_range=Range1d(0, 40),
-                         plot_height='small', changed_params=changed_params)
+                         plot_height='small', changed_params=changed_params,
+                         x_range=x_range)
     data_plot.add_graph(['eph', 'epv', 'satellites_used', 'fix_type'], colors8[::2],
                         ['Horizontal position accuracy [m]', 'Vertical position accuracy [m]',
                          'Num Satellites used', 'GPS Fix'])
@@ -541,7 +559,8 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
     # gps noise & jamming
     data_plot = DataPlot(data, plot_config, 'vehicle_gps_position',
                          y_start=0, title='GPS Noise & Jamming',
-                         plot_height='small', changed_params=changed_params)
+                         plot_height='small', changed_params=changed_params,
+                         x_range=x_range)
     data_plot.add_graph(['noise_per_ms', 'jamming_indicator'], colors3[0:2],
                         ['Noise per ms', 'Jamming Indicator'])
     if data_plot.finalize() is not None: plots.append(data_plot)
@@ -550,7 +569,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
     # thrust and magnetic field
     data_plot = DataPlot(data, plot_config, 'sensor_combined',
                          y_start=0, title='Thrust and Magnetic Field', plot_height='small',
-                         changed_params=changed_params)
+                         changed_params=changed_params, x_range=x_range)
     data_plot.add_graph(
         [lambda data: ('len_mag', np.sqrt(data['magnetometer_ga[0]']**2 +
                                           data['magnetometer_ga[1]']**2 +
@@ -563,10 +582,10 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
 
 
     # power
-    # TODO: dischared in Ah?
     data_plot = DataPlot(data, plot_config, 'battery_status',
                          y_start=0, title='Power',
-                         plot_height='small', changed_params=changed_params)
+                         plot_height='small', changed_params=changed_params,
+                         x_range=x_range)
     data_plot.add_graph(['voltage_v', 'voltage_filtered_v',
                          'current_a', lambda data: ('discharged_mah', data['discharged_mah']/100)],
                         colors8[::2],
@@ -579,7 +598,8 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
     # estimator watchdog
     data_plot = DataPlot(data, plot_config, 'estimator_status',
                          y_start=0, title='Estimator Watchdog',
-                         plot_height='small', changed_params=changed_params)
+                         plot_height='small', changed_params=changed_params,
+                         x_range=x_range)
     data_plot.add_graph(['nan_flags', 'health_flags',
                          'timeout_flags'], colors3,
                         ['NaN Flags', 'Health Flags (vel, pos, hgt)',
@@ -591,7 +611,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
     # RC Quality
     data_plot = DataPlot(data, plot_config, 'input_rc',
                          title='RC Quality', plot_height='small', y_range=Range1d(0, 1),
-                         changed_params=changed_params)
+                         changed_params=changed_params, x_range=x_range)
     data_plot.add_graph([lambda data: ('rssi', data['rssi']/100), 'rc_lost'],
                         colors3[0:2], ['RSSI [0, 1]', 'RC Lost (Indicator)'])
     data_plot.change_dataset('vehicle_status')
@@ -603,7 +623,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
     # cpu load
     data_plot = DataPlot(data, plot_config, 'cpuload',
                          title='CPU & RAM', plot_height='small', y_range=Range1d(0, 1),
-                         changed_params=changed_params)
+                         changed_params=changed_params, x_range=x_range)
     data_plot.add_graph(['ram_usage', 'load'], [colors3[1], colors3[2]],
                         ['RAM Usage', 'CPU Load'])
     data_plot.add_span('load', line_color=colors3[2])
@@ -617,7 +637,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
         data_plot = DataPlot(data, plot_config, 'sensor_combined', y_start=0,
                              y_axis_label='[us]',
                              title='Sampling Regularity of Sensor Data', plot_height='small',
-                             changed_params=changed_params)
+                             changed_params=changed_params, x_range=x_range)
         sensor_combined = ulog.get_dataset('sensor_combined').data
         sampling_diff = np.diff(sensor_combined['timestamp'])
         min_sampling_diff = np.amin(sampling_diff)
