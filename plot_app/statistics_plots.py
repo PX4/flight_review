@@ -29,6 +29,7 @@ class _VersionData(object):
     """
     def __init__(self):
         self.boards = {} # flight durations per board
+        self.boards_num_logs = {} # num logs/flights per board
         self.airframes = {} # flight durations per airframes
         self.airframes_num_logs = {} # num logs/flights per airframes
         self.ratings = {}
@@ -190,6 +191,7 @@ class StatisticsPlots(object):
 
             cur_version_data = self._version_data[log.sw_version]
             boards = cur_version_data.boards
+            boards_num_logs = cur_version_data.boards_num_logs
             airframes = cur_version_data.airframes
             airframes_num_logs = cur_version_data.airframes_num_logs
             ratings = cur_version_data.ratings
@@ -197,7 +199,9 @@ class StatisticsPlots(object):
 
             if not log.hardware in boards:
                 boards[log.hardware] = 0
+                boards_num_logs[log.hardware] = 0
             boards[log.hardware] += log.duration / 3600.
+            boards_num_logs[log.hardware] += 1
 
             for flight_mode, duration in log.flight_mode_durations:
                 flight_mode_str = str(flight_mode)
@@ -330,6 +334,14 @@ class StatisticsPlots(object):
         return self._plot_public_data_statistics(
             self._all_boards, 'boards', 'Board', lambda x, short: x)
 
+    def plot_public_boards_num_flights_statistics(self):
+        """
+        plot board number of flights statistics for each version, for public logs
+        :return: bokeh plot
+        """
+
+        return self._plot_public_data_statistics(
+            self._all_boards, 'boards_num_logs', 'Board', lambda x, short: x, False)
 
     def plot_public_airframe_statistics(self):
         """
@@ -372,15 +384,21 @@ class StatisticsPlots(object):
             self._all_flight_modes, 'flight_mode_durations', 'Flight Mode', label_callback)
 
     def _plot_public_data_statistics(self, all_data, version_attr_name,
-                                     title_name, label_cb):
+                                     title_name, label_cb, is_flight_hours=True):
         """
         generic method to plot flight hours one data type
         :param all_data: list with all types as string
         :param version_attr_name: attribute name of _VersionData
         :param title_name: name of the data for the title (and hover tool)
         :param label_cb: callback to create the label
+        :param is_flight_hours: if True, this shows the flight hours, nr of flights otherwise
         :return: bokeh plot
         """
+
+        if is_flight_hours:
+            title_prefix = 'Flight hours'
+        else:
+            title_prefix = 'Number of Flights'
 
         # change data structure
         data_hours = {} # key=data id, value=list of hours for each version
@@ -421,7 +439,7 @@ class StatisticsPlots(object):
 
         colors = viridis(len(all_data))
         # alternative: use patches: http://bokeh.pydata.org/en/latest/docs/gallery/brewer.html
-        area = Area(X, title="Flight Hours per "+title_name, tools=TOOLS,
+        area = Area(X, title=title_prefix+" per "+title_name, tools=TOOLS,
                     active_scroll=ACTIVE_SCROLL_TOOLS,
                     stack=True, xlabel='version (including development states)',
                     ylabel='', color=colors)
@@ -439,6 +457,11 @@ class StatisticsPlots(object):
         data_hours['x'] = np.arange(len(versions))
 
         # hover tool
+        if is_flight_hours:
+            str_format = '{0,0.0}'
+        else:
+            str_format = '{0,0}'
+
         source = ColumnDataSource(data=data_hours)
         for d in all_data:
             renderer = area.circle(x='x', y=d+'_stacked', source=source,
@@ -446,8 +469,8 @@ class StatisticsPlots(object):
             g1_hover = HoverTool(
                 renderers=[renderer],
                 tooltips=[(title_name, label_cb(d, True)),
-                          ('Flight hours (only this version)', '@'+d+'{0,0.0}'),
-                          ('Flight hours (up to this version)', '@'+d+'_cum{0,0.0}')])
+                          (title_prefix+' (only this version)', '@'+d+str_format),
+                          (title_prefix+' (up to this version)', '@'+d+'_cum'+str_format)])
             area.add_tools(g1_hover)
 
 

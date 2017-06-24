@@ -55,6 +55,9 @@ if GET_arguments is not None and 'stats' in GET_arguments:
     p = statistics.plot_public_boards_statistics()
     plots.append(p)
 
+    p = statistics.plot_public_boards_num_flights_statistics()
+    plots.append(p)
+
     p = statistics.plot_public_flight_mode_statistics()
     plots.append(p)
 
