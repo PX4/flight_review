@@ -7,9 +7,7 @@ import datetime
 import numpy as np
 
 from bokeh.plotting import figure
-from bokeh.charts import Area # this requires pandas
 from bokeh.palettes import viridis # alternatives: magma, inferno
-import bokeh.core.properties as props
 from bokeh.models import (
     DatetimeTickFormatter, FixedTicker, FuncTickFormatter,
     HoverTool, ColumnDataSource, LabelSet, CustomJS
@@ -457,23 +455,35 @@ class StatisticsPlots(object):
 
 
         colors = viridis(len(all_data))
-        # alternative: use patches: http://bokeh.pydata.org/en/latest/docs/gallery/brewer.html
-        area = Area(X, title=title_prefix+" per "+title_name, tools=TOOLS,
-                    active_scroll=ACTIVE_SCROLL_TOOLS,
-                    stack=True, xlabel='version (including development states)',
-                    ylabel='', color=colors)
+        area = figure(title=title_prefix+" per "+title_name, tools=TOOLS,
+                      active_scroll=ACTIVE_SCROLL_TOOLS,
+                      x_axis_label='version (including development states)',
+                      y_axis_label='')
 
-        # now set the labels
-        for i in range(len(all_data)):
-            area.legend[0].items[i].label = props.value(label_cb(all_data[i], False))
-        area.legend[0].items.reverse()
-
-        # stack the data: we'll need it for the hover tool
+        # stack the data: we'll need it for the hover tool & the patches
         last = np.zeros(len(versions))
+        stacked_patches = [] # polygon y positions: one per data item
         for i in range(len(all_data)):
-            last = last + X[i, :]
-            data_hours[all_data[i]+'_stacked'] = last
+            next_data = last + X[i, :]
+            # for the stacked patches, we store a polygon: left-to-right, then right-to-left
+            stacked_patches.append(np.hstack((last[::-1], next_data)))
+            data_hours[all_data[i]+'_stacked'] = next_data
+            last = next_data
+
         data_hours['x'] = np.arange(len(versions))
+        # group minor versions closer together by manipulating the x-position
+        # (we could use the release dates but we don't have that information for
+        # all versions)
+        grouping_factor = 5 # higher=stronger grouping, 0=disabled
+        versions_spaced = []
+        prev_version = versions[0]
+        for i in range(len(versions)):
+            version = versions[i]
+            if prev_version.split('.')[0:2] != version.split('.')[0:2]:
+                versions_spaced.extend(['']*grouping_factor)
+            data_hours['x'][i] = len(versions_spaced)
+            versions_spaced.append(version)
+            prev_version = version
 
         # hover tool
         if is_flight_hours:
@@ -492,13 +502,20 @@ class StatisticsPlots(object):
                           (title_prefix+' (up to this version)', '@'+d+'_cum'+str_format)])
             area.add_tools(g1_hover)
 
+        # now plot the patches (polygons)
+        x = data_hours['x']
+        x2 = np.hstack((x[::-1], x))
+        for i in range(len(all_data)):
+            area.patch(x2, stacked_patches[i], color=colors[i],
+                       legend=label_cb(all_data[i], False), alpha=0.8, line_color=None)
 
-        # TODO: space x-axis entries according to version release date?
+        area.legend[0].items.reverse()
+
         area.xaxis.formatter = FuncTickFormatter(code="""
-            var versions = """ + str(versions) + """;
+            var versions = """ + str(versions_spaced) + """;
             return versions[Math.floor(tick)]
         """)
-        area.xaxis.ticker = FixedTicker(ticks=list(range(len(versions))))
+        area.xaxis.ticker = FixedTicker(ticks=list(data_hours['x']))
         self._setup_plot(area)
         return area
 
