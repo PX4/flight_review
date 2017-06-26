@@ -600,10 +600,21 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
                          y_start=0, title='Estimator Watchdog',
                          plot_height='small', changed_params=changed_params,
                          x_range=x_range)
-    data_plot.add_graph(['nan_flags', 'health_flags',
-                         'timeout_flags'], colors3,
-                        ['NaN Flags', 'Health Flags (vel, pos, hgt)',
-                         'Timeout Flags (vel, pos, hgt)'])
+    data_plot.add_graph(
+        ['nan_flags', 'health_flags', 'timeout_flags',
+         lambda data: ('innovation_check_flags_vel_pos', data['innovation_check_flags']&0x7),
+         lambda data: ('innovation_check_flags_mag', (data['innovation_check_flags']>>3)&0x7),
+         lambda data: ('innovation_check_flags_yaw', (data['innovation_check_flags']>>7)&0x1),
+         lambda data: ('innovation_check_flags_airspeed', (data['innovation_check_flags']>>7)&0x3),
+         lambda data: ('innovation_check_flags_flow', (data['innovation_check_flags']>>9)&0x3)],
+        colors8,
+        ['NaN Flags', 'Health Flags (vel, pos, hgt)',
+         'Timeout Flags (vel, pos, hgt)',
+         'Innovation Check Bits (vel, hor pos, vert pos)',
+         'Innovation Check Bits (mag X, Y, Z)',
+         'Innovation Check Bits (yaw)',
+         'Innovation Check Bits (airspeed, height to ground)',
+         'Innovation Check Bits (optical flow X, Y)'])
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
