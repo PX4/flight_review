@@ -42,6 +42,10 @@ if GET_arguments is not None and 'stats' in GET_arguments:
     p = statistics.plot_log_upload_statistics([colors8[0], colors8[1], colors8[3],
                                                colors8[4], colors8[5]])
     plots.append(p)
+    div_info = Div(text="Number of Continous Integration (Simulation Tests) Logs: %i<br />" \
+            "Total Number of Logs on the Server: %i" %
+                   (statistics.num_logs_ci(), statistics.num_logs_total()))
+    plots.append(widgetbox(div_info))
 
     div = Div(text="<h3>Flight Report Logs <small>(Public Logs only)</small></h3>")
     # TODO add a per version table?

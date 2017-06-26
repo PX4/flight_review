@@ -223,6 +223,13 @@ class StatisticsPlots(object):
 
             self._total_duration += log.duration / 3600.
 
+    def num_logs_total(self):
+        """ get the total number of logs on the server """
+        return len(self._all_logs_dates)
+
+    def num_logs_ci(self):
+        """ get the total number of CI logs on the server """
+        return len(self._ci_logs_dates)
 
     def plot_log_upload_statistics(self, colors):
         """
@@ -236,7 +243,7 @@ class StatisticsPlots(object):
                    y_axis_label=None, tools=TOOLS,
                    active_scroll=ACTIVE_SCROLL_TOOLS)
 
-        def plot_dates(p, dates_list, legend, color):
+        def plot_dates(p, dates_list, last_date, legend, color):
             """ plot a single line from a list of dates """
             counts = np.arange(1, len(dates_list)+1)
 
@@ -251,14 +258,25 @@ class StatisticsPlots(object):
                     dates_list_subsampled.append(date)
                     counts_subsampled.append(count)
 
-            p.line(dates_list_subsampled, counts_subsampled,
-                   legend=legend, line_width=2, line_color=color)
+            if len(counts_subsampled) > 0:
+                if dates_list_subsampled[-1] < last_date:
+                    # make sure the plot line extends to the last date
+                    counts_subsampled.append(counts_subsampled[-1])
+                    dates_list_subsampled.append(last_date)
 
-        plot_dates(p, self._all_logs_dates, 'Total', colors[0])
-        plot_dates(p, self._ci_logs_dates, 'Continuous Integration (Simulation Tests)', colors[1])
-        plot_dates(p, self._web_ui_logs_dates, 'Private (via Web UI)', colors[2])
-        plot_dates(p, self._qgc_logs_dates, 'Private (via QGC)', colors[3])
-        plot_dates(p, self._public_logs_dates, 'Public', colors[4])
+                p.line(dates_list_subsampled, counts_subsampled,
+                       legend=legend, line_width=2, line_color=color)
+
+        if len(self._all_logs_dates) > 0:
+            last_date = self._all_logs_dates[-1]
+            # compared to the others, there are many more CI logs, making it hard to
+            # see the others
+            #plot_dates(p, self._all_logs_dates, last_date, 'Total', colors[0])
+            #plot_dates(p, self._ci_logs_dates, last_date,
+            #           'Continuous Integration (Simulation Tests)', colors[1])
+            plot_dates(p, self._web_ui_logs_dates, last_date, 'Private (via Web UI)', colors[2])
+            plot_dates(p, self._qgc_logs_dates, last_date, 'Private (via QGC)', colors[3])
+            plot_dates(p, self._public_logs_dates, last_date, 'Public', colors[4])
 
         p.xaxis.formatter = DatetimeTickFormatter(
             hours=["%d %b %Y %H:%M"],
@@ -270,9 +288,10 @@ class StatisticsPlots(object):
 
         # show the release versions as text markers
         release_dict = dict(dates=[], tags=[], y=[], y_offset=[])
-        if len(self._all_logs_dates) > 0:
-            first_date = self._all_logs_dates[0]
-            y_max = len(self._all_logs_dates)
+        max_logs_dates = self._web_ui_logs_dates # defines range limits of the plot
+        if len(max_logs_dates) > 0:
+            first_date = max_logs_dates[0]
+            y_max = len(max_logs_dates)
             y_pos = -y_max*0.08
 
             releases = get_sw_releases()
