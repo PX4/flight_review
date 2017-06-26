@@ -516,6 +516,12 @@ class StatisticsPlots(object):
             return versions[Math.floor(tick)]
         """)
         area.xaxis.ticker = FixedTicker(ticks=list(data_hours['x']))
+
+        # decrease size a bit to fit all items
+        area.legend.label_text_font_size = '8pt'
+        area.legend.label_height = 8
+        area.legend.glyph_height = 10
+
         self._setup_plot(area)
         return area
 
