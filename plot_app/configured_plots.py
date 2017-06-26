@@ -657,6 +657,9 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
 
         data_plot.add_graph([lambda data: ('timediff', np.append(sampling_diff, 0))],
                             [colors3[2]], ['delta t (between 2 samples)'])
+        data_plot.change_dataset('estimator_status')
+        data_plot.add_graph([lambda data: ('time_slip', data['time_slip']*1e6)],
+                            [colors3[1]], ['Estimator time slip (cumulative)'])
         if data_plot.finalize() is not None: plots.append(data_plot)
     except:
         pass
