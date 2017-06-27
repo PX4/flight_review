@@ -25,10 +25,8 @@ function navigate(fragment) {
 
 {% if is_plot_page %}
 
-function checkPlotsInitialized() {
-	// check if plots are fully initialized and do the necessary setup.
-	// we cannot rely on a specific event for this as bokeh dynamically loads
-	// the plots after startup
+function setupPlots() {
+	// do necessary setup after plots are loaded
 
 	var plot_ids = [
 {% set comma = joiner(",") %}
@@ -44,22 +42,28 @@ function checkPlotsInitialized() {
 {% endfor %}
 	];
 
-	for (var i = 0; i < plot_ids.length; ++i) {
-		if (!$('#modelid_'+plot_ids[i]).length) {
-			window.setTimeout(checkPlotsInitialized, 500);
-			return; // not yet loaded
-		}
-	}
-
-
-	// if we get here, all plots are loaded
 
 	// add fragment anchor links to each plot (placement via CSS)
-	for (var i = 0; i < plot_ids.length; ++i) {
-		$('#modelid_'+plot_ids[i]).before('<a id="'+plot_fragments[i]+'" '+
-			'class="fragment bk-plot-layout"' +
-			' href="#'+plot_fragments[i]+'"><big>&para;</big></a>');
+	function foreach_plot_view(view, fn) {
+		if (view.model instanceof Bokeh.Models("Plot")) {
+			fn(view);
+		} else if (view.model instanceof Bokeh.Models("LayoutDOM")) {
+			for (var id in view.child_views) {
+				foreach_plot_view(view.child_views[id], fn);
+			}
+		}
 	}
+	var root = Bokeh.index[Object.keys(Bokeh.index)[0]];
+	foreach_plot_view(root, function(plot_view) {
+		index_of = plot_ids.indexOf(plot_view.model.id)
+		if (index_of >= 0) {
+			var a = $('<a id="'+plot_fragments[index_of]+'" '+
+					'class="fragment bk-plot-layout"' +
+					' href="#'+plot_fragments[index_of]+'"><big>&para;</big></a>');
+			$(plot_view.plot_canvas_view.canvas_view.canvas_el).before(a);
+		}
+	});
+
 
 	$('#loading-plots').hide();
 
@@ -71,8 +75,30 @@ function checkPlotsInitialized() {
 	}
 }
 
+function renderingCompleteCheck() {
+
+    function done() {
+		console.log('rendering done');
+		setupPlots();
+    }
+
+	// wait until the document exists
+	if (window.Bokeh.documents.length == 0) {
+		window.setTimeout(renderingCompleteCheck, 100);
+		return;
+	}
+
+    var doc = window.Bokeh.documents[0];
+
+    if (doc.is_idle) {
+		done();
+	} else {
+		doc.idle.connect(done);
+	}
+}
+
 $(function() { //on startup
-	window.setTimeout(checkPlotsInitialized, 500);
+	window.setTimeout(renderingCompleteCheck, 1);
 });
 
 /* resize the plots */

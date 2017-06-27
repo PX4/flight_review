@@ -41,9 +41,9 @@ a:hover, a:focus, a:active {
 /* anchor links for plots */
 a.fragment {
 	position: absolute;
-	left: 10px;
+	top: -14px;
+	left: -16px;
 	z-index: 100;
-	padding-top: 2px;
 }
 a.fragment:not(:hover) {
 	color: #a8a8a8;
