@@ -604,16 +604,16 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
         ['nan_flags', 'health_flags', 'timeout_flags',
          lambda data: ('innovation_check_flags_vel_pos', data['innovation_check_flags']&0x7),
          lambda data: ('innovation_check_flags_mag', (data['innovation_check_flags']>>3)&0x7),
-         lambda data: ('innovation_check_flags_yaw', (data['innovation_check_flags']>>7)&0x1),
-         lambda data: ('innovation_check_flags_airspeed', (data['innovation_check_flags']>>7)&0x3),
-         lambda data: ('innovation_check_flags_flow', (data['innovation_check_flags']>>9)&0x3)],
+         lambda data: ('innovation_check_flags_yaw', (data['innovation_check_flags']>>6)&0x3),
+         lambda data: ('innovation_check_flags_sideslip', (data['innovation_check_flags']>>8)&0x3),
+         lambda data: ('innovation_check_flags_flow', (data['innovation_check_flags']>>10)&0x3)],
         colors8,
         ['NaN Flags', 'Health Flags (vel, pos, hgt)',
          'Timeout Flags (vel, pos, hgt)',
          'Innovation Check Bits (vel, hor pos, vert pos)',
          'Innovation Check Bits (mag X, Y, Z)',
-         'Innovation Check Bits (yaw)',
-         'Innovation Check Bits (airspeed, height to ground)',
+         'Innovation Check Bits (yaw, airspeed)',
+         'Innovation Check Bits (synthetic sideslip, height to ground)',
          'Innovation Check Bits (optical flow X, Y)'])
     if data_plot.finalize() is not None: plots.append(data_plot)
 
