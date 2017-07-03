@@ -329,8 +329,13 @@ def get_total_flight_time(ulog):
     """
     if ('LND_FLIGHT_T_HI' in ulog.initial_parameters and
             'LND_FLIGHT_T_LO' in ulog.initial_parameters):
-        flight_time_s = ((ulog.initial_parameters['LND_FLIGHT_T_HI'] << 32) |
-                         ulog.initial_parameters['LND_FLIGHT_T_LO']) / 1e6
+        high = ulog.initial_parameters['LND_FLIGHT_T_HI']
+        if high < 0: # both are signed int32
+            high += 2**32
+        low = ulog.initial_parameters['LND_FLIGHT_T_LO']
+        if low < 0:
+            low += 2**32
+        flight_time_s = ((high << 32) | low) / 1e6
         return flight_time_s
     return None
 
