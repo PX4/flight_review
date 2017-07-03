@@ -606,6 +606,7 @@ class DataPlot2D(DataPlot):
 
 
     def _setup_plot(self):
-        pass
+        p = self._p
+        p.toolbar.logo = None
 
 
