@@ -785,6 +785,23 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
     plots.append(widgetbox(div, data_table, width=plot_width))
 
 
+
+    # information about which messages are contained in the log
+# TODO: need to load all topics for this (-> log loading will take longer)
+#    data_list_sorted = sorted(ulog.data_list, key=lambda d: d.name + str(d.multi_id))
+#    table_text = []
+#    for d in data_list_sorted:
+#        message_size = sum([ULog.get_field_size(f.type_str) for f in d.field_data])
+#        num_data_points = len(d.data['timestamp'])
+#        table_text.append((d.name, str(d.multi_id), str(message_size), str(num_data_points),
+#           str(message_size * num_data_points)))
+#    topics_info = '<table><tr><th>Name</th><th>Topic instance</th><th>Message Size</th>' \
+#            '<th>Number of data points</th><th>Total bytes</th></tr>' + ''.join(
+#            ['<tr><td>'+'</td><td>'.join(list(x))+'</td></tr>' for x in table_text]) + '</table>'
+#    topics_div = Div(text=topics_info, width=int(plot_width*0.9))
+#    plots.append(widgetbox(topics_div, width=int(plot_width*0.9)))
+
+
     # log messages
     log_times = []
     log_levels = []
