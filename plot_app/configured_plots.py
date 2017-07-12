@@ -810,6 +810,37 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
     plots.append(widgetbox(div, data_table, width=plot_width))
 
 
+    # perf & top output
+    top_data = ''
+    perf_data = ''
+    for state in ['pre', 'post']:
+        if 'perf_top_'+state+'flight' in ulog.msg_info_multiple_dict:
+            current_top_data = ulog.msg_info_multiple_dict['perf_top_'+state+'flight'][0]
+            flight_data = cgi.escape('\n'.join(current_top_data))
+            top_data += '<p>'+state.capitalize()+' Flight:<br/><pre>'+flight_data+'</pre></p>'
+        if 'perf_counter_'+state+'flight' in ulog.msg_info_multiple_dict:
+            current_perf_data = ulog.msg_info_multiple_dict['perf_counter_'+state+'flight'][0]
+            flight_data = cgi.escape('\n'.join(current_perf_data))
+            perf_data += '<p>'+state.capitalize()+' Flight:<br/><pre>'+flight_data+'</pre></p>'
+
+    additional_data_html = ''
+    if len(top_data) > 0:
+        additional_data_html += '<h4>Processes</h4>'+top_data
+    if len(perf_data) > 0:
+        additional_data_html += '<h4>Performance Counters</h4>'+perf_data
+    if len(additional_data_html) > 0:
+        # hide by default & use a button to expand
+        additional_data_html = '''
+<button class="btn btn-common" data-toggle="collapse" style="min-width:0;"
+ data-target="#show-additional-data">Show additional Data</button>
+<div id="show-additional-data" class="collapse">
+{:}
+</div>
+'''.format(additional_data_html)
+        additional_data_div = Div(text=additional_data_html, width=int(plot_width*0.9))
+        plots.append(widgetbox(additional_data_div, width=int(plot_width*0.9)))
+
+
     curdoc().template_variables['plots'] = jinja_plot_data
 
     return plots
