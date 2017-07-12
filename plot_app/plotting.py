@@ -488,7 +488,8 @@ class DataPlot:
         if self._had_error and not self._previous_success:
             return None
         self._setup_plot()
-        return self._p
+        #return self._p
+        return self
 
 
     def _setup_plot(self):

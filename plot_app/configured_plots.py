@@ -1,11 +1,25 @@
 """ This contains the list of all drawn plots on the log plotting page """
 
 import cgi # for html escaping
+import functools
 
-from bokeh.layouts import widgetbox
-from bokeh.models import ColumnDataSource, Range1d
+from bokeh.layouts import widgetbox, column, row
+from bokeh.models import ColumnDataSource, Range1d, Spacer
 from bokeh.models.widgets import DataTable, TableColumn, Div, Button
 from bokeh.io import curdoc
+try:
+    from bokeh.io import export_png
+    # we don't use the following imports, just to test if they're installed
+    import selenium.webdriver
+    import PIL.Image
+    from subprocess import Popen, PIPE
+    proc = Popen(["phantomjs", "--version"], stdout=PIPE, stderr=PIPE)
+    proc.wait()
+    has_export_png = True
+    print("using png export") # TODO: debug only..............................
+except:
+    has_export_png = False
+from PIL import Image
 
 from helper import *
 from config import *
@@ -15,10 +29,11 @@ from plotting import *
 #pylint: disable=consider-using-enumerate
 
 
-def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
+def generate_plots(log_id, ulog, px4_ulog, db_data, vehicle_data):
     """ create a list of bokeh plots (and widgets) to show """
 
     plots = []
+    extended_plots = [] # list of tuples (callback, name)
     data = ulog.data_list
 
 
@@ -250,6 +265,30 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
             plots.append(None) # save space for the param change button
 
 
+    def add_plot(gen_plot_cb, plot_name=None, extended=False):
+        """
+        add a plot to the plots list.
+        :param gen_plot_cb: callback to generate the bokeh plot (takes no args)
+        :param plot_name: name of the plot. Will be used as file name
+        :param extended: the plot is part of the extended list and only loaded
+                         upon a button press
+        """
+        nonlocal plots, extended_plots, log_id
+
+#        if len(plots) > 3:
+#            return None
+
+        if plot_name is None:
+            plot_name = gen_plot_cb.__name__
+
+        if extended:
+            extended_plots.append((gen_plot_cb, plot_name))
+        else:
+            plot = gen_plot_cb()
+            if plot is not None:
+                plots.append(plot)
+
+
     ### Add all data plots ###
 
     x_range_offset = (ulog.last_timestamp - ulog.start_timestamp) * 0.05
@@ -257,31 +296,31 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
 
 
     # Altitude estimate
-    data_plot = DataPlot(data, plot_config, 'vehicle_gps_position',
-                         y_axis_label='[m]', title='Altitude Estimate',
-                         changed_params=changed_params, x_range=x_range)
-    data_plot.add_graph([lambda data: ('alt', data['alt']*0.001)],
-                        colors8[0:1], ['GPS Altitude'])
-    data_plot.change_dataset('sensor_combined')
-    data_plot.add_graph(['baro_alt_meter'], colors8[1:2], ['Barometer Altitude'])
-    data_plot.change_dataset('vehicle_global_position')
-    data_plot.add_graph(['alt'], colors8[2:3], ['Fused Altitude Estimation'])
-    data_plot.change_dataset('position_setpoint_triplet')
-    data_plot.add_circle(['current.alt'], [plot_config['mission_setpoint_color']],
-                         ['Altitude Setpoint'])
-    data_plot.change_dataset('actuator_controls_0')
-    data_plot.add_graph([lambda data: ('thrust', data['control[3]']*100)],
-                        colors8[6:7], ['Thrust [0, 100]'])
-    plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
+    def plot_altitude():
+        data_plot = DataPlot(data, plot_config, 'vehicle_gps_position',
+                             y_axis_label='[m]', title='Altitude Estimate',
+                             changed_params=changed_params, x_range=x_range)
+        data_plot.add_graph([lambda data: ('alt', data['alt']*0.001)],
+                            colors8[0:1], ['GPS Altitude'])
+        data_plot.change_dataset('sensor_combined')
+        data_plot.add_graph(['baro_alt_meter'], colors8[1:2], ['Barometer Altitude'])
+        data_plot.change_dataset('vehicle_global_position')
+        data_plot.add_graph(['alt'], colors8[2:3], ['Fused Altitude Estimation'])
+        data_plot.change_dataset('position_setpoint_triplet')
+        data_plot.add_circle(['current.alt'], [plot_config['mission_setpoint_color']],
+                             ['Altitude Setpoint'])
+        data_plot.change_dataset('actuator_controls_0')
+        data_plot.add_graph([lambda data: ('thrust', data['control[3]']*100)],
+                            colors8[6:7], ['Thrust [0, 100]'])
+        plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
 
-    if data_plot.finalize() is not None: plots.append(data_plot)
+        return data_plot.finalize()
+    add_plot(plot_altitude)
 
 
 
-    # Roll/Pitch/Yaw angle & angular rate
-    for axis in ['roll', 'pitch', 'yaw']:
-
-        # angle
+    # angle
+    def plot_angle(axis):
         axis_name = axis.capitalize()
         data_plot = DataPlot(data, plot_config, 'vehicle_attitude',
                              y_axis_label='[deg]', title=axis_name+' Angle',
@@ -297,9 +336,11 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
                             [color_gray], [axis_name+' Groundtruth'])
         plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
 
-        if data_plot.finalize() is not None: plots.append(data_plot)
+        return data_plot.finalize()
 
-        # rate
+    # rate
+    def plot_angle_rate(axis):
+        axis_name = axis.capitalize()
         data_plot = DataPlot(data, plot_config, 'vehicle_attitude',
                              y_axis_label='[deg/s]', title=axis_name+' Angular Rate',
                              plot_height='small', changed_params=changed_params,
@@ -314,12 +355,17 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
                             [color_gray], [axis_name+' Rate Groundtruth'])
         plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
 
-        if data_plot.finalize() is not None: plots.append(data_plot)
+        return data_plot.finalize()
+
+    # Roll/Pitch/Yaw angle & angular rate
+    for axis in ['roll', 'pitch', 'yaw']:
+        add_plot(functools.partial(plot_angle, axis), 'plot_angle_'+axis)
+        add_plot(functools.partial(plot_angle_rate, axis), 'plot_angle_rate_'+axis)
 
 
 
     # Local position
-    for axis in ['x', 'y', 'z']:
+    def plot_local_position(axis):
         data_plot = DataPlot(data, plot_config, 'vehicle_local_position',
                              y_axis_label='[m]', title='Local Position '+axis.upper(),
                              plot_height='small', changed_params=changed_params,
@@ -329,335 +375,440 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
         data_plot.add_graph([axis], colors2[1:2], [axis.upper()+' Setpoint'])
         plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
 
-        if data_plot.finalize() is not None: plots.append(data_plot)
+        return data_plot.finalize()
 
+    for axis in ['x', 'y', 'z']:
+        add_plot(functools.partial(plot_local_position, axis), 'plot_local_position_'+axis)
 
 
     # Velocity
-    data_plot = DataPlot(data, plot_config, 'vehicle_local_position',
-                         y_axis_label='[m/s]', title='Velocity',
-                         plot_height='small', changed_params=changed_params,
-                         x_range=x_range)
-    data_plot.add_graph(['vx', 'vy', 'vz'], colors3, ['X', 'Y', 'Z'])
-    plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
-
-    if data_plot.finalize() is not None: plots.append(data_plot)
-
-
-    # Vision position (only if topic found)
-    if any(elem.name == 'vehicle_vision_position' for elem in data):
-        data_plot = DataPlot(data, plot_config, 'vehicle_vision_position',
-                             y_axis_label='[m]', title='Vision Position',
-                             plot_height='small', changed_params=changed_params,
-                             x_range=x_range)
-        data_plot.add_graph(['x', 'y', 'z'], colors3, ['X', 'Y', 'Z'])
-        plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
-
-        data_plot.change_dataset('vehicle_local_position_groundtruth')
-        data_plot.add_graph(['x', 'y', 'z'], colors8[2:5],
-                            ['Groundtruth X', 'Groundtruth Y', 'Groundtruth Z'])
-
-        if data_plot.finalize() is not None: plots.append(data_plot)
-
-
-        # Vision velocity
-        data_plot = DataPlot(data, plot_config, 'vehicle_vision_position',
-                             y_axis_label='[m]', title='Vision Velocity',
+    def plot_velocity():
+        data_plot = DataPlot(data, plot_config, 'vehicle_local_position',
+                             y_axis_label='[m/s]', title='Velocity',
                              plot_height='small', changed_params=changed_params,
                              x_range=x_range)
         data_plot.add_graph(['vx', 'vy', 'vz'], colors3, ['X', 'Y', 'Z'])
         plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
 
-        data_plot.change_dataset('vehicle_local_position_groundtruth')
-        data_plot.add_graph(['vx', 'vy', 'vz'], colors8[2:5],
-                            ['Groundtruth X', 'Groundtruth Y', 'Groundtruth Z'])
-        if data_plot.finalize() is not None: plots.append(data_plot)
+        return data_plot.finalize()
+    add_plot(plot_velocity)
+
+
+    # Vision position (only if topic found)
+    def plot_vision_position():
+        if any(elem.name == 'vehicle_vision_position' for elem in data):
+            data_plot = DataPlot(data, plot_config, 'vehicle_vision_position',
+                                 y_axis_label='[m]', title='Vision Position',
+                                 plot_height='small',
+                                 changed_params=changed_params, x_range=x_range)
+            data_plot.add_graph(['x', 'y', 'z'], colors3, ['X', 'Y', 'Z'])
+            plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
+
+            data_plot.change_dataset('vehicle_local_position_groundtruth')
+            data_plot.add_graph(['x', 'y', 'z'], colors8[2:5],
+                                ['Groundtruth X', 'Groundtruth Y', 'Groundtruth Z'])
+
+            return data_plot.finalize()
+        return None
+    add_plot(plot_vision_position)
+
+
+    # Vision velocity
+    def plot_vision_velocity():
+        if any(elem.name == 'vehicle_vision_position' for elem in data):
+            data_plot = DataPlot(data, plot_config, 'vehicle_vision_position',
+                                 y_axis_label='[m]', title='Vision Velocity',
+                                 plot_height='small',
+                                 changed_params=changed_params, x_range=x_range)
+            data_plot.add_graph(['vx', 'vy', 'vz'], colors3, ['X', 'Y', 'Z'])
+            plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
+
+            data_plot.change_dataset('vehicle_local_position_groundtruth')
+            data_plot.add_graph(['vx', 'vy', 'vz'], colors8[2:5],
+                                ['Groundtruth X', 'Groundtruth Y', 'Groundtruth Z'])
+            return data_plot.finalize()
+        return None
+    add_plot(plot_vision_velocity)
 
 
     # Vision attitude
-    if any(elem.name == 'vehicle_vision_attitude' for elem in data):
-        data_plot = DataPlot(data, plot_config, 'vehicle_vision_attitude',
-                             y_axis_label='[deg]', title='Vision Attitude',
-                             plot_height='small', changed_params=changed_params,
-                             x_range=x_range)
-        data_plot.add_graph([lambda data: ('roll', np.rad2deg(data['roll'])),
-                             lambda data: ('pitch', np.rad2deg(data['pitch'])),
-                             lambda data: ('yaw', np.rad2deg(data['yaw']))],
-                            colors3, ['Roll', 'Pitch', 'Yaw'])
-        plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
+    def plot_vision_attitude():
+        if any(elem.name == 'vehicle_vision_attitude' for elem in data):
+            data_plot = DataPlot(data, plot_config, 'vehicle_vision_attitude',
+                                 y_axis_label='[deg]', title='Vision Attitude',
+                                 plot_height='small',
+                                 changed_params=changed_params, x_range=x_range)
+            data_plot.add_graph([lambda data: ('roll', np.rad2deg(data['roll'])),
+                                 lambda data: ('pitch', np.rad2deg(data['pitch'])),
+                                 lambda data: ('yaw', np.rad2deg(data['yaw']))],
+                                colors3, ['Roll', 'Pitch', 'Yaw'])
+            plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
 
-        data_plot.change_dataset('vehicle_attitude_groundtruth')
-        data_plot.add_graph([lambda data: ('roll', np.rad2deg(data['roll'])),
-                             lambda data: ('pitch', np.rad2deg(data['pitch'])),
-                             lambda data: ('yaw', np.rad2deg(data['yaw']))],
-                            colors8[2:5],
-                            ['Roll Groundtruth', 'Pitch Groundtruth', 'Yaw Groundtruth'])
+            data_plot.change_dataset('vehicle_attitude_groundtruth')
+            data_plot.add_graph([lambda data: ('roll', np.rad2deg(data['roll'])),
+                                 lambda data: ('pitch', np.rad2deg(data['pitch'])),
+                                 lambda data: ('yaw', np.rad2deg(data['yaw']))],
+                                colors8[2:5],
+                                ['Roll Groundtruth', 'Pitch Groundtruth', 'Yaw Groundtruth'])
 
-        if data_plot.finalize() is not None: plots.append(data_plot)
+            return data_plot.finalize()
+        return None
+    add_plot(plot_vision_attitude)
 
 
     # Airspeed vs Ground speed
-    if any(elem.name == 'airspeed' for elem in data):
-        data_plot = DataPlot(data, plot_config, 'vehicle_global_position',
-                             y_axis_label='[m/s]', title='Airspeed',
-                             plot_height='small',
-                             changed_params=changed_params, x_range=x_range)
-        data_plot.add_graph([lambda data: ('groundspeed_estimated',
-                                           np.sqrt(data['vel_n']**2 + data['vel_e']**2))],
-                            colors3[2:3], ['Ground Speed Estimated'])
-        data_plot.change_dataset('airspeed')
-        data_plot.add_graph(['indicated_airspeed_m_s'], colors2[0:1], ['Airspeed Indicated'])
+    def plot_airspeed():
+        if any(elem.name == 'airspeed' for elem in data):
+            data_plot = DataPlot(data, plot_config, 'vehicle_global_position',
+                                 y_axis_label='[m/s]', title='Airspeed',
+                                 plot_height='small',
+                                 changed_params=changed_params, x_range=x_range)
+            data_plot.add_graph([lambda data: ('groundspeed_estimated',
+                                               np.sqrt(data['vel_n']**2 + data['vel_e']**2))],
+                                colors3[2:3], ['Ground Speed Estimated'])
+            data_plot.change_dataset('airspeed')
+            data_plot.add_graph(['indicated_airspeed_m_s'], colors2[0:1], ['Airspeed Indicated'])
 
-        plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
+            plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
 
-        if data_plot.finalize() is not None: plots.append(data_plot)
+            return data_plot.finalize()
+        return None
+    add_plot(plot_airspeed)
 
 
 
     # raw radio control inputs
-    data_plot = DataPlot(data, plot_config, 'rc_channels',
-                         title='Raw Radio Control Inputs',
-                         plot_height='small', y_range=Range1d(-1.1, 1.1),
-                         changed_params=changed_params, x_range=x_range)
-    num_rc_channels = 8
-    if data_plot.dataset:
-        max_channels = np.amax(data_plot.dataset.data['channel_count'])
-        if max_channels < num_rc_channels: num_rc_channels = max_channels
-    legends = []
-    for i in range(num_rc_channels):
-        channel_names = px4_ulog.get_configured_rc_input_names(i)
-        if channel_names is None:
-            legends.append('Channel '+str(i))
-        else:
-            legends.append('Channel '+str(i)+' ('+', '.join(channel_names)+')')
-    data_plot.add_graph(['channels['+str(i)+']' for i in range(num_rc_channels)],
-                        colors8[0:num_rc_channels], legends)
-    plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
+    def plot_raw_radio_controls():
+        data_plot = DataPlot(data, plot_config, 'rc_channels',
+                             title='Raw Radio Control Inputs',
+                             plot_height='small', y_range=Range1d(-1.1, 1.1),
+                             changed_params=changed_params, x_range=x_range)
+        num_rc_channels = 8
+        if data_plot.dataset:
+            max_channels = np.amax(data_plot.dataset.data['channel_count'])
+            if max_channels < num_rc_channels: num_rc_channels = max_channels
+        legends = []
+        for i in range(num_rc_channels):
+            channel_names = px4_ulog.get_configured_rc_input_names(i)
+            if channel_names is None:
+                legends.append('Channel '+str(i))
+            else:
+                legends.append('Channel '+str(i)+' ('+', '.join(channel_names)+')')
+        data_plot.add_graph(['channels['+str(i)+']' for i in range(num_rc_channels)],
+                            colors8[0:num_rc_channels], legends)
+        plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
 
-    if data_plot.finalize() is not None: plots.append(data_plot)
+        return data_plot.finalize()
+    add_plot(plot_raw_radio_controls)
 
 
 
     # actuator controls 0
-    data_plot = DataPlot(data, plot_config, 'actuator_controls_0',
-                         y_start=0, title='Actuator Controls 0', plot_height='small',
-                         changed_params=changed_params, x_range=x_range)
-    data_plot.add_graph(['control[0]', 'control[1]', 'control[2]', 'control[3]'],
-                        colors8[0:4], ['Roll', 'Pitch', 'Yaw', 'Thrust'])
-    plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
-    if data_plot.finalize() is not None: plots.append(data_plot)
+    def plot_actuator_controls_0():
+        data_plot = DataPlot(data, plot_config, 'actuator_controls_0',
+                             y_start=0, title='Actuator Controls 0', plot_height='small',
+                             changed_params=changed_params, x_range=x_range)
+        data_plot.add_graph(['control[0]', 'control[1]', 'control[2]', 'control[3]'],
+                            colors8[0:4], ['Roll', 'Pitch', 'Yaw', 'Thrust'])
+        plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
+        return data_plot.finalize()
+    add_plot(plot_actuator_controls_0)
 
     # actuator controls 1
     # (only present on VTOL, Fixed-wing config)
-    data_plot = DataPlot(data, plot_config, 'actuator_controls_1',
-                         y_start=0, title='Actuator Controls 1 (VTOL in Fixed-Wing mode)',
-                         plot_height='small', changed_params=changed_params,
-                         x_range=x_range)
-    data_plot.add_graph(['control[0]', 'control[1]', 'control[2]', 'control[3]'],
-                        colors8[0:4], ['Roll', 'Pitch', 'Yaw', 'Thrust'])
-    plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
-    if data_plot.finalize() is not None: plots.append(data_plot)
+    def plot_actuator_controls_1():
+        data_plot = DataPlot(data, plot_config, 'actuator_controls_1',
+                             y_start=0, title='Actuator Controls 1 (VTOL in Fixed-Wing mode)',
+                             plot_height='small', changed_params=changed_params,
+                             x_range=x_range)
+        data_plot.add_graph(['control[0]', 'control[1]', 'control[2]', 'control[3]'],
+                            colors8[0:4], ['Roll', 'Pitch', 'Yaw', 'Thrust'])
+        plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
+        return data_plot.finalize()
+    add_plot(plot_actuator_controls_1)
 
 
     # actuator outputs 0: Main
-    data_plot = DataPlot(data, plot_config, 'actuator_outputs',
-                         y_start=0, title='Actuator Outputs (Main)', plot_height='small',
-                         changed_params=changed_params, x_range=x_range)
-    num_actuator_outputs = 8
-    if data_plot.dataset:
-        max_outputs = np.amax(data_plot.dataset.data['noutputs'])
-        if max_outputs < num_actuator_outputs: num_actuator_outputs = max_outputs
-    data_plot.add_graph(['output['+str(i)+']' for i in
-                         range(num_actuator_outputs)], colors8[0:num_actuator_outputs],
-                        ['Output '+str(i) for i in range(num_actuator_outputs)])
-    plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
+    def plot_actuator_outputs_0():
+        data_plot = DataPlot(data, plot_config, 'actuator_outputs',
+                             y_start=0, title='Actuator Outputs (Main)', plot_height='small',
+                             changed_params=changed_params, x_range=x_range)
+        num_actuator_outputs = 8
+        if data_plot.dataset:
+            max_outputs = np.amax(data_plot.dataset.data['noutputs'])
+            if max_outputs < num_actuator_outputs: num_actuator_outputs = max_outputs
+        data_plot.add_graph(['output['+str(i)+']' for i in
+                             range(num_actuator_outputs)], colors8[0:num_actuator_outputs],
+                            ['Output '+str(i) for i in range(num_actuator_outputs)])
+        plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
 
-    if data_plot.finalize() is not None: plots.append(data_plot)
+        return data_plot.finalize()
+    add_plot(plot_actuator_outputs_0)
 
     # actuator outputs 1: AUX
-    data_plot = DataPlot(data, plot_config, 'actuator_outputs',
-                         y_start=0, title='Actuator Outputs (AUX)', plot_height='small',
-                         changed_params=changed_params, topic_instance=1,
-                         x_range=x_range)
-    num_actuator_outputs = 8
-    if data_plot.dataset:
-        max_outputs = np.amax(data_plot.dataset.data['noutputs'])
-        if max_outputs < num_actuator_outputs: num_actuator_outputs = max_outputs
-    data_plot.add_graph(['output['+str(i)+']' for i in
-                         range(num_actuator_outputs)], colors8[0:num_actuator_outputs],
-                        ['Output '+str(i) for i in range(num_actuator_outputs)])
-    plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
+    def plot_actuator_outputs_1():
+        data_plot = DataPlot(data, plot_config, 'actuator_outputs',
+                             y_start=0, title='Actuator Outputs (AUX)', plot_height='small',
+                             changed_params=changed_params, topic_instance=1,
+                             x_range=x_range)
+        num_actuator_outputs = 8
+        if data_plot.dataset:
+            max_outputs = np.amax(data_plot.dataset.data['noutputs'])
+            if max_outputs < num_actuator_outputs: num_actuator_outputs = max_outputs
+        data_plot.add_graph(['output['+str(i)+']' for i in
+                             range(num_actuator_outputs)], colors8[0:num_actuator_outputs],
+                            ['Output '+str(i) for i in range(num_actuator_outputs)])
+        plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
 
-    if data_plot.finalize() is not None: plots.append(data_plot)
+        return data_plot.finalize()
+    add_plot(plot_actuator_outputs_1)
 
 
     # raw acceleration
-    data_plot = DataPlot(data, plot_config, 'sensor_combined',
-                         y_axis_label='[m/s^2]', title='Raw Acceleration',
-                         plot_height='small', changed_params=changed_params,
-                         x_range=x_range)
-    data_plot.add_graph(['accelerometer_m_s2[0]', 'accelerometer_m_s2[1]',
-                         'accelerometer_m_s2[2]'], colors3, ['X', 'Y', 'Z'])
-    if data_plot.finalize() is not None: plots.append(data_plot)
+    def plot_raw_acceleration():
+        data_plot = DataPlot(data, plot_config, 'sensor_combined',
+                             y_axis_label='[m/s^2]', title='Raw Acceleration',
+                             plot_height='small', changed_params=changed_params,
+                             x_range=x_range)
+        data_plot.add_graph(['accelerometer_m_s2[0]', 'accelerometer_m_s2[1]',
+                             'accelerometer_m_s2[2]'], colors3, ['X', 'Y', 'Z'])
+        return data_plot.finalize()
+    add_plot(plot_raw_acceleration)
+
 
 
 
     # raw angular speed
-    data_plot = DataPlot(data, plot_config, 'sensor_combined',
-                         y_axis_label='[deg/s]', title='Raw Angular Speed (Gyroscope)',
-                         plot_height='small', changed_params=changed_params,
-                         x_range=x_range)
-    data_plot.add_graph([
-        lambda data: ('gyro_rad[0]', np.rad2deg(data['gyro_rad[0]'])),
-        lambda data: ('gyro_rad[1]', np.rad2deg(data['gyro_rad[1]'])),
-        lambda data: ('gyro_rad[2]', np.rad2deg(data['gyro_rad[2]']))],
-                        colors3, ['X', 'Y', 'Z'])
-    if data_plot.finalize() is not None: plots.append(data_plot)
+    def plot_raw_angular_speed():
+        data_plot = DataPlot(data, plot_config, 'sensor_combined',
+                             y_axis_label='[deg/s]', title='Raw Angular Speed (Gyroscope)',
+                             plot_height='small', changed_params=changed_params,
+                             x_range=x_range)
+        data_plot.add_graph([
+            lambda data: ('gyro_rad[0]', np.rad2deg(data['gyro_rad[0]'])),
+            lambda data: ('gyro_rad[1]', np.rad2deg(data['gyro_rad[1]'])),
+            lambda data: ('gyro_rad[2]', np.rad2deg(data['gyro_rad[2]']))],
+                            colors3, ['X', 'Y', 'Z'])
+        return data_plot.finalize()
+    add_plot(plot_raw_angular_speed, extended=True)
 
 
 
     # magnetic field strength
-    data_plot = DataPlot(data, plot_config, 'sensor_combined',
-                         y_axis_label='[gauss]', title='Raw Magnetic Field Strength',
-                         plot_height='small', changed_params=changed_params,
-                         x_range=x_range)
-    data_plot.add_graph(['magnetometer_ga[0]', 'magnetometer_ga[1]',
-                         'magnetometer_ga[2]'], colors3,
-                        ['X', 'Y', 'Z'])
-    if data_plot.finalize() is not None: plots.append(data_plot)
+    def plot_magnetic_field_strength():
+        data_plot = DataPlot(data, plot_config, 'sensor_combined',
+                             y_axis_label='[gauss]', title='Raw Magnetic Field Strength',
+                             plot_height='small', changed_params=changed_params,
+                             x_range=x_range)
+        data_plot.add_graph(['magnetometer_ga[0]', 'magnetometer_ga[1]',
+                             'magnetometer_ga[2]'], colors3,
+                            ['X', 'Y', 'Z'])
+        return data_plot.finalize()
+    add_plot(plot_magnetic_field_strength, extended=True)
 
 
     # distance sensor
-    data_plot = DataPlot(data, plot_config, 'distance_sensor',
-                         y_start=0, y_axis_label='[m]', title='Distance Sensor',
-                         plot_height='small', changed_params=changed_params,
-                         x_range=x_range)
-    data_plot.add_graph(['current_distance', 'covariance'], colors3[0:2],
-                        ['Distance', 'Covariance'])
-    if data_plot.finalize() is not None: plots.append(data_plot)
+    def plot_distance_sensor():
+        data_plot = DataPlot(data, plot_config, 'distance_sensor',
+                             y_start=0, y_axis_label='[m]', title='Distance Sensor',
+                             plot_height='small', changed_params=changed_params,
+                             x_range=x_range)
+        data_plot.add_graph(['current_distance', 'covariance'], colors3[0:2],
+                            ['Distance', 'Covariance'])
+        return data_plot.finalize()
+    add_plot(plot_distance_sensor)
 
 
 
     # gps uncertainty
     # the accuracy values can be really large if there is no fix, so we limit the
     # y axis range to some sane values
-    data_plot = DataPlot(data, plot_config, 'vehicle_gps_position',
-                         title='GPS Uncertainty', y_range=Range1d(0, 40),
-                         plot_height='small', changed_params=changed_params,
-                         x_range=x_range)
-    data_plot.add_graph(['eph', 'epv', 'satellites_used', 'fix_type'], colors8[::2],
-                        ['Horizontal position accuracy [m]', 'Vertical position accuracy [m]',
-                         'Num Satellites used', 'GPS Fix'])
-    if data_plot.finalize() is not None: plots.append(data_plot)
+    def plot_gps_uncertainty():
+        data_plot = DataPlot(data, plot_config, 'vehicle_gps_position',
+                             title='GPS Uncertainty', y_range=Range1d(0, 40),
+                             plot_height='small', changed_params=changed_params,
+                             x_range=x_range)
+        data_plot.add_graph(['eph', 'epv', 'satellites_used', 'fix_type'], colors8[::2],
+                            ['Horizontal position accuracy [m]', 'Vertical position accuracy [m]',
+                             'Num Satellites used', 'GPS Fix'])
+        return data_plot.finalize()
+    add_plot(plot_gps_uncertainty, extended=True)
 
 
     # gps noise & jamming
-    data_plot = DataPlot(data, plot_config, 'vehicle_gps_position',
-                         y_start=0, title='GPS Noise & Jamming',
-                         plot_height='small', changed_params=changed_params,
-                         x_range=x_range)
-    data_plot.add_graph(['noise_per_ms', 'jamming_indicator'], colors3[0:2],
-                        ['Noise per ms', 'Jamming Indicator'])
-    if data_plot.finalize() is not None: plots.append(data_plot)
+    def plot_gps_noise():
+        data_plot = DataPlot(data, plot_config, 'vehicle_gps_position',
+                             y_start=0, title='GPS Noise & Jamming',
+                             plot_height='small', changed_params=changed_params,
+                             x_range=x_range)
+        data_plot.add_graph(['noise_per_ms', 'jamming_indicator'], colors3[0:2],
+                            ['Noise per ms', 'Jamming Indicator'])
+        return data_plot.finalize()
+    add_plot(plot_gps_noise, extended=True)
 
 
     # thrust and magnetic field
-    data_plot = DataPlot(data, plot_config, 'sensor_combined',
-                         y_start=0, title='Thrust and Magnetic Field', plot_height='small',
-                         changed_params=changed_params, x_range=x_range)
-    data_plot.add_graph(
-        [lambda data: ('len_mag', np.sqrt(data['magnetometer_ga[0]']**2 +
-                                          data['magnetometer_ga[1]']**2 +
-                                          data['magnetometer_ga[2]']**2))],
-        colors2[0:1], ['Norm of Magnetic Field'])
-    data_plot.change_dataset('actuator_controls_0')
-    data_plot.add_graph([lambda data: ('thrust', data['control[3]'])],
-                        colors2[1:2], ['Thrust'])
-    if data_plot.finalize() is not None: plots.append(data_plot)
+    def plot_thrust_and_magnetic_field():
+        data_plot = DataPlot(data, plot_config, 'sensor_combined',
+                             y_start=0, title='Thrust and Magnetic Field', plot_height='small',
+                             changed_params=changed_params, x_range=x_range)
+        data_plot.add_graph(
+            [lambda data: ('len_mag', np.sqrt(data['magnetometer_ga[0]']**2 +
+                                              data['magnetometer_ga[1]']**2 +
+                                              data['magnetometer_ga[2]']**2))],
+            colors2[0:1], ['Norm of Magnetic Field'])
+        data_plot.change_dataset('actuator_controls_0')
+        data_plot.add_graph([lambda data: ('thrust', data['control[3]'])],
+                            colors2[1:2], ['Thrust'])
+        return data_plot.finalize()
+    add_plot(plot_thrust_and_magnetic_field, extended=True)
 
 
     # power
-    data_plot = DataPlot(data, plot_config, 'battery_status',
-                         y_start=0, title='Power',
-                         plot_height='small', changed_params=changed_params,
-                         x_range=x_range)
-    data_plot.add_graph(['voltage_v', 'voltage_filtered_v',
-                         'current_a', lambda data: ('discharged_mah', data['discharged_mah']/100)],
-                        colors8[::2],
-                        ['Voltage  [V]', 'Voltage filtered [V]', 'Current [A]',
-                         'Discharged Amount [mAh / 100]'])
-    if data_plot.finalize() is not None: plots.append(data_plot)
+    def plot_power():
+        data_plot = DataPlot(data, plot_config, 'battery_status',
+                             y_start=0, title='Power',
+                             plot_height='small', changed_params=changed_params,
+                             x_range=x_range)
+        data_plot.add_graph(['voltage_v', 'voltage_filtered_v',
+                             'current_a', lambda data: ('discharged_mah', data['discharged_mah']/100)],
+                            colors8[::2],
+                            ['Voltage  [V]', 'Voltage filtered [V]', 'Current [A]',
+                             'Discharged Amount [mAh / 100]'])
+        return data_plot.finalize()
+    add_plot(plot_power, extended=True)
 
 
 
     # estimator watchdog
-    data_plot = DataPlot(data, plot_config, 'estimator_status',
-                         y_start=0, title='Estimator Watchdog',
-                         plot_height='small', changed_params=changed_params,
-                         x_range=x_range)
-    data_plot.add_graph(
-        ['nan_flags', 'health_flags', 'timeout_flags',
-         lambda data: ('innovation_check_flags_vel_pos', data['innovation_check_flags']&0x7),
-         lambda data: ('innovation_check_flags_mag', (data['innovation_check_flags']>>3)&0x7),
-         lambda data: ('innovation_check_flags_yaw', (data['innovation_check_flags']>>6)&0x3),
-         lambda data: ('innovation_check_flags_sideslip', (data['innovation_check_flags']>>8)&0x3),
-         lambda data: ('innovation_check_flags_flow', (data['innovation_check_flags']>>10)&0x3)],
-        colors8,
-        ['NaN Flags', 'Health Flags (vel, pos, hgt)',
-         'Timeout Flags (vel, pos, hgt)',
-         'Innovation Check Bits (vel, hor pos, vert pos)',
-         'Innovation Check Bits (mag X, Y, Z)',
-         'Innovation Check Bits (yaw, airspeed)',
-         'Innovation Check Bits (synthetic sideslip, height to ground)',
-         'Innovation Check Bits (optical flow X, Y)'])
-    if data_plot.finalize() is not None: plots.append(data_plot)
+    def plot_estimator_watchdog():
+        data_plot = DataPlot(data, plot_config, 'estimator_status',
+                             y_start=0, title='Estimator Watchdog',
+                             plot_height='small', changed_params=changed_params,
+                             x_range=x_range)
+        data_plot.add_graph(
+            ['nan_flags', 'health_flags', 'timeout_flags',
+             lambda data: ('innovation_check_flags_vel_pos', data['innovation_check_flags']&0x7),
+             lambda data: ('innovation_check_flags_mag', (data['innovation_check_flags']>>3)&0x7),
+             lambda data: ('innovation_check_flags_yaw', (data['innovation_check_flags']>>6)&0x3),
+             lambda data: ('innovation_check_flags_sideslip', (data['innovation_check_flags']>>8)&0x3),
+             lambda data: ('innovation_check_flags_flow', (data['innovation_check_flags']>>10)&0x3)],
+            colors8,
+            ['NaN Flags', 'Health Flags (vel, pos, hgt)',
+             'Timeout Flags (vel, pos, hgt)',
+             'Innovation Check Bits (vel, hor pos, vert pos)',
+             'Innovation Check Bits (mag X, Y, Z)',
+             'Innovation Check Bits (yaw, airspeed)',
+             'Innovation Check Bits (synthetic sideslip, height to ground)',
+             'Innovation Check Bits (optical flow X, Y)'])
+        return data_plot.finalize()
+    add_plot(plot_estimator_watchdog, extended=True)
 
 
 
     # RC Quality
-    data_plot = DataPlot(data, plot_config, 'input_rc',
-                         title='RC Quality', plot_height='small', y_range=Range1d(0, 1),
-                         changed_params=changed_params, x_range=x_range)
-    data_plot.add_graph([lambda data: ('rssi', data['rssi']/100), 'rc_lost'],
-                        colors3[0:2], ['RSSI [0, 1]', 'RC Lost (Indicator)'])
-    data_plot.change_dataset('vehicle_status')
-    data_plot.add_graph(['rc_signal_lost'], colors3[2:3], ['RC Lost (Detected)'])
-    if data_plot.finalize() is not None: plots.append(data_plot)
+    def plot_rc_quality():
+        data_plot = DataPlot(data, plot_config, 'input_rc',
+                             title='RC Quality', plot_height='small', y_range=Range1d(0, 1),
+                             changed_params=changed_params, x_range=x_range)
+        data_plot.add_graph([lambda data: ('rssi', data['rssi']/100), 'rc_lost'],
+                            colors3[0:2], ['RSSI [0, 1]', 'RC Lost (Indicator)'])
+        data_plot.change_dataset('vehicle_status')
+        data_plot.add_graph(['rc_signal_lost'], colors3[2:3], ['RC Lost (Detected)'])
+        return data_plot.finalize()
+    add_plot(plot_rc_quality, extended=True)
 
 
 
     # cpu load
-    data_plot = DataPlot(data, plot_config, 'cpuload',
-                         title='CPU & RAM', plot_height='small', y_range=Range1d(0, 1),
-                         changed_params=changed_params, x_range=x_range)
-    data_plot.add_graph(['ram_usage', 'load'], [colors3[1], colors3[2]],
-                        ['RAM Usage', 'CPU Load'])
-    data_plot.add_span('load', line_color=colors3[2])
-    data_plot.add_span('ram_usage', line_color=colors3[1])
-    plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
-    if data_plot.finalize() is not None: plots.append(data_plot)
+    def plot_cpu_load():
+        data_plot = DataPlot(data, plot_config, 'cpuload',
+                             title='CPU & RAM', plot_height='small', y_range=Range1d(0, 1),
+                             changed_params=changed_params, x_range=x_range)
+        data_plot.add_graph(['ram_usage', 'load'], [colors3[1], colors3[2]],
+                            ['RAM Usage', 'CPU Load'])
+        data_plot.add_span('load', line_color=colors3[2])
+        data_plot.add_span('ram_usage', line_color=colors3[1])
+        plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
+        return data_plot.finalize()
+    add_plot(plot_cpu_load)
 
 
     # sampling: time difference
-    try:
-        data_plot = DataPlot(data, plot_config, 'sensor_combined', y_start=0,
-                             y_axis_label='[us]',
-                             title='Sampling Regularity of Sensor Data', plot_height='small',
-                             changed_params=changed_params, x_range=x_range)
-        sensor_combined = ulog.get_dataset('sensor_combined').data
-        sampling_diff = np.diff(sensor_combined['timestamp'])
-        min_sampling_diff = np.amin(sampling_diff)
+    def plot_sampling_regularity():
+        try:
+            data_plot = DataPlot(data, plot_config, 'sensor_combined', y_start=0,
+                                 y_axis_label='[us]',
+                                 title='Sampling Regularity of Sensor Data', plot_height='small',
+                                 changed_params=changed_params, x_range=x_range)
+            sensor_combined = ulog.get_dataset('sensor_combined').data
+            sampling_diff = np.diff(sensor_combined['timestamp'])
+            min_sampling_diff = np.amin(sampling_diff)
 
-        plot_dropouts(data_plot.bokeh_plot, ulog.dropouts, min_sampling_diff)
+            plot_dropouts(data_plot.bokeh_plot, ulog.dropouts, min_sampling_diff)
 
-        data_plot.add_graph([lambda data: ('timediff', np.append(sampling_diff, 0))],
-                            [colors3[2]], ['delta t (between 2 samples)'])
-        data_plot.change_dataset('estimator_status')
-        data_plot.add_graph([lambda data: ('time_slip', data['time_slip']*1e6)],
-                            [colors3[1]], ['Estimator time slip (cumulative)'])
-        if data_plot.finalize() is not None: plots.append(data_plot)
-    except:
-        pass
+            data_plot.add_graph([lambda data: ('timediff', np.append(sampling_diff, 0))],
+                                [colors3[2]], ['delta t (between 2 samples)'])
+            data_plot.change_dataset('estimator_status')
+            data_plot.add_graph([lambda data: ('time_slip', data['time_slip']*1e6)],
+                                [colors3[1]], ['Estimator time slip (cumulative)'])
+            return data_plot.finalize()
+        except:
+            pass
+        return None
+    add_plot(plot_sampling_regularity)
+
+
+    #### no more graphs from here on ####
+
+
+    # load interactive plots button
+    load_plots_button = Button(label="Load interactive Plots", width=170)
+    interactive_plots_button_index = len(plots)
+    def load_plots_button_clicked():
+        nonlocal interactive_plots_button_index
+        main_layout = curdoc().get_model_by_name('main_layout')
+        del main_layout.children[interactive_plots_button_index] # remove the button
+        gen_plots = []
+        for gen_plot_cb, plot_name in extended_plots:
+            plot = gen_plot_cb()
+            if plot is not None:
+                gen_plots.append(plot.bokeh_plot)
+        # replace the png image
+        main_layout.children[interactive_plots_button_index] = column(gen_plots)
+
+
+
+    # need to generated the extended plots as png?
+# TODO: serve.py -f <file.ulg> -> do not generate -> helper.py
+# TODO: loading plots... does not disapear
+    image_name = 'plot_app/static/%s_extended.png' % log_id
+    if has_export_png and not os.path.exists(image_name):
+
+        start_time = timer()
+        plots = []
+        for gen_plot_cb, plot_name in extended_plots:
+            plot = gen_plot_cb()
+            if plot is not None:
+                plots.append(plot.bokeh_plot)
+        export_png(column(plots), image_name)
+        # crop toolbar away
+        im = Image.open(image_name)
+        w, h = im.size
+        im.crop((0,0,w-29,h)).save(image_name)
+        print_timing("png export", start_time)
+
+    # plot cached image if it exists
+    if os.path.exists(image_name):
+        load_plots_button.on_click(load_plots_button_clicked)
+        plots.append(widgetbox(load_plots_button, width=int(plot_width*0.99)))
+        plots.append(Div(text='<img src="%s">' % image_name , width=int(plot_width)))
+    else:
+        # load dynamic plots directly
+        for gen_plot_cb, plot_name in extended_plots:
+            plot = gen_plot_cb()
+            if plot is not None:
+                plots.append(plot.bokeh_plot)
 
 
 
@@ -680,7 +831,6 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
                 label.text_alpha = 1
     param_changes_button.on_click(param_changes_button_clicked)
 
-
     jinja_plot_data = []
     for i in range(len(plots)):
         if plots[i] is None:
@@ -698,6 +848,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
                 'fragment': fragment,
                 'title': plot_title
                 })
+
 
 
     # changed parameters
@@ -796,6 +947,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
                            height=300, sortable=False, selectable=False)
     div = Div(text="""<b>Logged Messages</b>""", width=int(plot_width/2))
     plots.append(widgetbox(div, data_table, width=plot_width))
+
 
 
     curdoc().template_variables['plots'] = jinja_plot_data
