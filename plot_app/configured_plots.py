@@ -188,12 +188,15 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
 
     # hardfault
     if 'hardfault_plain' in ulog.msg_info_multiple_dict:
-        hardfault_html = '<p><b>This log contains hardfault data from a software crash</b> ' \
-        '(see <a href="https://dev.px4.io/en/debug/gdb_debugging.html#debugging-hard-faults-in-nuttx">here</a> how to debug):</p>'
+        hardfault_html = (
+            '<p><b>This log contains hardfault data from a software crash</b> (see <a '
+            'href="https://dev.px4.io/en/debug/gdb_debugging.html#debugging-hard-faults-in-nuttx">'
+            'here</a> how to debug):</p>')
         counter = 1
         for hardfault in ulog.msg_info_multiple_dict['hardfault_plain']:
             hardfault_text = cgi.escape(''.join(hardfault)).replace('\n', '<br/>')
-            hardfault_html += '<p>Hardfault #'+str(counter)+':<br/><pre>'+hardfault_text+'</pre></p>'
+            hardfault_html += ('<p>Hardfault #'+str(counter)+':<br/><pre>'+
+                               hardfault_text+'</pre></p>')
             counter += 1
         hardfault_div = Div(text=hardfault_html, width=int(plot_width*0.9))
         plots.append(widgetbox(hardfault_div, width=int(plot_width*0.9)))
