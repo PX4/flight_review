@@ -189,7 +189,8 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
     # hardfault
     if 'hardfault_plain' in ulog.msg_info_multiple_dict:
         hardfault_html = (
-            '<p><b>This log contains hardfault data from a software crash</b> (see <a '
+            '<p><b> <font color="#e0212d">This log contains hardfault data from a software crash'
+            '</font></b> (see <a '
             'href="https://dev.px4.io/en/debug/gdb_debugging.html#debugging-hard-faults-in-nuttx">'
             'here</a> how to debug):</p>')
         counter = 1
