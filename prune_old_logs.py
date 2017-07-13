@@ -61,6 +61,11 @@ with con:
         print('no maches. exiting')
         exit(0)
 
+    cur.execute('select count(*) from Logs')
+    num_total = cur.fetchone()
+    if num_total is not None:
+        print("Will delete {:} logs out of {:}".format(len(log_ids_to_remove), num_total[0]))
+
     if interactive:
         confirm = input('Press "y" and ENTER to confirm and delete: ')
         if confirm != 'y':
