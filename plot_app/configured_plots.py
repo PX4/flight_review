@@ -85,12 +85,15 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
     else:
         release_str += ' <small>('
         release_str_suffix = ')</small>'
+    branch_info = ''
+    if 'ver_sw_branch' in ulog.msg_info_dict:
+        branch_info = ', branch: '+ulog.msg_info_dict['ver_sw_branch']+''
     if 'ver_sw' in ulog.msg_info_dict:
         ver_sw = cgi.escape(ulog.msg_info_dict['ver_sw'])
         ver_sw_link = 'https://github.com/PX4/Firmware/commit/'+ver_sw
         table_text.append(('Software Version', release_str +
                            '<a href="'+ver_sw_link+'" target="_blank">'+ver_sw[:8]+'</a>'+
-                           release_str_suffix))
+                           release_str_suffix+branch_info))
 
     if 'sys_os_name' in ulog.msg_info_dict and 'sys_os_ver_release' in ulog.msg_info_dict:
         os_name = cgi.escape(ulog.msg_info_dict['sys_os_name'])
