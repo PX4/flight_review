@@ -26,7 +26,7 @@ from helper import get_log_filename, validate_log_id, \
 from multipart_streamer import MultiPartStreamer
 from send_email import send_notification_email, send_flightreport_email
 
-#pylint: disable=maybe-no-member,attribute-defined-outside-init,abstract-method
+#pylint: disable=maybe-no-member,attribute-defined-outside-init,abstract-method,too-many-statements
 # TODO: cgi.escape got deprecated in python 3.2
 #pylint: disable=deprecated-method
 
@@ -194,8 +194,12 @@ class UploadHandler(tornado.web.RequestHandler):
                     '/edit_entry?action=delete&log='+log_id+'&token='+token
 
                 if upload_type == 'flightreport' and is_public:
+                    destinations = set(email_notifications_config['public_flightreport'])
+                    if rating in ['unsatisfactory', 'crash_sw_hw', 'crash_pilot']:
+                        destinations = destinations | \
+                            set(email_notifications_config['public_flightreport_bad'])
                     send_flightreport_email(
-                        email_notifications_config['public_flightreport'],
+                        list(destinations),
                         full_plot_url, description, feedback,
                         DBData.rating_str_static(rating),
                         DBData.wind_speed_str_static(wind_speed), delete_url,
