@@ -395,12 +395,13 @@ class DataPlot:
             self._cur_dataset = None
 
 
-    def add_graph(self, field_names, colors, legends, use_downsample=True):
+    def add_graph(self, field_names, colors, legends, use_downsample=True, mark_nan=False):
         """ add 1 or more lines to a graph
 
         field_names can be a list of fields from the data set, or a list of
         functions with the data set as argument and returning a tuple of
         (field_name, data)
+        :param mark_nan: if True, add an indicator to the plot when one of the graphs is NaN
         """
         if self._had_error: return
         try:
@@ -408,6 +409,35 @@ class DataPlot:
             data_set = {}
             data_set['timestamp'] = self._cur_dataset.data['timestamp']
             field_names_expanded = self._expand_field_names(field_names, data_set)
+
+            if mark_nan:
+                # look through the data to find NaN's and store their timestamps
+                nan_timestamps = set()
+                for key in field_names_expanded:
+                    nan_indexes = np.argwhere(np.isnan(data_set[key]))
+                    last_index = -2
+                    for ind in nan_indexes:
+                        if last_index + 1 != ind: # store only timestamps at the start of NaN
+                            nan_timestamps.add(data_set['timestamp'][ind][0])
+                        last_index = ind
+
+                nan_color = 'black'
+                for nan_timestamp in nan_timestamps:
+                    nan_line = Span(location=nan_timestamp,
+                                    dimension='height', line_color=nan_color,
+                                    line_dash='dashed', line_width=3)
+                    p.add_layout(nan_line)
+                if len(nan_timestamps) > 0:
+                    y_values = [30] * len(nan_timestamps)
+                    names = ['NaN'] * len(nan_timestamps)
+                    source = ColumnDataSource(data=dict(x=np.array(list(nan_timestamps))+1e5,
+                                                        names=names, y=y_values))
+                    # plot as text with a fixed screen-space y offset
+                    labels = LabelSet(x='x', y='y', text='names',
+                                      y_units='screen', level='glyph', text_color=nan_color,
+                                      source=source, render_mode='canvas')
+                    p.add_layout(labels)
+
 
             if use_downsample:
                 # we directly pass the data_set, downsample and then create the
