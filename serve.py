@@ -34,6 +34,8 @@ parser = argparse.ArgumentParser(description='Start bokeh Server')
 
 parser.add_argument('-s', '--show', dest='show', action='store_true',
                     help='Open browser on startup')
+parser.add_argument('--use-xheaders', action='store_true',
+                    help="Prefer X-headers for IP/protocol information")
 parser.add_argument('-f', '--file', metavar='file.ulg', action='store',
                     help='Directly show an ULog file, only for local use (implies -s)',
                     default=None)
@@ -67,6 +69,7 @@ applications['/plot_app'] = Application(handler)
 
 server_kwargs = {}
 if args.port != None: server_kwargs['port'] = args.port
+if args.use_xheaders: server_kwargs['use_xheaders'] = args.use_xheaders
 server_kwargs['num_procs'] = args.numprocs
 if args.address != None: server_kwargs['address'] = args.address
 if args.host != None: server_kwargs['host'] = args.host
