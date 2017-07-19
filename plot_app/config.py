@@ -23,6 +23,7 @@ email_notifications_config['public_flightreport_bad'] = \
     [ s.strip() for s in email_notifications_config['public_flightreport_bad'].split(',')]
 
 __DOMAIN_NAME = _conf.get('general', 'domain_name')
+__HTTP_PROTOCOL = _conf.get('general', 'http_protocol')
 __AIRFRAMES_URL = _conf.get('general', 'airframes_url')
 __PARAMETERS_URL = _conf.get('general', 'parameters_url')
 __GMAPS_API_KEY = _conf.get('general', 'google_maps_api_key')
@@ -69,6 +70,10 @@ plot_config['mission_setpoint_color'] = colors8[5]
 def get_domain_name():
     """ get configured domain name (w/o http://) """
     return __DOMAIN_NAME
+
+def get_http_protocol():
+    """ get the protocol: either http or https """
+    return __HTTP_PROTOCOL
 
 def get_log_filepath():
     """ get configured log files directory """

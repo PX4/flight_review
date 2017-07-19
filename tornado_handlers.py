@@ -188,9 +188,10 @@ class UploadHandler(tornado.web.RequestHandler):
                 con.commit()
 
                 url = '/plot_app?log='+log_id
-                full_plot_url = 'http://'+get_domain_name()+url
+                full_plot_url = get_http_protocol()+'://'+get_domain_name()+url
+                print(full_plot_url)
 
-                delete_url = 'http://'+get_domain_name()+ \
+                delete_url = get_http_protocol()+'://'+get_domain_name()+ \
                     '/edit_entry?action=delete&log='+log_id+'&token='+token
 
                 if upload_type == 'flightreport' and is_public:
