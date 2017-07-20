@@ -8,6 +8,8 @@ ULog flight logs, and analyze them through the browser.
 It uses the [bokeh](http://bokeh.pydata.org) library for plotting and the
 [Tornado Web Server](http://www.tornadoweb.org).
 
+Flight Review is deployed on https://review.px4.io.
+
 
 #### Installation and Setup ####
 
@@ -19,7 +21,9 @@ It uses the [bokeh](http://bokeh.pydata.org) library for plotting and the
 - configure web server config (this can be skipped for a local installation):
   create a file `config_user.ini` and copy and adjust the sections and values
   from `config_default.ini` that should be overridden.
-- `./setup_db.py` to initialize the database
+- `./setup_db.py` to initialize the database.
+  This script can also be used to upgrade the DB tables, for instance when new
+  entries are added (it automatically detects that).
 
 
 #### Usage ####
@@ -47,22 +51,18 @@ with immediate feedback.
 - Start the notebook: `jupyter notebook`
 - open the `testing_notebook.ipynb` file
 
-### TODO list ###
-- Google Maps seems to have some problems (initialization, scaling and zooming
-  issues). This is bokeh
-- maximum upload size is currently limited to 100MB. This requires a bokeh
-  setting.
-- add SSL
-- Not all bokeh widgets seem to be responsive to size changes
-- better downsampling (use JS callback with queue & timeout (like
-  InteractiveImage) and better algorithm)
-- add location obfuscation option
-- user management: login, per-user display templates
-- download CSV option?
-- ...
-
 
 ### Implementation ###
+The web site is structured around a bokeh application in `plot_app`
+(`plot_app/configured_plots.py` contains all the configured plots). This
+application also handles the statistics page, as it contains bokeh plots as
+well. The other pages (upload, browse, ...) are implemented as tornado handlers
+in `tornado_handlers.py`.
+
+Tornado uses a single-threaded event loop. This means all operations should be
+non-blocking (see also http://www.tornadoweb.org/en/stable/guide/async.html).
+(This is currently not the case for sending emails).
+
 Reading ULog files is expensive and thus should be avoided if not really
 necessary. There are two mechanisms helping with that:
 - Loaded ULog files are kept in RAM using an LRU cache with configurable size
@@ -71,9 +71,10 @@ necessary. There are two mechanisms helping with that:
 - There's a LogsGenerated DB table, which contains extracted data from ULog
   for faster access.
 
-Tornado uses a single-threaded event loop. This means all operations should be
-non-blocking (see also http://www.tornadoweb.org/en/stable/guide/async.html).
-
+#### Caching ####
+In addition to in-memory caching there is also some on-disk caching: KML files
+are stored on disk. Also the parameters and airframes are cached and downloaded
+every 24 hours. It is safe to delete these files (but not the cache directory).
 
 #### Notes about python imports ####
 Bokeh uses dynamic code loading and the `plot_app/main.py` gets loaded on each
