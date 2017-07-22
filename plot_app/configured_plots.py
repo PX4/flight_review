@@ -499,15 +499,16 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
                          changed_params=changed_params, topic_instance=1,
                          x_range=x_range)
     num_actuator_outputs = 8
+    # only plot if at least one of the outputs is not constant
+    all_constant = True
     if data_plot.dataset:
         max_outputs = np.amax(data_plot.dataset.data['noutputs'])
         if max_outputs < num_actuator_outputs: num_actuator_outputs = max_outputs
-    # only plot if at least one of the outputs is not constant
-    all_constant = True
-    for i in range(num_actuator_outputs):
-        output_data = data_plot.dataset.data['output['+str(i)+']']
-        if not np.all(output_data == output_data[0]):
-            all_constant = False
+
+        for i in range(num_actuator_outputs):
+            output_data = data_plot.dataset.data['output['+str(i)+']']
+            if not np.all(output_data == output_data[0]):
+                all_constant = False
     if not all_constant:
         data_plot.add_graph(['output['+str(i)+']' for i in
                              range(num_actuator_outputs)], colors8[0:num_actuator_outputs],
