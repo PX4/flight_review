@@ -22,7 +22,7 @@ from db_entry import *
 from helper import get_log_filename, validate_log_id, \
     flight_modes_table, get_airframe_data, html_long_word_force_break, \
     validate_url, load_ulog_file, clear_ulog_cache, get_default_parameters, \
-    get_total_flight_time, ULogException
+    get_total_flight_time, ULogException, get_airframe_name
 from multipart_streamer import MultiPartStreamer
 from send_email import send_notification_email, send_flightreport_email
 
@@ -183,7 +183,8 @@ class UploadHandler(tornado.web.RequestHandler):
                      feedback, upload_type, video_url, is_public, token])
 
                 if ulog is not None:
-                    update_vehicle_db_entry(cur, ulog, log_id, vehicle_name)
+                    vehicle_data = update_vehicle_db_entry(cur, ulog, log_id, vehicle_name)
+                    vehicle_name = vehicle_data.name
 
                 con.commit()
 
@@ -194,6 +195,43 @@ class UploadHandler(tornado.web.RequestHandler):
                 delete_url = get_http_protocol()+'://'+get_domain_name()+ \
                     '/edit_entry?action=delete&log='+log_id+'&token='+token
 
+                # information for the notification email
+                info = {}
+                info['description'] = description
+                info['feedback'] = feedback
+                info['upload_filename'] = upload_file_name
+                info['type'] = ''
+                info['airframe'] = ''
+                info['hardware'] = ''
+                info['uuid'] = ''
+                info['software'] = ''
+                if len(vehicle_name) > 0:
+                    info['vehicle_name'] = vehicle_name
+
+                if ulog is not None:
+                    px4_ulog = PX4ULog(ulog)
+                    info['type'] = px4_ulog.get_mav_type()
+                    airframe_name_tuple = get_airframe_name(ulog)
+                    if airframe_name_tuple is not None:
+                        airframe_name, airframe_id = airframe_name_tuple
+                        if len(airframe_name) == 0:
+                            info['airframe'] = airframe_id
+                        else:
+                            info['airframe'] = airframe_name
+                    sys_hardware = ''
+                    if 'ver_hw' in ulog.msg_info_dict:
+                        sys_hardware = cgi.escape(ulog.msg_info_dict['ver_hw'])
+                        info['hardware'] = sys_hardware
+                    if 'sys_uuid' in ulog.msg_info_dict and sys_hardware != 'SITL':
+                        info['uuid'] = cgi.escape(ulog.msg_info_dict['sys_uuid'])
+                    branch_info = ''
+                    if 'ver_sw_branch' in ulog.msg_info_dict:
+                        branch_info = ' (branch: '+ulog.msg_info_dict['ver_sw_branch']+')'
+                    if 'ver_sw' in ulog.msg_info_dict:
+                        ver_sw = cgi.escape(ulog.msg_info_dict['ver_sw'])
+                        info['software'] = ver_sw + branch_info
+
+
                 if upload_type == 'flightreport' and is_public:
                     destinations = set(email_notifications_config['public_flightreport'])
                     if rating in ['unsatisfactory', 'crash_sw_hw', 'crash_pilot']:
@@ -201,10 +239,10 @@ class UploadHandler(tornado.web.RequestHandler):
                             set(email_notifications_config['public_flightreport_bad'])
                     send_flightreport_email(
                         list(destinations),
-                        full_plot_url, description, feedback,
+                        full_plot_url,
                         DBData.rating_str_static(rating),
                         DBData.wind_speed_str_static(wind_speed), delete_url,
-                        stored_email)
+                        stored_email, info)
 
                     # also generate the additional DB entry
                     # (we may have the log already loaded in 'ulog', however the
@@ -215,12 +253,8 @@ class UploadHandler(tornado.web.RequestHandler):
                 cur.close()
                 con.close()
 
-                # TODO: now that we have loaded the ulog already, add more
-                # information to the notification email (airframe, ...)
-
                 # send notification emails
-                send_notification_email(email, full_plot_url, description,
-                                        delete_url)
+                send_notification_email(email, full_plot_url, delete_url, info)
 
                 # do not redirect for QGC
                 if source != 'QGroundControl':
@@ -396,6 +430,7 @@ def update_vehicle_db_entry(cur, ulog, log_id, vehicle_name):
     :param cur: DB cursor
     :param ulog: ULog object
     :param vehicle_name: new vehicle name or '' if not updated
+    :return vehicle_data: DBVehicleData object
     """
 
     vehicle_data = DBVehicleData()
@@ -423,6 +458,7 @@ def update_vehicle_db_entry(cur, ulog, log_id, vehicle_name):
                     'values (?, ?, ?, ?)',
                     [vehicle_data.uuid, vehicle_data.log_id, vehicle_data.name,
                      vehicle_data.flight_time])
+    return vehicle_data
 
 
 
