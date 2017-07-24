@@ -59,18 +59,14 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
 
     # airframe
     table_text = []
-    if 'SYS_AUTOSTART' in ulog.initial_parameters:
-        sys_autostart = ulog.initial_parameters['SYS_AUTOSTART']
-        airframe_data = get_airframe_data(sys_autostart)
-
-        if airframe_data is None:
-            table_text.append(('Airframe', str(sys_autostart)))
+    airframe_name_tuple = get_airframe_name(ulog)
+    if airframe_name_tuple is not None:
+        airframe_name, airframe_id = airframe_name_tuple
+        if len(airframe_name) == 0:
+            table_text.append(('Airframe', airframe_id))
         else:
-            airframe_type = ''
-            if 'type' in airframe_data:
-                airframe_type = ', '+airframe_data['type']
-            table_text.append(('Airframe', airframe_data.get('name')+
-                               airframe_type+' <small>('+str(sys_autostart)+')</small>'))
+            table_text.append(('Airframe', airframe_name+' <small>('+airframe_id+')</small>'))
+
 
     # HW & SW
     sys_hardware = ''

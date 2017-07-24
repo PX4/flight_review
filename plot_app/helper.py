@@ -322,6 +322,27 @@ def load_ulog_file(file_name):
 
     return ulog
 
+def get_airframe_name(ulog):
+    """
+    get the airframe name and autostart ID.
+    :return: tuple (airframe name & type (str), autostart ID (str)) or None if no
+             autostart ID
+    """
+
+    if 'SYS_AUTOSTART' in ulog.initial_parameters:
+        sys_autostart = ulog.initial_parameters['SYS_AUTOSTART']
+        airframe_data = get_airframe_data(sys_autostart)
+
+        if airframe_data is None:
+            return ("", str(sys_autostart))
+
+        airframe_type = ''
+        if 'type' in airframe_data:
+            airframe_type = ', '+airframe_data['type']
+        return (airframe_data.get('name')+ airframe_type, str(sys_autostart))
+    return None
+
+
 def get_total_flight_time(ulog):
     """
     get the total flight time from an ulog in seconds
