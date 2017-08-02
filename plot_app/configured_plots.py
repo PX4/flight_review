@@ -208,7 +208,6 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
 #    gps_titles = []
 #    plot = plot_map(ulog, plot_config, map_type='google', api_key =
 #            get_google_maps_api_key(), setpoints=False)
-#    plot = None
 #    if plot is not None:
 #        gps_plots.append(plot)
 #        gps_titles.append('GPS Map: Satellite')
@@ -227,7 +226,6 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
 #        gps_plots.append(data_plot.bokeh_plot)
 #        gps_titles.append('Local Position')
 #
-#
 #    if len(gps_plots) >= 2:
 #        tabs = []
 #        for i in range(len(gps_plots)):
@@ -236,6 +234,15 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
 #        plots.append(Tabs(tabs=tabs, width=plot_width, height=gps_plot_height))
 #    elif len(gps_plots) == 1:
 #        plots.extend(gps_plots)
+
+
+    if is_running_locally():
+        # show the google maps plot via Bokeh, since the one in the html
+        # template does not work locally (we disable it further down)
+        map_plot = plot_map(ulog, plot_config, map_type='google', api_key=
+                            get_google_maps_api_key(), setpoints=False)
+        if map_plot is not None:
+            plots.append(map_plot)
 
 
     # Position plot
@@ -254,7 +261,8 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
                  bokeh_plot=data_plot.bokeh_plot)
         if data_plot.finalize() is not None:
             plots.append(data_plot.bokeh_plot)
-            curdoc().template_variables['has_position_data'] = True
+            if not is_running_locally(): # do not enable Google Map if running locally
+                curdoc().template_variables['has_position_data'] = True
 
 
     # initialize parameter changes

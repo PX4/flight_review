@@ -41,6 +41,14 @@ def set_log_id_is_filename(enable=False):
 def _check_log_id_is_filename():
     return __log_id_is_filename['enable']
 
+def is_running_locally():
+    """
+    Check if we run locally.
+    Avoid using this if possible as it makes testing more difficult
+    """
+    # this is an approximation: it's actually only True if a log is displayed
+    # directly via ./serve.py -f <file.ulg>
+    return __log_id_is_filename['enable']
 
 
 def validate_log_id(log_id):
