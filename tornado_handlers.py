@@ -302,6 +302,29 @@ class DownloadHandler(tornado.web.RequestHandler):
         if not os.path.exists(log_file_name):
             raise tornado.web.HTTPError(404, 'Log not found')
 
+
+        def get_original_filename(default_value, new_file_suffix):
+            """
+            get the uploaded file name & exchange the file extension
+            """
+            try:
+                con = sqlite3.connect(get_db_filename(), detect_types=sqlite3.PARSE_DECLTYPES)
+                cur = con.cursor()
+                cur.execute('select OriginalFilename '
+                            'from Logs where Id = ?', [log_id])
+                db_tuple = cur.fetchone()
+                if db_tuple is not None:
+                    original_file_name = cgi.escape(db_tuple[0])
+                    if original_file_name[-4:].lower() == '.ulg':
+                        original_file_name = original_file_name[:-4]
+                    return original_file_name + new_file_suffix
+                cur.close()
+                con.close()
+            except:
+                print("DB access failed:", sys.exc_info()[0], sys.exc_info()[1])
+            return default_value
+
+
         if download_type == '1': # download the parameters
             ulog = load_ulog_file(log_file_name)
             param_keys = sorted(ulog.initial_parameters.keys())
@@ -354,9 +377,11 @@ class DownloadHandler(tornado.web.RequestHandler):
                     raise CustomHTTPError(400, 'No Position Data in log')
 
 
+            kml_dl_file_name = get_original_filename('track.kml', '.kml')
+
             # send the whole KML file
             self.set_header("Content-Type", "application/vnd.google-earth.kml+xml")
-            self.set_header('Content-Disposition', 'attachment; filename=track.kml')
+            self.set_header('Content-Disposition', 'attachment; filename='+kml_dl_file_name)
             with open(kml_file_name, 'rb') as kml_file:
                 while True:
                     data = kml_file.read(4096)
