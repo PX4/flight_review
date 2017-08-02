@@ -613,10 +613,11 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
                          plot_height='small', changed_params=changed_params,
                          x_range=x_range)
     data_plot.add_graph(['voltage_v', 'voltage_filtered_v',
-                         'current_a', lambda data: ('discharged_mah', data['discharged_mah']/100)],
-                        colors8[::2],
-                        ['Voltage  [V]', 'Voltage filtered [V]', 'Current [A]',
-                         'Discharged Amount [mAh / 100]'])
+                         'current_a', lambda data: ('discharged_mah', data['discharged_mah']/100),
+                         lambda data: ('remaining', data['remaining']*10)],
+                        colors8[::2]+colors8[1:2],
+                        ['Voltage [V]', 'Voltage filtered [V]', 'Current [A]',
+                         'Discharged Amount [mAh / 100]', 'Battery remaining [0=empty, 10=full]'])
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
