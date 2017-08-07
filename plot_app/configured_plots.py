@@ -672,7 +672,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
 
     # sampling: time difference
     try:
-        data_plot = DataPlot(data, plot_config, 'sensor_combined', y_start=0,
+        data_plot = DataPlot(data, plot_config, 'sensor_combined', y_range=Range1d(0, 25e3),
                              y_axis_label='[us]',
                              title='Sampling Regularity of Sensor Data', plot_height='small',
                              changed_params=changed_params, x_range=x_range)
@@ -683,7 +683,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
         plot_dropouts(data_plot.bokeh_plot, ulog.dropouts, min_sampling_diff)
 
         data_plot.add_graph([lambda data: ('timediff', np.append(sampling_diff, 0))],
-                            [colors3[2]], ['delta t (between 2 samples)'])
+                            [colors3[2]], ['delta t (between 2 logged samples)'])
         data_plot.change_dataset('estimator_status')
         data_plot.add_graph([lambda data: ('time_slip', data['time_slip']*1e6)],
                             [colors3[1]], ['Estimator time slip (cumulative)'])
