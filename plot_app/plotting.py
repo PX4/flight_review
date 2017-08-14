@@ -351,7 +351,7 @@ class DataPlot:
                                  if elem.name == data_name and elem.multi_id == topic_instance][0]
 
             if y_start is not None:
-                # make sure y axis starts at 0. We do it by adding an invisible circle
+                # make sure y axis starts at y_start. We do it by adding an invisible circle
                 self._p.circle(x=int(self._cur_dataset.data['timestamp'][0]),
                                y=y_start, size=0, alpha=0)
 

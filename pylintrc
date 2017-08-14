@@ -99,7 +99,7 @@ evaluation=10.0 - ((float(5 * error + warning + refactor + convention) / stateme
 [BASIC]
 
 # Good variable names which should always be accepted, separated by a comma
-good-names=i,j,k,ex,Run,_,e,h,m,s,m1,s1,h1,p,x,y,t,_p,d
+good-names=i,j,k,ex,Run,_,e,h,m,s,m1,s1,h1,p,x,y,t,_p,d,dx,dy,dz,q
 
 # Bad variable names which should always be refused, separated by a comma
 bad-names=foo,bar,baz,toto,tutu,tata
@@ -246,7 +246,7 @@ single-line-if-stmt=no
 no-space-check=trailing-comma,dict-separator
 
 # Maximum number of lines in a module
-max-module-lines=1000
+max-module-lines=1010
 
 # String used as indentation unit. This is usually "    " (4 spaces) or "\t" (1
 # tab).

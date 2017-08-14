@@ -55,7 +55,6 @@ p {
 p,td,button {
     font-family: 'Roboto', sans-serif;
     font-size: 1.2em;
-    text-align: justify;
     text-justify: inter-word;
 }
 
@@ -76,7 +75,7 @@ table.spaced tbody {
 }
 
 td.left {
-	padding-right: 30px;
+	padding-right: 20px;
 }
 
 .plot-legend-box {
@@ -109,6 +108,9 @@ ul {
 	float: right;
 }
 
+tr .space-above > td {
+	padding-top: 1em;
+}
 
 /* browse page / DataTables */
 

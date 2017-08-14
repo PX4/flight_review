@@ -1,6 +1,7 @@
 """ This contains the list of all drawn plots on the log plotting page """
 
 import cgi # for html escaping
+from math import sqrt
 
 from bokeh.layouts import widgetbox
 from bokeh.models import ColumnDataSource, Range1d
@@ -57,22 +58,25 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
         div_descr = Div(text="<h4>"+db_data.description+"</h4>", width=int(plot_width*0.9))
         header_divs.append(div_descr)
 
+
+    ### Setup the text for the left table with various information ###
+    table_text_left = []
+
     # airframe
-    table_text = []
-    airframe_name_tuple = get_airframe_name(ulog)
+    airframe_name_tuple = get_airframe_name(ulog, True)
     if airframe_name_tuple is not None:
         airframe_name, airframe_id = airframe_name_tuple
         if len(airframe_name) == 0:
-            table_text.append(('Airframe', airframe_id))
+            table_text_left.append(('Airframe', airframe_id))
         else:
-            table_text.append(('Airframe', airframe_name+' <small>('+airframe_id+')</small>'))
+            table_text_left.append(('Airframe', airframe_name+' <small>('+airframe_id+')</small>'))
 
 
     # HW & SW
     sys_hardware = ''
     if 'ver_hw' in ulog.msg_info_dict:
         sys_hardware = cgi.escape(ulog.msg_info_dict['ver_hw'])
-        table_text.append(('Hardware', sys_hardware))
+        table_text_left.append(('Hardware', sys_hardware))
 
     release_str = ulog.get_version_info_str()
     if release_str is None:
@@ -83,21 +87,23 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
         release_str_suffix = ')</small>'
     branch_info = ''
     if 'ver_sw_branch' in ulog.msg_info_dict:
-        branch_info = ', branch: '+ulog.msg_info_dict['ver_sw_branch']+''
+        branch_info = '<br> branch: '+ulog.msg_info_dict['ver_sw_branch']
     if 'ver_sw' in ulog.msg_info_dict:
         ver_sw = cgi.escape(ulog.msg_info_dict['ver_sw'])
         ver_sw_link = 'https://github.com/PX4/Firmware/commit/'+ver_sw
-        table_text.append(('Software Version', release_str +
-                           '<a href="'+ver_sw_link+'" target="_blank">'+ver_sw[:8]+'</a>'+
-                           release_str_suffix+branch_info))
+        table_text_left.append(('Software Version', release_str +
+                                '<a href="'+ver_sw_link+'" target="_blank">'+ver_sw[:8]+'</a>'+
+                                release_str_suffix+branch_info))
 
     if 'sys_os_name' in ulog.msg_info_dict and 'sys_os_ver_release' in ulog.msg_info_dict:
         os_name = cgi.escape(ulog.msg_info_dict['sys_os_name'])
         os_ver = ulog.get_version_info_str('sys_os_ver_release')
         if os_ver is not None:
-            table_text.append(('OS Version', os_name + ', ' + os_ver))
+            table_text_left.append(('OS Version', os_name + ', ' + os_ver))
 
-    table_text.append(('Estimator', px4_ulog.get_estimator()))
+    table_text_left.append(('Estimator', px4_ulog.get_estimator()))
+
+    table_text_left.append(('', '')) # spacing
 
     # logging start time & date
     try:
@@ -120,9 +126,9 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
     logging_span.show();
 </script>
 """
-            table_text.append(('Logging Start',
-                               '<span style="display:none" id="logging-start-element">'+
-                               str(logging_start_time)+'</span>'+js_code))
+            table_text_left.append(('Logging Start',
+                                    '<span style="display:none" id="logging-start-element">'+
+                                    str(logging_start_time)+'</span>'+js_code))
     except:
         # Ignore. Eg. if topic not found
         pass
@@ -131,7 +137,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
     # logging duration
     m, s = divmod(int((ulog.last_timestamp - ulog.start_timestamp)/1e6), 60)
     h, m = divmod(m, 60)
-    table_text.append(('Logging Duration', '{:d}:{:02d}:{:02d}'.format(h, m, s)))
+    table_text_left.append(('Logging Duration', '{:d}:{:02d}:{:02d}'.format(h, m, s)))
 
     # dropouts
     dropout_durations = [dropout.duration for dropout in ulog.dropouts]
@@ -141,7 +147,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
             total_duration_str = '{:.0f}'.format(total_duration)
         else:
             total_duration_str = '{:.2f}'.format(total_duration)
-        table_text.append(('Dropouts', '{:} ({:} s)'.format(
+        table_text_left.append(('Dropouts', '{:} ({:} s)'.format(
             len(dropout_durations), total_duration_str)))
 
     # total vehicle flight time
@@ -155,7 +161,9 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
         if h > 0: flight_time_str += '{:d} hours '.format(h)
         if m > 0: flight_time_str += '{:d} minutes '.format(m)
         flight_time_str += '{:d} seconds '.format(s)
-        table_text.append(('Vehicle Flight Time', flight_time_str))
+        table_text_left.append(('Vehicle Flight Time', flight_time_str))
+
+    table_text_left.append(('', '')) # spacing
 
     # vehicle UUID (and name if provided). SITL does not have a UUID
     if 'sys_uuid' in ulog.msg_info_dict and sys_hardware != 'SITL':
@@ -163,26 +171,136 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
         if vehicle_data is not None and vehicle_data.name != '':
             sys_uuid = sys_uuid + ' (' + vehicle_data.name + ')'
         if len(sys_uuid) > 0:
-            table_text.append(('Vehicle UUID', sys_uuid))
+            table_text_left.append(('Vehicle UUID', sys_uuid))
 
+
+    table_text_left.append(('', '')) # spacing
 
     # Wind speed, rating, feedback
     if db_data.wind_speed >= 0:
-        table_text.append(('Wind Speed', db_data.wind_speed_str()))
+        table_text_left.append(('Wind Speed', db_data.wind_speed_str()))
     if len(db_data.rating) > 0:
-        table_text.append(('Flight Rating', db_data.rating_str()))
+        table_text_left.append(('Flight Rating', db_data.rating_str()))
     if len(db_data.feedback) > 0:
-        table_text.append(('Feedback', db_data.feedback.replace('\n', '<br/>')))
+        table_text_left.append(('Feedback', db_data.feedback.replace('\n', '<br/>')))
     if len(db_data.video_url) > 0:
-        table_text.append(('Video', '<a href="'+db_data.video_url+
-                           '" target="_blank">'+db_data.video_url+'</a>'))
+        table_text_left.append(('Video', '<a href="'+db_data.video_url+
+                                '" target="_blank">'+db_data.video_url+'</a>'))
 
-    # generate the table
-    divs_text = '<table>' + ''.join(
-        ['<tr><td class="left">'+a+
-         ':</td><td>'+b+'</td></tr>' for a, b in table_text]) + '</table>'
-    header_divs.append(Div(text=divs_text, width=int(plot_width*0.9)))
-    plots.append(widgetbox(header_divs, width=int(plot_width*0.9)))
+
+    ### Setup the text for the right table: estimated numbers (e.g. max speed) ###
+    table_text_right = []
+    try:
+
+        local_pos = ulog.get_dataset('vehicle_local_position')
+        pos_x = local_pos.data['x']
+        pos_y = local_pos.data['y']
+        pos_z = local_pos.data['z']
+        pos_xyz_valid = np.multiply(local_pos.data['xy_valid'], local_pos.data['z_valid'])
+        local_vel_valid_indices = np.argwhere(np.multiply(local_pos.data['v_xy_valid'],
+                                                          local_pos.data['v_z_valid']) > 0)
+        vel_x = local_pos.data['vx'][local_vel_valid_indices]
+        vel_y = local_pos.data['vy'][local_vel_valid_indices]
+        vel_z = local_pos.data['vz'][local_vel_valid_indices]
+
+        # total distance (take only valid indexes)
+        total_dist_m = 0
+        last_index = -2
+        for valid_index in np.argwhere(pos_xyz_valid > 0):
+            index = valid_index[0]
+            if index == last_index + 1:
+                dx = pos_x[index] - pos_x[last_index]
+                dy = pos_y[index] - pos_y[last_index]
+                dz = pos_z[index] - pos_z[last_index]
+                total_dist_m += sqrt(dx*dx + dy*dy + dz*dz)
+            last_index = index
+        if total_dist_m < 1:
+            pass # ignore
+        elif total_dist_m > 1000:
+            table_text_right.append(('Distance', "{:.2f} km".format(total_dist_m/1000)))
+        else:
+            table_text_right.append(('Distance', "{:.1f} m".format(total_dist_m)))
+
+        if len(pos_z) > 0:
+            max_alt_diff = np.amax(pos_z) - np.amin(pos_z)
+            table_text_right.append(('Max Altitude Difference', "{:.0f} m".format(max_alt_diff)))
+
+        table_text_right.append(('', '')) # spacing
+
+        # Speed
+        if len(vel_x) > 0:
+            max_h_speed = np.amax(np.sqrt(np.square(vel_x) + np.square(vel_y)))
+            speed_vector = np.sqrt(np.square(vel_x) + np.square(vel_y) + np.square(vel_z))
+            max_speed = np.amax(speed_vector)
+            mean_speed = np.mean(speed_vector)
+            table_text_right.append(('Average Speed', "{:.1f} km/h".format(mean_speed*3.6)))
+            table_text_right.append(('Max Speed', "{:.1f} km/h".format(max_speed*3.6)))
+            table_text_right.append(('Max Speed Horizontal', "{:.1f} km/h".format(max_h_speed*3.6)))
+            table_text_right.append(('Max Speed Up', "{:.1f} km/h".format(np.amax(-vel_z)*3.6)))
+            table_text_right.append(('Max Speed Down', "{:.1f} km/h".format(-np.amin(-vel_z)*3.6)))
+
+            table_text_right.append(('', '')) # spacing
+
+        vehicle_attitude = ulog.get_dataset('vehicle_attitude')
+        roll = vehicle_attitude.data['roll']
+        pitch = vehicle_attitude.data['pitch']
+        if len(roll) > 0:
+            # tilt = angle between [0,0,1] and [0,0,1] rotated by roll and pitch
+            tilt_angle = np.arccos(np.multiply(np.cos(pitch), np.cos(roll)))*180/np.pi
+            table_text_right.append(('Max Tilt Angle', "{:.1f} deg".format(np.amax(tilt_angle))))
+
+        rollspeed = vehicle_attitude.data['rollspeed']
+        pitchspeed = vehicle_attitude.data['pitchspeed']
+        yawspeed = vehicle_attitude.data['yawspeed']
+        if len(rollspeed) > 0:
+            max_rot_speed = np.amax(np.sqrt(np.square(rollspeed) +
+                                            np.square(pitchspeed) +
+                                            np.square(yawspeed)))
+            table_text_right.append(('Max Rotation Speed', "{:.1f} deg/s".format(
+                max_rot_speed*180/np.pi)))
+
+        table_text_right.append(('', '')) # spacing
+
+        battery_status = ulog.get_dataset('battery_status')
+        battery_current = battery_status.data['current_a']
+        if len(battery_current) > 0:
+            max_current = np.amax(battery_current)
+            mean_current = np.mean(battery_current)
+            if max_current > 0.1:
+                table_text_right.append(('Average Current', "{:.1f} A".format(mean_current)))
+                table_text_right.append(('Max Current', "{:.1f} A".format(max_current)))
+    except:
+        pass # ignore (e.g. if topic not found)
+
+
+    # generate the tables
+    def generate_html_table(rows_list, style, tooltip=None):
+        """
+        return the html table (str) from a row list of tuples
+        """
+        if tooltip is None:
+            tooltip = ''
+        else:
+            tooltip = 'data-toggle="tooltip" title="'+tooltip+'" '
+        table = '<table '+tooltip+'style="'+style+'">'
+        padding_text = ''
+        for label, value in rows_list:
+            if label == '': # empty label means: add some row spacing
+                padding_text = ' style="padding-top: 0.5em;" '
+            else:
+                table += ('<tr><td '+padding_text+'class="left">'+label+
+                          ':</td><td'+padding_text+'>'+value+'</td></tr>')
+                padding_text = ''
+        return table + '</table>'
+
+    left_table = generate_html_table(table_text_left,
+                                     "display: inline-block; max-width: 60%")
+    right_table = generate_html_table(
+        table_text_right, "float: right;",
+        'Note: most of these values are based on estimations from the vehicle,'
+        ' and thus requiring an accurate estimator')
+    header_divs.append(Div(text=left_table+right_table))
+    plots.append(widgetbox(header_divs, width=int(plot_width*0.99)))
 
 
     # hardfault

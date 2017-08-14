@@ -330,7 +330,7 @@ def load_ulog_file(file_name):
 
     return ulog
 
-def get_airframe_name(ulog):
+def get_airframe_name(ulog, multi_line=False):
     """
     get the airframe name and autostart ID.
     :return: tuple (airframe name & type (str), autostart ID (str)) or None if no
@@ -345,8 +345,12 @@ def get_airframe_name(ulog):
             return ("", str(sys_autostart))
 
         airframe_type = ''
+        if multi_line:
+            separator = '<br>'
+        else:
+            separator = ', '
         if 'type' in airframe_data:
-            airframe_type = ', '+airframe_data['type']
+            airframe_type = separator+airframe_data['type']
         return (airframe_data.get('name')+ airframe_type, str(sys_autostart))
     return None
 

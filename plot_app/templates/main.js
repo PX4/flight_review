@@ -101,6 +101,11 @@ $(function() { //on startup
 	window.setTimeout(renderingCompleteCheck, 1);
 });
 
+$(document).ready(function(){
+	// initialize the tooltip's
+	$('[data-toggle="tooltip"]').tooltip();
+});
+
 /* resize the plots */
 function setSize(size) {
 	console.log(size);
