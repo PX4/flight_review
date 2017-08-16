@@ -274,7 +274,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
 
 
     # generate the tables
-    def generate_html_table(rows_list, style, tooltip=None):
+    def generate_html_table(rows_list, tooltip=None):
         """
         return the html table (str) from a row list of tuples
         """
@@ -282,7 +282,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
             tooltip = ''
         else:
             tooltip = 'data-toggle="tooltip" title="'+tooltip+'" '
-        table = '<table '+tooltip+'style="'+style+'">'
+        table = '<table '+tooltip+'>'
         padding_text = ''
         for label, value in rows_list:
             if label == '': # empty label means: add some row spacing
@@ -293,13 +293,14 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
                 padding_text = ''
         return table + '</table>'
 
-    left_table = generate_html_table(table_text_left,
-                                     "display: inline-block; max-width: 60%")
+    left_table = generate_html_table(table_text_left)
     right_table = generate_html_table(
-        table_text_right, "float: right;",
+        table_text_right,
         'Note: most of these values are based on estimations from the vehicle,'
         ' and thus requiring an accurate estimator')
-    header_divs.append(Div(text=left_table+right_table))
+    html_tables = ('<div style="display: flex; justify-content: space-between;">'+
+                   left_table+right_table+'</div>')
+    header_divs.append(Div(text=html_tables))
     plots.append(widgetbox(header_divs, width=int(plot_width*0.99)))
 
 
