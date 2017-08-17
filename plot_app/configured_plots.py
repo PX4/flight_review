@@ -281,7 +281,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
         if tooltip is None:
             tooltip = ''
         else:
-            tooltip = 'data-toggle="tooltip" title="'+tooltip+'" '
+            tooltip = 'data-toggle="tooltip" delay="{show: 500, hide: 100}" title="'+tooltip+'" '
         table = '<table '+tooltip+'>'
         padding_text = ''
         for label, value in rows_list:
