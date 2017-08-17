@@ -16,6 +16,35 @@ from plotting import *
 #pylint: disable=consider-using-enumerate
 
 
+def _get_vtol_means_per_mode(vtol_states, timestamps, data):
+    """
+    get the mean values separated by MC and FW mode for some
+    data vector
+    :return: tuple of (mean mc, mean fw)
+    """
+    vtol_state_index = 0
+    current_vtol_state = -1
+    sum_mc = 0
+    counter_mc = 0
+    sum_fw = 0
+    counter_fw = 0
+    for i in range(len(timestamps)):
+        if timestamps[i] > vtol_states[vtol_state_index][0]:
+            current_vtol_state = vtol_states[vtol_state_index][1]
+            vtol_state_index += 1
+        if current_vtol_state == 2: # FW
+            sum_fw += data[i]
+            counter_fw += 1
+        elif current_vtol_state == 3: # MC
+            sum_mc += data[i]
+            counter_mc += 1
+    mean_mc = None
+    if counter_mc > 0: mean_mc = sum_mc / counter_mc
+    mean_fw = None
+    if counter_fw > 0: mean_fw = sum_fw / counter_fw
+    return (mean_mc, mean_fw)
+
+
 def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
     """ create a list of bokeh plots (and widgets) to show """
 
@@ -232,8 +261,20 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
             max_h_speed = np.amax(np.sqrt(np.square(vel_x) + np.square(vel_y)))
             speed_vector = np.sqrt(np.square(vel_x) + np.square(vel_y) + np.square(vel_z))
             max_speed = np.amax(speed_vector)
-            mean_speed = np.mean(speed_vector)
-            table_text_right.append(('Average Speed', "{:.1f} km/h".format(mean_speed*3.6)))
+            if vtol_states is None:
+                mean_speed = np.mean(speed_vector)
+                table_text_right.append(('Average Speed', "{:.1f} km/h".format(mean_speed*3.6)))
+            else:
+                local_pos_timestamp = local_pos.data['timestamp'][local_vel_valid_indices]
+                speed_vector = speed_vector.reshape((len(speed_vector),))
+                mean_speed_mc, mean_speed_fw = _get_vtol_means_per_mode(
+                    vtol_states, local_pos_timestamp, speed_vector)
+                if mean_speed_mc is not None:
+                    table_text_right.append(
+                        ('Average Speed MC', "{:.1f} km/h".format(mean_speed_mc*3.6)))
+                if mean_speed_fw is not None:
+                    table_text_right.append(
+                        ('Average Speed FW', "{:.1f} km/h".format(mean_speed_fw*3.6)))
             table_text_right.append(('Max Speed', "{:.1f} km/h".format(max_speed*3.6)))
             table_text_right.append(('Max Speed Horizontal', "{:.1f} km/h".format(max_h_speed*3.6)))
             table_text_right.append(('Max Speed Up', "{:.1f} km/h".format(np.amax(-vel_z)*3.6)))
@@ -265,9 +306,20 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
         battery_current = battery_status.data['current_a']
         if len(battery_current) > 0:
             max_current = np.amax(battery_current)
-            mean_current = np.mean(battery_current)
             if max_current > 0.1:
-                table_text_right.append(('Average Current', "{:.1f} A".format(mean_current)))
+                if vtol_states is None:
+                    mean_current = np.mean(battery_current)
+                    table_text_right.append(('Average Current', "{:.1f} A".format(mean_current)))
+                else:
+                    mean_current_mc, mean_current_fw = _get_vtol_means_per_mode(
+                        vtol_states, battery_status.data['timestamp'], battery_current)
+                    if mean_current_mc is not None:
+                        table_text_right.append(
+                            ('Average Current MC', "{:.1f} A".format(mean_current_mc)))
+                    if mean_current_fw is not None:
+                        table_text_right.append(
+                            ('Average Current FW', "{:.1f} A".format(mean_current_fw)))
+
                 table_text_right.append(('Max Current', "{:.1f} A".format(max_current)))
     except:
         pass # ignore (e.g. if topic not found)
