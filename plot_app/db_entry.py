@@ -38,7 +38,7 @@ class DBData:
                 'good': 'Good',
                 'great': 'Great!'}.get(rating, '')
 
-    def toJSONdict(self):
+    def to_json_dict(self):
         jsondict = dict()
         jsondict['description'] = self.description
         jsondict['feedback'] = self.feedback
@@ -123,7 +123,7 @@ class DBDataGenerated:
 
         return obj
 
-    def toJSONdict(self):
+    def to_json_dict(self):
         jsondict = dict()
         jsondict['duration_s'] = self.duration_s
         jsondict['mav_type'] = self.mav_type

@@ -7,12 +7,12 @@ import sys
 import os
 import binascii
 import uuid
+import json
 import shutil
 import sqlite3
 import datetime
 import cgi # for html escaping
 import tornado.web
-import json
 from jinja2 import Environment, FileSystemLoader
 from pyulog import *
 from pyulog.ulog2kml import convert_ulog2kml
@@ -700,7 +700,7 @@ class DBInfoHandler(tornado.web.RequestHandler):
             db_data.wind_speed = db_tuple[3]
             db_data.rating = db_tuple[4]
             db_data.video_url = db_tuple[5]
-            jsondict.update(db_data.toJSONdict())
+            jsondict.update(db_data.to_json_dict())
 
             # try to get the additional data from the DB
             cur.execute('select * from LogsGenerated where Id = ?', [log_id])
@@ -730,7 +730,7 @@ class DBInfoHandler(tornado.web.RequestHandler):
                 db_data_gen.flight_mode_durations = \
                     [tuple(map(int, x.split(':'))) for x in db_tuple[12].split(',') if len(x) > 0]
 
-            jsondict.update(db_data_gen.toJSONdict())
+            jsondict.update(db_data_gen.to_json_dict())
             jsonlist.append(jsondict)
 
         cur.close()
