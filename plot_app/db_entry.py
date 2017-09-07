@@ -38,6 +38,16 @@ class DBData:
                 'good': 'Good',
                 'great': 'Great!'}.get(rating, '')
 
+    def to_json_dict(self):
+        jsondict = dict()
+        jsondict['description'] = self.description
+        jsondict['feedback'] = self.feedback
+        jsondict['type'] = self.type
+        jsondict['wind_speed'] = self.wind_speed
+        jsondict['rating'] = self.rating
+        jsondict['video_url'] = self.video_url
+        return jsondict
+
 
 class DBDataGenerated:
     """ information from the generated DB entry """
@@ -112,6 +122,22 @@ class DBDataGenerated:
             obj.flight_modes = set()
 
         return obj
+
+    def to_json_dict(self):
+        jsondict = dict()
+        jsondict['duration_s'] = self.duration_s
+        jsondict['mav_type'] = self.mav_type
+        jsondict['estimator'] = self.estimator
+        jsondict['sys_autostart_id'] = self.sys_autostart_id
+        jsondict['sys_hw'] = self.sys_hw
+        jsondict['ver_sw'] = self.ver_sw
+        jsondict['ver_sw_release'] = self.ver_sw_release
+        jsondict['num_logged_errors'] = self.num_logged_errors
+        jsondict['num_logged_warnings'] = self.num_logged_warnings
+        jsondict['flight_modes'] = list(self.flight_modes)
+        jsondict['vehicle_uuid'] = self.vehicle_uuid
+        jsondict['flight_mode_durations'] = self.flight_mode_durations
+        return jsondict
 
 class DBVehicleData:
     """ simple class that contains information from the DB entry of a vehicle """

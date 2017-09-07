@@ -17,7 +17,7 @@ from helper import set_log_id_is_filename, print_cache_info
 from config import debug_print_timing
 from tornado.web import RedirectHandler
 from tornado_handlers import DownloadHandler, UploadHandler, BrowseHandler, \
-    EditEntryHandler
+    EditEntryHandler, DBInfoHandler
 
 #pylint: disable=invalid-name
 
@@ -95,6 +95,7 @@ extra_patterns = [
     (r'/edit_entry', EditEntryHandler),
     (r'/?', UploadHandler), #root should point to upload
     (r'/download', DownloadHandler),
+    (r'/dbinfo', DBInfoHandler),
     (r"/stats", RedirectHandler, {"url": "/plot_app?stats=1"}),
 ]
 
