@@ -308,27 +308,44 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
 
 
 
-    # raw radio control inputs
-    data_plot = DataPlot(data, plot_config, 'rc_channels',
-                         title='Raw Radio Control Inputs',
-                         plot_height='small', y_range=Range1d(-1.1, 1.1),
-                         changed_params=changed_params, x_range=x_range)
-    num_rc_channels = 8
-    if data_plot.dataset:
-        max_channels = np.amax(data_plot.dataset.data['channel_count'])
-        if max_channels < num_rc_channels: num_rc_channels = max_channels
-    legends = []
-    for i in range(num_rc_channels):
-        channel_names = px4_ulog.get_configured_rc_input_names(i)
-        if channel_names is None:
-            legends.append('Channel '+str(i))
-        else:
-            legends.append('Channel '+str(i)+' ('+', '.join(channel_names)+')')
-    data_plot.add_graph(['channels['+str(i)+']' for i in range(num_rc_channels)],
-                        colors8[0:num_rc_channels], legends, mark_nan=True)
-    plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
+    # manual control inputs
+    # prefer the manual_control_setpoint topic. Old logs do not contain it
+    if any(elem.name == 'manual_control_setpoint' for elem in data):
+        data_plot = DataPlot(data, plot_config, 'manual_control_setpoint',
+                             title='Manual Control Inputs (Radio or Joystick)',
+                             plot_height='small', y_range=Range1d(-1.1, 1.1),
+                             changed_params=changed_params, x_range=x_range)
+        data_plot.add_graph(['z', 'y', 'x', 'r',
+                             lambda data: ('mode_slot', data['mode_slot']/6),
+                             'aux1', 'aux2', 'kill_switch'], colors8,
+                            ['Throttle [0, 1]', 'Y / Roll', 'X / Pitch', 'Yaw',
+                             'Flight Mode', 'Aux1', 'Aux2', 'Kill Switch'])
+        # TODO: add RTL switch and others? Look at params which functions are mapped?
+        plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
 
-    if data_plot.finalize() is not None: plots.append(data_plot)
+        if data_plot.finalize() is not None: plots.append(data_plot)
+
+    else: # it's an old log
+        data_plot = DataPlot(data, plot_config, 'rc_channels',
+                             title='Raw Radio Control Inputs',
+                             plot_height='small', y_range=Range1d(-1.1, 1.1),
+                             changed_params=changed_params, x_range=x_range)
+        num_rc_channels = 8
+        if data_plot.dataset:
+            max_channels = np.amax(data_plot.dataset.data['channel_count'])
+            if max_channels < num_rc_channels: num_rc_channels = max_channels
+        legends = []
+        for i in range(num_rc_channels):
+            channel_names = px4_ulog.get_configured_rc_input_names(i)
+            if channel_names is None:
+                legends.append('Channel '+str(i))
+            else:
+                legends.append('Channel '+str(i)+' ('+', '.join(channel_names)+')')
+        data_plot.add_graph(['channels['+str(i)+']' for i in range(num_rc_channels)],
+                            colors8[0:num_rc_channels], legends, mark_nan=True)
+        plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
+
+        if data_plot.finalize() is not None: plots.append(data_plot)
 
 
 
