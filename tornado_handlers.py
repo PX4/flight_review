@@ -736,6 +736,7 @@ class DBInfoHandler(tornado.web.RequestHandler):
         cur.close()
         con.close()
 
+        self.set_header('Content-Type', 'application/json')
         self.write(json.dumps(jsonlist))
 
 class EditEntryHandler(tornado.web.RequestHandler):
