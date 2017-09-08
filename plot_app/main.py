@@ -165,10 +165,10 @@ else:
             {'name': 'Manual', 'color': HTML_color_to_RGB(flight_modes_table[0][1])},
             {'name': 'Altitude Control', 'color': HTML_color_to_RGB(flight_modes_table[1][1])},
             {'name': 'Position Control', 'color': HTML_color_to_RGB(flight_modes_table[2][1])},
-            {'name': 'Acro', 'color': HTML_color_to_RGB(flight_modes_table[6][1])},
-            {'name': 'Stabilized', 'color': HTML_color_to_RGB(flight_modes_table[8][1])},
-            {'name': 'Offboard', 'color': HTML_color_to_RGB(flight_modes_table[7][1])},
-            {'name': 'Rattitude', 'color': HTML_color_to_RGB(flight_modes_table[9][1])},
+            {'name': 'Acro', 'color': HTML_color_to_RGB(flight_modes_table[10][1])},
+            {'name': 'Stabilized', 'color': HTML_color_to_RGB(flight_modes_table[15][1])},
+            {'name': 'Offboard', 'color': HTML_color_to_RGB(flight_modes_table[14][1])},
+            {'name': 'Rattitude', 'color': HTML_color_to_RGB(flight_modes_table[16][1])},
             {'name': 'Auto (Mission, RTL, Follow, ...)',
              'color': HTML_color_to_RGB(flight_modes_table[3][1])}
             ]

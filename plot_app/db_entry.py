@@ -103,8 +103,8 @@ class DBDataGenerated:
                 obj.num_logged_warnings += 1
 
         try:
-            cur_dataset = ulog.get_dataset('commander_state')
-            flight_mode_changes = cur_dataset.list_value_changes('main_state')
+            cur_dataset = ulog.get_dataset('vehicle_status')
+            flight_mode_changes = cur_dataset.list_value_changes('nav_state')
             obj.flight_modes = set([x[1] for x in flight_mode_changes])
 
             # get the durations
