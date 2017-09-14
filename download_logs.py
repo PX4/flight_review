@@ -16,9 +16,9 @@ def get_arguments():
                         help='Whether to only print (not download) the database entries.')
     parser.add_argument('--overwrite', action='store_true', default=False,
                         help='Whether to overwrite already existing files in download folder.')
-    parser.add_argument('--db-info-api', type=str, default="http://review.px4.io/dbinfo",
+    parser.add_argument('--db-info-api', type=str, default="https://review.px4.io/dbinfo",
                         help='The url at which the server provides the dbinfo API.')
-    parser.add_argument('--download-api', type=str, default="http://review.px4.io/download",
+    parser.add_argument('--download-api', type=str, default="https://review.px4.io/download",
                         help='The url at which the server provides the download API.')
     return parser.parse_args()
 
