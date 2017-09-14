@@ -39,7 +39,7 @@ def main():
     else:
         if not os.path.isdir(args.download_folder):
             print("creating download directory " + args.download_folder)
-            os.mkdir(args.download_folder)
+            os.makedirs(args.download_folder)
         # find already existing logs in download folder
         logfile_pattern = os.path.join(os.path.abspath(args.download_folder), "*.ulg")
         logfiles = glob.glob(os.path.join(os.getcwd(), logfile_pattern))
