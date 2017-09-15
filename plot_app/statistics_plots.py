@@ -505,7 +505,8 @@ class StatisticsPlots(object):
             area.patch(x2, stacked_patches[i], color=colors[i],
                        legend=label_cb(all_data[i], False), alpha=0.8, line_color=None)
 
-        area.legend[0].items.reverse()
+        if area.legend:
+            area.legend[0].items.reverse()
 
         area.xaxis.formatter = FuncTickFormatter(code="""
             var versions = """ + str(versions_spaced) + """;
