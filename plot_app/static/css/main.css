@@ -192,18 +192,21 @@ input {
   margin-bottom: 0;
 }
 
-#header .navbar-toggle{
+#header .navbar-toggle {
   margin-top: 20px;
 }
 
-#header .navbar-brand{
+#header .navbar-brand {
   padding: 0;
   margin-left: 0;
 }
 
-#header .navbar-brand h1{
+#header .navbar-brand h1 {
   padding: 0;
   margin: 0;
+}
+#header .navbar-brand a {
+  text-decoration: none;
 }
 
 #header .navbar-nav.navbar-right >li a {
