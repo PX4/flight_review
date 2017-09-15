@@ -110,8 +110,7 @@ class StatisticsPlots(object):
 
         # lists of dates when a _log was uploaded, one list per type
         self._public_logs_dates = []
-        self._web_ui_logs_dates = []
-        self._qgc_logs_dates = [] # private uploads via QGC
+        self._private_logs_dates = []
         self._ci_logs_dates = []
         self._all_logs_dates = []
 
@@ -134,10 +133,8 @@ class StatisticsPlots(object):
                 else:
                     if log.source == 'CI':
                         self._ci_logs_dates.append(log.date)
-                    elif log.source == 'QGroundControl':
-                        self._qgc_logs_dates.append(log.date)
                     else:
-                        self._web_ui_logs_dates.append(log.date)
+                        self._private_logs_dates.append(log.date)
 
 
                 # LogsGenerated: public only
@@ -272,8 +269,7 @@ class StatisticsPlots(object):
             #plot_dates(p, self._all_logs_dates, last_date, 'Total', colors[0])
             #plot_dates(p, self._ci_logs_dates, last_date,
             #           'Continuous Integration (Simulation Tests)', colors[1])
-            plot_dates(p, self._web_ui_logs_dates, last_date, 'Private (via Web UI)', colors[2])
-            plot_dates(p, self._qgc_logs_dates, last_date, 'Private (via QGC)', colors[3])
+            plot_dates(p, self._private_logs_dates, last_date, 'Private', colors[2])
             plot_dates(p, self._public_logs_dates, last_date, 'Public', colors[4])
 
         p.xaxis.formatter = DatetimeTickFormatter(
@@ -286,7 +282,7 @@ class StatisticsPlots(object):
 
         # show the release versions as text markers
         release_dict = dict(dates=[], tags=[], y=[], y_offset=[])
-        max_logs_dates = self._web_ui_logs_dates # defines range limits of the plot
+        max_logs_dates = self._private_logs_dates # defines range limits of the plot
         if len(max_logs_dates) > 0:
             first_date = max_logs_dates[0]
             y_max = len(max_logs_dates)
