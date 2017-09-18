@@ -290,21 +290,25 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
         if data_plot.finalize() is not None: plots.append(data_plot)
 
 
-    # Airspeed vs Ground speed
-    if any(elem.name == 'airspeed' for elem in data):
-        data_plot = DataPlot(data, plot_config, 'vehicle_global_position',
-                             y_axis_label='[m/s]', title='Airspeed',
-                             plot_height='small',
-                             changed_params=changed_params, x_range=x_range)
-        data_plot.add_graph([lambda data: ('groundspeed_estimated',
-                                           np.sqrt(data['vel_n']**2 + data['vel_e']**2))],
-                            colors3[2:3], ['Ground Speed Estimated'])
-        data_plot.change_dataset('airspeed')
-        data_plot.add_graph(['indicated_airspeed_m_s'], colors2[0:1], ['Airspeed Indicated'])
+    # Airspeed vs Ground speed: but only if there's valid airspeed data
+    try:
+        cur_dataset = ulog.get_dataset('airspeed')
+        if np.amax(cur_dataset.data['indicated_airspeed_m_s']) > 0.1:
+            data_plot = DataPlot(data, plot_config, 'vehicle_global_position',
+                                 y_axis_label='[m/s]', title='Airspeed',
+                                 plot_height='small',
+                                 changed_params=changed_params, x_range=x_range)
+            data_plot.add_graph([lambda data: ('groundspeed_estimated',
+                                               np.sqrt(data['vel_n']**2 + data['vel_e']**2))],
+                                colors3[2:3], ['Ground Speed Estimated'])
+            data_plot.change_dataset('airspeed')
+            data_plot.add_graph(['indicated_airspeed_m_s'], colors2[0:1], ['Airspeed Indicated'])
 
-        plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
+            plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
 
-        if data_plot.finalize() is not None: plots.append(data_plot)
+            if data_plot.finalize() is not None: plots.append(data_plot)
+    except (KeyError, IndexError) as error:
+        pass
 
 
 
