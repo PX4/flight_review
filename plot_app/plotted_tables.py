@@ -303,7 +303,7 @@ def get_heading_and_info(ulog, px4_ulog, plot_width, db_data, vehicle_data, vtol
 
 
     # generate the tables
-    def generate_html_table(rows_list, tooltip=None):
+    def generate_html_table(rows_list, tooltip=None, max_width=None):
         """
         return the html table (str) from a row list of tuples
         """
@@ -311,7 +311,10 @@ def get_heading_and_info(ulog, px4_ulog, plot_width, db_data, vehicle_data, vtol
             tooltip = ''
         else:
             tooltip = 'data-toggle="tooltip" delay="{show: 500, hide: 100}" title="'+tooltip+'" '
-        table = '<table '+tooltip+'>'
+        table = '<table '+tooltip
+        if max_width is not None:
+            table += ' style="max-width: '+max_width+';"'
+        table += '>'
         padding_text = ''
         for label, value in rows_list:
             if label == '': # empty label means: add some row spacing
@@ -322,7 +325,7 @@ def get_heading_and_info(ulog, px4_ulog, plot_width, db_data, vehicle_data, vtol
                 padding_text = ''
         return table + '</table>'
 
-    left_table = generate_html_table(table_text_left)
+    left_table = generate_html_table(table_text_left, max_width='65%')
     right_table = generate_html_table(
         table_text_right,
         'Note: most of these values are based on estimations from the vehicle,'
