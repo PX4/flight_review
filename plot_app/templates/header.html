@@ -9,8 +9,8 @@
 	<link href='https://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
     <link href="plot_app/static/css/bootstrap.min.css" rel="stylesheet">
     <link href="plot_app/static/css/font-awesome.min.css" rel="stylesheet">
-    <link href="plot_app/static/css/animate.min.css" rel="stylesheet"> 
-	<link href="plot_app/static/css/main.css" rel="stylesheet">
+    <link href="plot_app/static/css/animate.min.css" rel="stylesheet">
+    <link href="plot_app/static/css/main.css" rel="stylesheet">
 
     {{ bokeh_css }}
     {{ bokeh_js }}
@@ -31,7 +31,7 @@
 							<span class="name">Flight Review</span>
 						</h1>
 					</div>
-                    
+
                 </div>
                 <div class="col-xs-">
                     <ul class="nav navbar-nav navbar-right">
@@ -51,7 +51,7 @@
                                 <li><a href="download?log={{ log_id }}&type=2" target="_blank">KML Track</a></li>
 {% endif %}
                             </ul>
-                        </li>                    
+                        </li>
                         <li class="dropdown" id="navigation-menu"><a href="javascript:;">Navigation <i class="fa fa-angle-down"></i></a>
                             <ul role="menu" class="sub-menu" id="ul-fragments">
 {% for cur_plot in plots %}
