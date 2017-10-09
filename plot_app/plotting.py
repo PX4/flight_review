@@ -5,14 +5,16 @@ from bokeh.models import (
     ColumnDataSource, Range1d, DataRange1d, DatetimeAxis,
     TickFormatter, DatetimeTickFormatter, FuncTickFormatter,
     Grid, Legend, Plot, BoxAnnotation, Span, CustomJS, Rect, Circle, Line,
-    HoverTool, BoxZoomTool, PanTool, WheelZoomTool,
+    HoverTool, BoxZoomTool, PanTool, WheelZoomTool, ResetTool, SaveTool,
     WMTSTileSource, GMapPlot, GMapOptions,
-    LabelSet, Label
+    LabelSet, Label, ColorBar, LinearColorMapper, BasicTicker, PrintfTickFormatter
     )
-from bokeh.models.widgets import DataTable, DateFormatter, TableColumn, Div
+from bokeh.palettes import viridis
+from bokeh.models.widgets import DataTable, DateFormatter, TableColumn
 
 from downsampling import DynamicDownsample
 import numpy as np
+from scipy import signal
 from helper import (
     map_projection, WGS84_to_mercator, flight_modes_table, vtol_modes_table
     )
@@ -360,6 +362,15 @@ class DataPlot:
             self._had_error = True
 
     @property
+    def title(self):
+        """ return the bokeh title """
+        if self._p is not None:
+            title_text = self._p.title.text
+        else:
+            title_text = ""
+        return title_text
+
+    @property
     def bokeh_plot(self):
         """ return the bokeh plot """
         return self._p
@@ -520,7 +531,6 @@ class DataPlot:
         self._setup_plot()
         return self._p
 
-
     def _setup_plot(self):
         plots_width = self._config['plot_width']
         plots_height = self._config['plot_height'][self._plot_height_name]
@@ -640,3 +650,91 @@ class DataPlot2D(DataPlot):
         p.toolbar.logo = None
 
 
+class DataPlotSpec(DataPlot):
+    """
+    A spectrogram plot.
+    This does not downsample dynamically.
+    """
+
+    def __init__(self, data, config, data_name, x_axis_label=None,
+                 y_axis_label=None, title=None, plot_height='small',
+                 x_range=None, y_range=None, topic_instance=0):
+
+        super(DataPlotSpec, self).__init__(data, config, data_name, x_axis_label=x_axis_label,
+                                           y_axis_label=y_axis_label, title=title, plot_height=plot_height,
+                                           x_range=x_range, y_range=y_range, topic_instance=topic_instance)
+
+    def add_graph(self, field_names, legends, window='hann', window_length=256, noverlap=128):
+        """ add a spectrogram plot to the graph
+
+        field_names: can be a list of fields from the data set, or a list of
+        functions with the data set as argument and returning a tuple of
+        (field_name, data)
+        legends: description for the field_names that will appear in the title of the plot
+        window: the type of window to use for the frequency analysis. check scipy documentation for available window types.
+        window_length: length of the analysis window in samples.
+        noverlap: number of overlapping samples between windows.
+        """
+
+        if self._had_error: return
+        try:
+            data_set = {}
+            data_set['timestamp'] = self._cur_dataset.data['timestamp']
+
+            # calculate the sampling frequency
+            delta_t = ((data_set['timestamp'][-1] - data_set['timestamp'][0]) * 1.0e-6) / len(data_set['timestamp'])
+            sampling_frequency = int(1.0 / delta_t)
+
+            field_names_expanded = self._expand_field_names(field_names, data_set)
+
+            # calculate the spectrogram
+            psd = dict()
+            for key in field_names_expanded:
+                frequency, time, psd[key] = signal.spectrogram(
+                    data_set[key], fs=sampling_frequency, window=window,
+                    nperseg=window_length, noverlap=noverlap, scaling='density')
+
+            # sum all psd's
+            key_it = iter(psd)
+            sum_psd = psd[next(key_it)]
+            for key in key_it:
+                sum_psd += psd[key]
+
+            # offset = int(((1024/2.0)/250.0)*1e6)
+            # scale time to microseconds and add start time as offset
+            time = time * 1.0e6 + self._cur_dataset.data['timestamp'][0]
+
+            color_mapper = LinearColorMapper(palette=viridis(256), low=-80, high=0)
+
+            image = [10 * np.log10(sum_psd)]
+            title = self.title
+            for legend in legends:
+                title += " " + legend
+            title += " [dB]"
+
+            # assume maximal data points per pixel at full resolution
+            max_num_data_points = 2.0*self._config['plot_width']
+            if len(time) > max_num_data_points:
+                step_size = int(len(time) / max_num_data_points)
+                time = time[::step_size]
+                image[0] = image[0][:, ::step_size]
+
+            self._p.y_range = Range1d(frequency[0], frequency[-1])
+            self._p.toolbar_location = 'above'
+            self._p.image(image=image, x=time[0], y=frequency[0], dw=(time[-1]-time[0]),
+                          dh=(frequency[-1]-frequency[0]), color_mapper=color_mapper)
+            color_bar = ColorBar(color_mapper=color_mapper,
+                                 major_label_text_font_size="5pt",
+                                 ticker=BasicTicker(desired_num_ticks=5),
+                                 formatter=PrintfTickFormatter(format="%f"),
+                                 label_standoff=6, border_line_color=None, location=(0, 0))
+            self._p.add_layout(color_bar, 'right')
+
+            # add plot zoom tool that only zooms in time axis
+            wheel_zoom = WheelZoomTool()
+            self._p.toolbar.tools = [PanTool(), wheel_zoom, BoxZoomTool(dimensions="width"), ResetTool(), SaveTool()]   # updated_tools
+            self._p.toolbar.active_scroll = wheel_zoom
+
+        except (KeyError, IndexError, ValueError) as error:
+            print(type(error), "(" + self._data_name + "):", error)
+            self._had_error = True

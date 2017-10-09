@@ -135,14 +135,12 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
             if not is_running_locally(): # do not enable Google Map if running locally
                 curdoc().template_variables['has_position_data'] = True
 
-
     # initialize parameter changes
     changed_params = None
     if not 'replay' in ulog.msg_info_dict: # replay can have many param changes
         if len(ulog.changed_parameters) > 0:
             changed_params = ulog.changed_parameters
             plots.append(None) # save space for the param change button
-
 
     ### Add all data plots ###
 
@@ -499,6 +497,14 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
+    # Acceleration Spectrogram
+    data_plot = DataPlotSpec(data, plot_config, 'sensor_combined',
+                             y_axis_label='[Hz]', title='Acceleration Power Spectral Density',
+                             plot_height='small', x_range=x_range)
+    data_plot.add_graph(['accelerometer_m_s2[0]', 'accelerometer_m_s2[1]', 'accelerometer_m_s2[2]'],
+                        ['X', 'Y', 'Z'])
+    if data_plot.finalize() is not None: plots.append(data_plot)
+
     # power
     data_plot = DataPlot(data, plot_config, 'battery_status',
                          y_start=0, title='Power',
@@ -608,13 +614,14 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
     jinja_plot_data = []
     for i in range(len(plots)):
         if plots[i] is None:
-            plots[i] = widgetbox(param_changes_button, width=int(plot_width*0.99))
+            plots[i] = widgetbox(param_changes_button, width=int(plot_width * 0.99))
         if isinstance(plots[i], DataPlot):
             if plots[i].param_change_label is not None:
                 param_change_labels.append(plots[i].param_change_label)
+
+            plot_title = plots[i].title
             plots[i] = plots[i].bokeh_plot
 
-            plot_title = plots[i].title.text
             fragment = 'Nav-'+plot_title.replace(' ', '-') \
                 .replace('&', '_').replace('(', '').replace(')', '')
             jinja_plot_data.append({
