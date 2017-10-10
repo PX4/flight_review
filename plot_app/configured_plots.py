@@ -106,6 +106,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
 #    elif len(gps_plots) == 1:
 #        plots.extend(gps_plots)
 
+
     if is_running_locally():
         # show the google maps plot via Bokeh, since the one in the html
         # template does not work locally (we disable it further down)
@@ -113,7 +114,6 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
                             get_google_maps_api_key(), setpoints=False)
         if map_plot is not None:
             plots.append(map_plot)
-
 
 
     # Position plot
@@ -137,42 +137,10 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
 
     # initialize parameter changes
     changed_params = None
-    if not 'replay' in ulog.msg_info_dict:  # replay can have many param changes
+    if not 'replay' in ulog.msg_info_dict: # replay can have many param changes
         if len(ulog.changed_parameters) > 0:
             changed_params = ulog.changed_parameters
-            plots.append(None)  # save space for the param change button
-
-    # Spectrogram plot
-    data_plot = DataPlot2D(data, plot_config, 'sensor_combined',
-                           y_axis_label='[1/s]', title='Acceleration Spectrogram',
-                           plot_height='small', changed_params=changed_params, x_range=x_range)
-    data_plot.add_graph('y', 'x', colors2[0], 'Estimated',
-                        check_if_all_zero=True)
-    if not data_plot.had_error:  # vehicle_local_position is required
-        data_plot.change_dataset('vehicle_local_position_setpoint')
-        data_plot.add_graph('y', 'x', colors2[1], 'Setpoint')
-        # groundtruth (SITL only)
-        data_plot.change_dataset('vehicle_local_position_groundtruth')
-        data_plot.add_graph('y', 'x', color_gray, 'Groundtruth')
-        # GPS + position setpoints
-        plot_map(ulog, plot_config, map_type='plain', setpoints=True,
-                 bokeh_plot=data_plot.bokeh_plot)
-        if data_plot.finalize() is not None:
-            plots.append(data_plot.bokeh_plot)
-            if not is_running_locally():  # do not enable Google Map if running locally
-                curdoc().template_variables['has_position_data'] = True
-
-    # raw acceleration
-    data_plot = DataPlot(data, plot_config, 'sensor_combined',
-                         y_axis_label='[m/s^2]', title='Raw Acceleration',
-                         plot_height='small', changed_params=changed_params,
-                         x_range=x_range)
-    data_plot.add_graph(['accelerometer_m_s2[0]', 'accelerometer_m_s2[1]',
-                         'accelerometer_m_s2[2]'], colors3, ['X', 'Y', 'Z'])
-    if data_plot.finalize() is not None: plots.append(data_plot)
-
-
-
+            plots.append(None) # save space for the param change button
 
     ### Add all data plots ###
 
@@ -528,6 +496,15 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
                         colors2[1:2], ['Thrust'])
     if data_plot.finalize() is not None: plots.append(data_plot)
 
+    # Acceleration Spectrogram
+    data_plot = DataPlotTabs(data, plot_config, 'sensor_combined',
+                             y_axis_label='[Hz]', title='Acceleration Spectrogram',
+                             plot_height='normal', changed_params=changed_params)
+    data_plot.add_spec_graph(['accelerometer_m_s2[0]', 'accelerometer_m_s2[1]',
+                              'accelerometer_m_s2[2]'], ['X', 'Y', 'Z'])
+    if data_plot.finalize() is not None: plots.append(data_plot)
+
+    plots.append(None)
 
     # power
     data_plot = DataPlot(data, plot_config, 'battery_status',
@@ -636,15 +613,22 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
 
 
     jinja_plot_data = []
+    div = Div(text="""""",width=int(plot_width*0.99), height=int(plot_config['plot_height']['normal']))
+    first = True
     for i in range(len(plots)):
         if plots[i] is None:
-            plots[i] = widgetbox(param_changes_button, width=int(plot_width*0.99))
+            if first:
+                plots[i] = widgetbox(param_changes_button, width=int(plot_width*0.99))
+                first = False
+            else:
+                plots[i] = widgetbox(div, width=int(plot_width * 0.99))
         if isinstance(plots[i], DataPlot):
             if plots[i].param_change_label is not None:
                 param_change_labels.append(plots[i].param_change_label)
+
+            plot_title = plots[i].title
             plots[i] = plots[i].bokeh_plot
 
-            plot_title = plots[i].title.text
             fragment = 'Nav-'+plot_title.replace(' ', '-') \
                 .replace('&', '_').replace('(', '').replace(')', '')
             jinja_plot_data.append({
