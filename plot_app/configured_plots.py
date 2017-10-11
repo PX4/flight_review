@@ -505,6 +505,18 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
                               'accelerometer_m_s2[2]'], ['X', 'Y', 'Z'])
     if data_plot.finalize() is not None: plots.append(data_plot)
 
+    # Gyro Spectrogram
+    data_plot = DataPlotTabs(
+        data, plot_config, 'sensor_combined',y_axis_label='[Hz]',
+        title='Raw Angular Speed (Gyroscope) Spectrogram (dB)',
+        plot_height='small', tabs_height='normal',changed_params=changed_params)
+    data_plot.add_spec_graph([
+        lambda data: ('gyro_rad[0]', np.rad2deg(data['gyro_rad[0]'])),
+        lambda data: ('gyro_rad[1]', np.rad2deg(data['gyro_rad[1]'])),
+        lambda data: ('gyro_rad[2]', np.rad2deg(data['gyro_rad[2]']))],
+        ['X', 'Y', 'Z'])
+    if data_plot.finalize() is not None: plots.append(data_plot)
+
     # power
     data_plot = DataPlot(data, plot_config, 'battery_status',
                          y_start=0, title='Power',
