@@ -498,13 +498,12 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
 
     # Acceleration Spectrogram
     data_plot = DataPlotTabs(data, plot_config, 'sensor_combined',
-                             y_axis_label='[Hz]', title='Acceleration Spectrogram',
-                             plot_height='normal', changed_params=changed_params)
+                             y_axis_label='[Hz]', title='Acceleration Spectrogram (dB)',
+                             plot_height='small', tabs_height='normal',
+                             changed_params=changed_params)
     data_plot.add_spec_graph(['accelerometer_m_s2[0]', 'accelerometer_m_s2[1]',
                               'accelerometer_m_s2[2]'], ['X', 'Y', 'Z'])
     if data_plot.finalize() is not None: plots.append(data_plot)
-
-    plots.append(None)
 
     # power
     data_plot = DataPlot(data, plot_config, 'battery_status',
@@ -613,15 +612,9 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
 
 
     jinja_plot_data = []
-    div = Div(text="""""",width=int(plot_width*0.99), height=int(plot_config['plot_height']['normal']))
-    first = True
     for i in range(len(plots)):
         if plots[i] is None:
-            if first:
-                plots[i] = widgetbox(param_changes_button, width=int(plot_width*0.99))
-                first = False
-            else:
-                plots[i] = widgetbox(div, width=int(plot_width * 0.99))
+            plots[i] = widgetbox(param_changes_button, width=int(plot_width * 0.99))
         if isinstance(plots[i], DataPlot):
             if plots[i].param_change_label is not None:
                 param_change_labels.append(plots[i].param_change_label)

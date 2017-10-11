@@ -7,7 +7,7 @@ from bokeh.models import (
     Grid, Legend, Plot, BoxAnnotation, Span, CustomJS, Rect, Circle, Line,
     HoverTool, BoxZoomTool, PanTool, WheelZoomTool,
     WMTSTileSource, GMapPlot, GMapOptions,
-    LabelSet, Label
+    LabelSet, Label, ColorBar, LinearColorMapper, BasicTicker, PrintfTickFormatter
     )
 from bokeh.palettes import viridis
 from bokeh.models.widgets import DataTable, DateFormatter, TableColumn, Div, Tabs, Panel
@@ -656,8 +656,8 @@ class DataPlotTabs(DataPlot):
     """
 
     def __init__(self, data, config, data_name, x_axis_label=None,
-                 y_axis_label=None, title=None, plot_height='normal',
-                 equal_aspect=True, x_range=None, y_range=None,
+                 y_axis_label=None, title=None, plot_height='small',
+                 tabs_height='normal', x_range=None, y_range=None,
                  changed_params=None, topic_instance=0):
 
         self._had_error = False
@@ -669,7 +669,6 @@ class DataPlotTabs(DataPlot):
 
         self._data = data
         self._config = config
-        self._plot_height_name = plot_height
         self._data_name = data_name
         self._cur_dataset = None
         self._plots = []
@@ -692,43 +691,8 @@ class DataPlotTabs(DataPlot):
             self._had_error = True
 
         self._plot_width = self._config['plot_width']
-        self._plot_height = self._config['plot_height'][self._plot_height_name]
-
-    '''
-    def add_graph(self, dataset_x, dataset_y, color, legend, check_if_all_zero=False):
-        """ add a line to the graph
-        """
-        if self._had_error: return
-        try:
-            p = self._p
-
-            x = self._cur_dataset.data[dataset_x]
-            y = self._cur_dataset.data[dataset_y]
-            # FIXME: bokeh should be able to handle np.nan values properly, but
-            # we still get a ValueError('Out of range float values are not JSON
-            # compliant'), if x or y contains nan
-            non_nan_indexes = np.logical_not(np.logical_or(np.isnan(x), np.isnan(y)))
-            x = x[non_nan_indexes]
-            y = y[non_nan_indexes]
-
-            if check_if_all_zero:
-                if np.count_nonzero(x) == 0 and np.count_nonzero(y) == 0:
-                    raise ValueError()
-
-            data_source = ColumnDataSource(data=dict(x=x, y=y))
-
-            p.line(x="x", y="y", source=data_source, line_width=2,
-                   line_color=color, legend=legend)
-
-            if self._is_first_graph:
-                self._is_first_graph = False
-                if self._equal_aspect:
-                    plot_set_equal_aspect_ratio(p, x, y)
-
-        except (KeyError, IndexError, ValueError) as error:
-            print(type(error), "(" + self._data_name + "):", error)
-            self._had_error = True
-    '''
+        self._plot_height = self._config['plot_height'][plot_height]
+        self._tabs_height = self._config['plot_height'][tabs_height]
 
     @property
     def title(self):
@@ -755,15 +719,14 @@ class DataPlotTabs(DataPlot):
         return self._tabs
 
     def _setup_plot(self):
-        plots_width = self._config['plot_width']
-        plots_height = self._config['plot_height'][self._plot_height_name]
-        t_range = Range1d(start=self._cur_dataset.data['timestamp'][0],
+        #offset = int(((1024/2.0)/250.0)*1e6)
+        t_range = Range1d(start=self._cur_dataset.data['timestamp'][0],#+offset,
                 end=self._cur_dataset.data['timestamp'][-1], bounds=None)
         for p in self._plots:
             p.toolbar.logo = None
 
-            p.plot_width = plots_width
-            p.plot_height = plots_height
+            p.plot_width = self._plot_width
+            p.plot_height = self._plot_height
 
             # -> other attributes are set via theme.yaml
 
@@ -775,11 +738,13 @@ class DataPlotTabs(DataPlot):
 
             # p.lod_threshold=None # turn off level-of-detail
 
+            #p.xaxis[0].ticker = BasicTicker(desired_num_ticks = 6)
+
             # axis labels: format time
             p.xaxis[0].formatter = FuncTickFormatter(code='''
                                 //func arguments: ticks, x_range, t_range
                                 // assume us ticks
-                                ms = Math.round(tick * 1000) // + t_range.start)
+                                ms = Math.round(tick * 1000 + t_range.start / 1000)
                                 sec = Math.floor(ms / 1000)
                                 minutes = Math.floor(sec / 60)
                                 hours = Math.floor(minutes / 60)
@@ -798,14 +763,14 @@ class DataPlotTabs(DataPlot):
                                 } else {
                                     var ret_val = minutes + ":" + pad(sec,2);
                                 }
-                                if (x_range.end - x_range.start < 4e3) {
+                                if (x_range.end - x_range.start < 4) {
                                     ret_val = ret_val + "." + pad(ms, 3);
                                 }
                                 return ret_val;
                             ''', args={'x_range': p.x_range, 't_range': t_range})
 
             # make it possible to hide graphs by clicking on the label
-            p.legend.click_policy = "hide"
+            #p.legend.click_policy = "hide"
 
     def add_spec_graph(self, field_names, legends, use_downsample=True, mark_nan=False):
         """ add a spectrogram plot to the graph
@@ -841,6 +806,9 @@ class DataPlotTabs(DataPlot):
                 data_source = ColumnDataSource(data=data_set)
             '''
 
+            color_mapper = LinearColorMapper(palette=viridis(256),
+                                             low=-80, high=0)
+
             tabs = []
             for field_name, legend in zip(field_names_expanded, legends):
                 im = [10*np.log10(psd[field_name])]
@@ -848,13 +816,20 @@ class DataPlotTabs(DataPlot):
                     plot_width=self._plot_width,plot_height=self._plot_height,
                     x_range=(t[0], t[-1]),y_range=(f[0], f[-1]),
                     x_axis_label=self._x_axis_label,
-                    y_axis_label=self._y_axis_lable,
+                    y_axis_label=self._y_axis_lable,toolbar_location='above',
                     tools=TOOLS,active_scroll=ACTIVE_SCROLL_TOOLS))
                 self._plots[-1].image(image=im, x=t[0], y=f[0],
-                    dw=t[-1], dh=f[-1],palette=viridis(256))
+                    dw=t[-1], dh=f[-1],color_mapper=color_mapper)
+                color_bar = ColorBar(color_mapper=color_mapper,
+                                     major_label_text_font_size="5pt",
+                                     ticker=BasicTicker(desired_num_ticks=8),
+                                     formatter=PrintfTickFormatter(format="%f"),
+                                     label_standoff=6, border_line_color=None, location=(0, 0))
+                self._plots[-1].add_layout(color_bar,'right')
                 tabs.append(Panel(child=self._plots[-1],title=legend))
 
-            self._tabs = Tabs(tabs=tabs)
+            self._tabs = Tabs(tabs=tabs,width=self._plot_width,
+                              height=self._tabs_height)
 
         except (KeyError, IndexError, ValueError) as error:
             print(type(error), "("+self._data_name+"):", error)
