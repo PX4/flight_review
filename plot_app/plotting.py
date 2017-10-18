@@ -738,7 +738,7 @@ class DataPlotTabs(DataPlot):
 
             # p.lod_threshold=None # turn off level-of-detail
 
-            #p.xaxis[0].ticker = BasicTicker(desired_num_ticks = 6)
+            # p.xaxis[0].ticker = BasicTicker(desired_num_ticks = 13)
 
             # axis labels: format time
             p.xaxis[0].formatter = FuncTickFormatter(code='''
@@ -793,7 +793,7 @@ class DataPlotTabs(DataPlot):
             psd = dict()
             for key in field_names_expanded:
                 f, t, psd[key] = signal.spectrogram(data_set[key],
-                    fs=fs, window='hann', nperseg=1024, noverlap=512,scaling='density')
+                    fs=fs, window='hann', nperseg=256, noverlap=128,scaling='density')
 
             '''
             if use_downsample:
