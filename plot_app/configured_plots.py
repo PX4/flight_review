@@ -319,10 +319,10 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
                              title='Manual Control Inputs (Radio or Joystick)',
                              plot_height='small', y_range=Range1d(-1.1, 1.1),
                              changed_params=changed_params, x_range=x_range)
-        data_plot.add_graph(['z', 'y', 'x', 'r',
+        data_plot.add_graph(['y', 'x', 'r', 'z',
                              lambda data: ('mode_slot', data['mode_slot']/6),
                              'aux1', 'aux2', 'kill_switch'], colors8,
-                            ['Throttle [0, 1]', 'Y / Roll', 'X / Pitch', 'Yaw',
+                            ['Y / Roll', 'X / Pitch', 'Yaw', 'Throttle [0, 1]',
                              'Flight Mode', 'Aux1', 'Aux2', 'Kill Switch'])
         # TODO: add RTL switch and others? Look at params which functions are mapped?
         plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
