@@ -496,6 +496,15 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
                         colors2[1:2], ['Thrust'])
     if data_plot.finalize() is not None: plots.append(data_plot)
 
+
+    # Acceleration Spectrogram
+    data_plot = DataPlotSpec(data, plot_config, 'sensor_combined',
+                             y_axis_label='[Hz]', title='Acceleration Spectrogram Z [dB]',
+                             plot_height='small', changed_params=changed_params)
+    data_plot.add_spec_graph(['accelerometer_m_s2[2]'], ['Z'])
+    if data_plot.finalize() is not None: plots.append(data_plot)
+
+    '''
     # Acceleration Spectrogram
     data_plot = DataPlotTabs(data, plot_config, 'sensor_combined',
                              y_axis_label='[Hz]', title='Acceleration Spectrogram (dB)',
@@ -516,6 +525,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
         lambda data: ('gyro_rad[2]', np.rad2deg(data['gyro_rad[2]']))],
         ['X', 'Y', 'Z'])
     if data_plot.finalize() is not None: plots.append(data_plot)
+    '''
 
     # power
     data_plot = DataPlot(data, plot_config, 'battery_status',
