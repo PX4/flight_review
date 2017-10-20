@@ -756,11 +756,13 @@ class DataPlotSpec(DataPlot):
             # make it possible to hide graphs by clicking on the label
             # p.legend.click_policy = "hide"
 
-    def add_graph(self, field_name, legend, window='hann',window_length=256, noverlap=128):
+    def add_graph(self, field_names, legends, window='hann',window_length=256, noverlap=128):
         """ add a spectrogram plot to the graph
 
-        field_name: a string describing the field from the data set used for frequency analysis
-        legend: description for the field_name that will appear in the title of the plot
+        field_names: can be a list of fields from the data set, or a list of
+        functions with the data set as argument and returning a tuple of
+        (field_name, data)
+        legends: description for the field_names that will appear in the title of the plot
         window: the type of window to use for the frequency analysis. check scipy documentation for available window types.
         window_length: length of the analysis window in samples.
         noverlap: number of overlapping samples between windows.
@@ -770,15 +772,24 @@ class DataPlotSpec(DataPlot):
         try:
             data_set = {}
             data_set['timestamp'] = self._cur_dataset.data['timestamp']
-            data_set[field_name] = self._cur_dataset.data[field_name]
 
             # calculate the sampling frequency
             dt = ((data_set['timestamp'][-1] - data_set['timestamp'][0]) * 1.0e-6) / len(data_set['timestamp'])
             fs = int(1.0 / dt)
 
+            field_names_expanded = self._expand_field_names(field_names, data_set)
+
             # calculate the spectrogram
-            f, t, psd = signal.spectrogram(data_set[field_name],
-                            fs=fs, window=window, nperseg=window_length, noverlap=noverlap, scaling='density')
+            psd = dict()
+            for key in field_names_expanded:
+                f, t, psd[key] = signal.spectrogram(data_set[key],
+                                                    fs=fs, window='hann', nperseg=256, noverlap=128, scaling='density')
+
+            # sum all psd's
+            key_it = iter(psd)
+            sum_psd = psd[next(key_it)]
+            for key in key_it:
+                sum_psd += psd[key]
 
             # offset = int(((1024/2.0)/250.0)*1e6)
             # add start time as offset
@@ -795,9 +806,12 @@ class DataPlotSpec(DataPlot):
 
             color_mapper = LinearColorMapper(palette=viridis(256), low=-80, high=0)
 
-            im = [10 * np.log10(psd)]
-            self._p = figure(title=self._title+" "+legend+" [dB]",
-                                      plot_width=self._plot_width, plot_height=self._plot_height,
+            im = [10 * np.log10(sum_psd)]
+            title = self._title
+            for legend in legends:
+                title += " " + legend
+            title += " [dB]"
+            self._p = figure(title=title,plot_width=self._plot_width, plot_height=self._plot_height,
                                       y_range=(f[0], f[-1]),
                                       x_axis_label=self._x_axis_label,
                                       y_axis_label=self._y_axis_label, toolbar_location='above',
