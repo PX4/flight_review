@@ -776,7 +776,7 @@ class DataPlotSpec(DataPlot):
             dt = ((data_set['timestamp'][-1] - data_set['timestamp'][0]) * 1.0e-6) / len(data_set['timestamp'])
             fs = int(1.0 / dt)
 
-            # calculate the spectogram
+            # calculate the spectrogram
             f, t, psd = signal.spectrogram(data_set[field_name],
                             fs=fs, window=window, nperseg=window_length, noverlap=noverlap, scaling='density')
 
