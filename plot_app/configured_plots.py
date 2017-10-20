@@ -499,9 +499,9 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
 
     # Acceleration Spectrogram
     data_plot = DataPlotSpec(data, plot_config, 'sensor_combined',
-                             y_axis_label='[Hz]', title='Acceleration Spectrogram Z [dB]',
-                             plot_height='small', changed_params=changed_params)
-    data_plot.add_spec_graph(['accelerometer_m_s2[2]'], ['Z'])
+                             y_axis_label='[Hz]', title='Acceleration Spectrogram',
+                             plot_height='small', x_range=x_range)
+    data_plot.add_graph('accelerometer_m_s2[2]','Z')
     if data_plot.finalize() is not None: plots.append(data_plot)
 
     '''

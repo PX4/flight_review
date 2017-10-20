@@ -658,8 +658,7 @@ class DataPlotSpec(DataPlot):
 
     def __init__(self, data, config, data_name, x_axis_label=None,
                  y_axis_label=None, title=None, plot_height='small',
-                 x_range=None, y_range=None,
-                 changed_params=None, topic_instance=0):
+                 x_range=None, y_range=None, topic_instance=0):
 
         self._had_error = False
         self._previous_success = False
@@ -673,16 +672,10 @@ class DataPlotSpec(DataPlot):
         self._data_name = data_name
         self._cur_dataset = None
         self._p = None
-        self._changed_params = changed_params
+        self._x_range = x_range
+        self._y_range = y_range
 
         try:
-            if y_range is not None:
-                self._p.y_range = Range1d(y_range.start, y_range.end)
-            if x_range is not None:
-                # we need a copy, otherwise x-axis zooming will be synchronized
-                # between all plots
-                self._p.x_range = Range1d(x_range.start, x_range.end)
-
             self._cur_dataset = [elem for elem in data
                                  if elem.name == data_name and elem.multi_id == topic_instance][0]
 
@@ -709,18 +702,10 @@ class DataPlotSpec(DataPlot):
         if self._had_error and not self._previous_success:
             return None
 
-        if self._changed_params is not None:
-            self._param_change_label = \
-                plot_parameter_changes(self._p, self._plot_height,
-                                       self._changed_params)
-
         self._setup_plot()
         return self._p
 
     def _setup_plot(self):
-        # offset = int(((1024/2.0)/250.0)*1e6)
-        t_range = Range1d(start=self._cur_dataset.data['timestamp'][0],  # +offset,
-                          end=self._cur_dataset.data['timestamp'][-1], bounds=None)
         p = self._p
         p.toolbar.logo = None
 
@@ -741,9 +726,9 @@ class DataPlotSpec(DataPlot):
 
         # axis labels: format time
         p.xaxis[0].formatter = FuncTickFormatter(code='''
-                            //func arguments: ticks, x_range, t_range
+                            //func arguments: ticks, x_range
                             // assume us ticks
-                            ms = Math.round(tick * 1000 + t_range.start / 1000)
+                            ms = Math.round(tick * 1000)
                             sec = Math.floor(ms / 1000)
                             minutes = Math.floor(sec / 60)
                             hours = Math.floor(minutes / 60)
@@ -766,65 +751,70 @@ class DataPlotSpec(DataPlot):
                                 ret_val = ret_val + "." + pad(ms, 3);
                             }
                             return ret_val;
-                        ''', args={'x_range': p.x_range, 't_range': t_range})
+                        ''', args={'x_range': p.x_range})
 
             # make it possible to hide graphs by clicking on the label
             # p.legend.click_policy = "hide"
 
-    def add_spec_graph(self, field_names, legends, use_downsample=True, mark_nan=False):
+    def add_graph(self, field_name, legend, window='hann',window_length=256, noverlap=128):
         """ add a spectrogram plot to the graph
 
-        field_names can be a list of fields from the data set, or a list of
-        functions with the data set as argument and returning a tuple of
-        (field_name, data)
-        :param mark_nan: if True, add an indicator to the plot when one of the graphs is NaN
+        field_name: a string describing the field from the data set used for frequency analysis
+        legend: description for the field_name that will appear in the title of the plot
+        window: the type of window to use for the frequency analysis. check scipy documentation for available window types.
+        window_length: length of the analysis window in samples.
+        noverlap: number of overlapping samples between windows.
         """
 
         if self._had_error: return
         try:
             data_set = {}
             data_set['timestamp'] = self._cur_dataset.data['timestamp']
+            data_set[field_name] = self._cur_dataset.data[field_name]
+
+            # calculate the sampling frequency
             dt = ((data_set['timestamp'][-1] - data_set['timestamp'][0]) * 1.0e-6) / len(data_set['timestamp'])
             fs = int(1.0 / dt)
 
-            field_names_expanded = self._expand_field_names(field_names, data_set)
-
-            psd = dict()
-            field_name = field_names_expanded[0]
-            legend = legends[0]
+            # calculate the spectogram
             f, t, psd = signal.spectrogram(data_set[field_name],
-                                                fs=fs, window='hann', nperseg=256, noverlap=128, scaling='density')
+                            fs=fs, window=window, nperseg=window_length, noverlap=noverlap, scaling='density')
 
-            '''
-            if use_downsample:
-                # we directly pass the data_set, downsample and then create the
-                # ColumnDataSource object, which is much faster than
-                # first creating ColumnDataSource, and then downsample
-                downsample = DynamicDownsample(p, data_set, 'timestamp')
-                data_source = downsample.data_source
+            # offset = int(((1024/2.0)/250.0)*1e6)
+            # add start time as offset
+            start_t=self._cur_dataset.data['timestamp'][0]/1.0e6
+            t = t + start_t
+
+            # remove box zoom tool, to add a customized version later
+            str_box_zoom = "box_zoom"
+            str_begin = TOOLS.find(str_box_zoom)
+            if str_begin != -1:
+                UPDATED_TOOLS = TOOLS[:str_begin] + TOOLS[(str_begin+len(str_box_zoom)+1):]
             else:
-                data_source = ColumnDataSource(data=data_set)
-            '''
+                UPDATED_TOOLS = TOOLS
 
             color_mapper = LinearColorMapper(palette=viridis(256), low=-80, high=0)
 
-            tabs = []
-            for field_name, legend in zip(field_names_expanded, legends):
-                im = [10 * np.log10(psd)]
-                self._p = figure(title=self._title,
-                                          plot_width=self._plot_width, plot_height=self._plot_height,
-                                          x_range=(t[0], t[-1]), y_range=(f[0], f[-1]),
-                                          x_axis_label=self._x_axis_label,
-                                          y_axis_label=self._y_axis_lable, toolbar_location='above',
-                                          tools=TOOLS, active_scroll=ACTIVE_SCROLL_TOOLS)
-                self._p.image(image=im, x=t[0], y=f[0],
-                                      dw=t[-1], dh=f[-1], color_mapper=color_mapper)
-                color_bar = ColorBar(color_mapper=color_mapper,
-                                     major_label_text_font_size="5pt",
-                                     ticker=BasicTicker(desired_num_ticks=8),
-                                     formatter=PrintfTickFormatter(format="%f"),
-                                     label_standoff=6, border_line_color=None, location=(0, 0))
-                self._p.add_layout(color_bar, 'right')
+            im = [10 * np.log10(psd)]
+            self._p = figure(title=self._title+" "+legend+" [dB]",
+                                      plot_width=self._plot_width, plot_height=self._plot_height,
+                                      y_range=(f[0], f[-1]),
+                                      x_axis_label=self._x_axis_label,
+                                      y_axis_label=self._y_axis_lable, toolbar_location='above',
+                                      tools=UPDATED_TOOLS, active_scroll=ACTIVE_SCROLL_TOOLS)
+            if self._x_range is not None:
+                # we need a copy, otherwise x-axis zooming will be synchronized
+                # between all plots
+                self._p.x_range = Range1d(self._x_range.start/1.0e6, self._x_range.end/1.0e6)
+            self._p.image(image=im, x=t[0], y=f[0],dw=(t[-1]-t[0]), dh=(f[-1]-f[0]), color_mapper=color_mapper)
+            color_bar = ColorBar(color_mapper=color_mapper,
+                                 major_label_text_font_size="5pt",
+                                 ticker=BasicTicker(desired_num_ticks=5),
+                                 formatter=PrintfTickFormatter(format="%f"),
+                                 label_standoff=6, border_line_color=None, location=(0, 0))
+            self._p.add_layout(color_bar, 'right')
+            # add plot zoom tool that only zooms in time axis
+            self._p.add_tools(BoxZoomTool(dimensions="width"))
 
         except (KeyError, IndexError, ValueError) as error:
             print(type(error), "(" + self._data_name + "):", error)
