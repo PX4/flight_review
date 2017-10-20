@@ -665,7 +665,7 @@ class DataPlotSpec(DataPlot):
         self._param_change_label = None
         self._title = title
         self._x_axis_label = x_axis_label
-        self._y_axis_lable = y_axis_label
+        self._y_axis_label = y_axis_label
 
         self._data = data
         self._config = config
@@ -800,7 +800,7 @@ class DataPlotSpec(DataPlot):
                                       plot_width=self._plot_width, plot_height=self._plot_height,
                                       y_range=(f[0], f[-1]),
                                       x_axis_label=self._x_axis_label,
-                                      y_axis_label=self._y_axis_lable, toolbar_location='above',
+                                      y_axis_label=self._y_axis_label, toolbar_location='above',
                                       tools=UPDATED_TOOLS, active_scroll=ACTIVE_SCROLL_TOOLS)
             if self._x_range is not None:
                 # we need a copy, otherwise x-axis zooming will be synchronized
