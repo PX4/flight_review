@@ -777,13 +777,16 @@ class DataPlotSpec(DataPlot):
             dt = ((data_set['timestamp'][-1] - data_set['timestamp'][0]) * 1.0e-6) / len(data_set['timestamp'])
             fs = int(1.0 / dt)
 
+            t_rel = (self._cur_dataset.data['timestamp'] + self._cur_dataset.data['accelerometer_timestamp_relative'] -
+                     self._cur_dataset.data['timestamp'][0]) / 1.0e6
+
             field_names_expanded = self._expand_field_names(field_names, data_set)
 
             # calculate the spectrogram
             psd = dict()
             for key in field_names_expanded:
-                f, t, psd[key] = signal.spectrogram(data_set[key],
-                                                    fs=fs, window='hann', nperseg=256, noverlap=128, scaling='density')
+                y = np.interp(np.arange(0, t_rel[-1], 1.0 / fs), t_rel, data_set[key])
+                f, t, psd[key] = signal.spectrogram(y,fs=fs, window='hann', nperseg=256, noverlap=128, scaling='density')
 
             # sum all psd's
             key_it = iter(psd)
