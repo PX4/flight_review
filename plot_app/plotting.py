@@ -366,8 +366,6 @@ class DataPlot:
         """ return the bokeh title """
         if self._p is not None:
             return self._p.title.text
-        else:
-            return None
 
     @property
     def bokeh_plot(self):
@@ -756,7 +754,7 @@ class DataPlotSpec(DataPlot):
             # make it possible to hide graphs by clicking on the label
             # p.legend.click_policy = "hide"
 
-    def add_graph(self, field_names, legends, window='hann',window_length=256, noverlap=128):
+    def add_graph(self, field_names, legends, window='hann', window_length=256, noverlap=128):
         """ add a spectrogram plot to the graph
 
         field_names: can be a list of fields from the data set, or a list of
@@ -774,15 +772,17 @@ class DataPlotSpec(DataPlot):
             data_set['timestamp'] = self._cur_dataset.data['timestamp']
 
             # calculate the sampling frequency
-            dt = ((data_set['timestamp'][-1] - data_set['timestamp'][0]) * 1.0e-6) / len(data_set['timestamp'])
-            fs = int(1.0 / dt)
+            delta_t = ((data_set['timestamp'][-1] - data_set['timestamp'][0]) * 1.0e-6) / len(data_set['timestamp'])
+            sampling_frequency = int(1.0 / delta_t)
 
             field_names_expanded = self._expand_field_names(field_names, data_set)
 
             # calculate the spectrogram
             psd = dict()
             for key in field_names_expanded:
-                f, t, psd[key] = signal.spectrogram(data_set[key],fs=fs, window='hann', nperseg=256, noverlap=128, scaling='density')
+                frequency, time, psd[key] = signal.spectrogram(
+                    data_set[key], fs=sampling_frequency, window=window,
+                    nperseg=window_length, noverlap=noverlap, scaling='density')
 
             # sum all psd's
             key_it = iter(psd)
@@ -792,34 +792,35 @@ class DataPlotSpec(DataPlot):
 
             # offset = int(((1024/2.0)/250.0)*1e6)
             # add start time as offset
-            start_t=self._cur_dataset.data['timestamp'][0]/1.0e6
-            t = t + start_t
+            start_t = self._cur_dataset.data['timestamp'][0]/1.0e6
+            time = time + start_t
 
             # remove box zoom tool, to add a customized version later
             str_box_zoom = "box_zoom"
             str_begin = TOOLS.find(str_box_zoom)
             if str_begin != -1:
-                UPDATED_TOOLS = TOOLS[:str_begin] + TOOLS[(str_begin+len(str_box_zoom)+1):]
+                updated_tools = TOOLS[:str_begin] + TOOLS[(str_begin+len(str_box_zoom)+1):]
             else:
-                UPDATED_TOOLS = TOOLS
+                updated_tools = TOOLS
 
             color_mapper = LinearColorMapper(palette=viridis(256), low=-80, high=0)
 
-            im = [10 * np.log10(sum_psd)]
+            image = [10 * np.log10(sum_psd)]
             title = self._title
             for legend in legends:
                 title += " " + legend
             title += " [dB]"
-            self._p = figure(title=title,plot_width=self._plot_width, plot_height=self._plot_height,
-                                      y_range=(f[0], f[-1]),
-                                      x_axis_label=self._x_axis_label,
-                                      y_axis_label=self._y_axis_label, toolbar_location='above',
-                                      tools=UPDATED_TOOLS, active_scroll=ACTIVE_SCROLL_TOOLS)
+            self._p = figure(title=title, plot_width=self._plot_width, plot_height=self._plot_height,
+                             y_range=(frequency[0], frequency[-1]),
+                             x_axis_label=self._x_axis_label,
+                             y_axis_label=self._y_axis_label, toolbar_location='above',
+                             tools=updated_tools, active_scroll=ACTIVE_SCROLL_TOOLS)
             if self._x_range is not None:
                 # we need a copy, otherwise x-axis zooming will be synchronized
                 # between all plots
                 self._p.x_range = Range1d(self._x_range.start/1.0e6, self._x_range.end/1.0e6)
-            self._p.image(image=im, x=t[0], y=f[0],dw=(t[-1]-t[0]), dh=(f[-1]-f[0]), color_mapper=color_mapper)
+            self._p.image(image=image, x=time[0], y=frequency[0], dw=(time[-1]-time[0]),
+                          dh=(frequency[-1]-frequency[0]), color_mapper=color_mapper)
             color_bar = ColorBar(color_mapper=color_mapper,
                                  major_label_text_font_size="5pt",
                                  ticker=BasicTicker(desired_num_ticks=5),
