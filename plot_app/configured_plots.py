@@ -499,7 +499,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
 
     # Acceleration Spectrogram
     data_plot = DataPlotSpec(data, plot_config, 'sensor_combined',
-                             y_axis_label='[Hz]', title='Acceleration Spectrogram',
+                             y_axis_label='[Hz]', title='Acceleration Power Spectral Density',
                              plot_height='small', x_range=x_range)
     data_plot.add_graph(['accelerometer_m_s2[0]', 'accelerometer_m_s2[1]', 'accelerometer_m_s2[2]'],
                         ['X', 'Y', 'Z'])

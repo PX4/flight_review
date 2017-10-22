@@ -99,7 +99,7 @@ extra_patterns = [
     (r"/stats", RedirectHandler, {"url": "/plot_app?stats=1"}),
 ]
 
-server = Server(applications, extra_patterns=extra_patterns) #, **server_kwargs)
+server = Server(applications, extra_patterns=extra_patterns, **server_kwargs)
 
 if args.show:
     # we have to defer opening in browser until we start up the server
