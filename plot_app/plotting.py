@@ -659,9 +659,9 @@ class DataPlotSpec(DataPlot):
                  y_axis_label=None, title=None, plot_height='small',
                  x_range=None, y_range=None, topic_instance=0):
 
-        super(DataPlotSpec, self).__init__(data, config, data_name,x_axis_label=x_axis_label,
-                                           y_axis_label=y_axis_label,title=title, plot_height=plot_height,
-                                           x_range=x_range,y_range=y_range, topic_instance=topic_instance)
+        super(DataPlotSpec, self).__init__(data, config, data_name, x_axis_label=x_axis_label,
+                                           y_axis_label=y_axis_label, title=title, plot_height=plot_height,
+                                           x_range=x_range, y_range=y_range, topic_instance=topic_instance)
 
     def add_graph(self, field_names, legends, window='hann', window_length=256, noverlap=128):
         """ add a spectrogram plot to the graph
@@ -712,7 +712,7 @@ class DataPlotSpec(DataPlot):
             title += " [dB]"
 
             self._p.y_range = Range1d(frequency[0], frequency[-1])
-            self._p.toolbar_location='above'
+            self._p.toolbar_location= 'above'
             self._p.image(image=image, x=time[0], y=frequency[0], dw=(time[-1]-time[0]),
                           dh=(frequency[-1]-frequency[0]), color_mapper=color_mapper)
             color_bar = ColorBar(color_mapper=color_mapper,
