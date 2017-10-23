@@ -5,7 +5,7 @@ from bokeh.models import (
     ColumnDataSource, Range1d, DataRange1d, DatetimeAxis,
     TickFormatter, DatetimeTickFormatter, FuncTickFormatter,
     Grid, Legend, Plot, BoxAnnotation, Span, CustomJS, Rect, Circle, Line,
-    HoverTool, BoxZoomTool, PanTool, WheelZoomTool,
+    HoverTool, BoxZoomTool, PanTool, WheelZoomTool, ResetTool, SaveTool,
     WMTSTileSource, GMapPlot, GMapOptions,
     LabelSet, Label, ColorBar, LinearColorMapper, BasicTicker, PrintfTickFormatter
     )
@@ -366,6 +366,8 @@ class DataPlot:
         """ return the bokeh title """
         if self._p is not None:
             return self._p.title.text
+        else:
+            return ""
 
     @property
     def bokeh_plot(self):
@@ -528,7 +530,6 @@ class DataPlot:
         self._setup_plot()
         return self._p
 
-
     def _setup_plot(self):
         plots_width = self._config['plot_width']
         plots_height = self._config['plot_height'][self._plot_height_name]
@@ -658,101 +659,9 @@ class DataPlotSpec(DataPlot):
                  y_axis_label=None, title=None, plot_height='small',
                  x_range=None, y_range=None, topic_instance=0):
 
-        self._had_error = False
-        self._previous_success = False
-        self._param_change_label = None
-        self._title = title
-        self._x_axis_label = x_axis_label
-        self._y_axis_label = y_axis_label
-
-        self._data = data
-        self._config = config
-        self._data_name = data_name
-        self._cur_dataset = None
-        self._p = None
-        self._x_range = x_range
-        self._y_range = y_range
-
-        try:
-            self._cur_dataset = [elem for elem in data
-                                 if elem.name == data_name and elem.multi_id == topic_instance][0]
-
-        except (KeyError, IndexError, ValueError) as error:
-            print(type(error), "(" + self._data_name + "):", error)
-            self._had_error = True
-
-        self._plot_width = self._config['plot_width']
-        self._plot_height = self._config['plot_height'][plot_height]
-
-    @property
-    def title(self):
-        """ return the bokeh title """
-        return self._title
-
-    @property
-    def bokeh_plot(self):
-        """ return the bokeh plot """
-        return self._p
-
-    def finalize(self):
-        """ Call this after all plots are done. Returns the bokeh plot, or None
-        on error """
-        if self._had_error and not self._previous_success:
-            return None
-
-        self._setup_plot()
-        return self._p
-
-    def _setup_plot(self):
-        p = self._p
-        p.toolbar.logo = None
-
-        p.plot_width = self._plot_width
-        p.plot_height = self._plot_height
-
-        # -> other attributes are set via theme.yaml
-
-        # disable x grid lines
-        p.xgrid.grid_line_color = None
-
-        p.toolbar.logo = None  # hide the bokeh logo (we give credit at the
-        # bottom of the page)
-
-        # p.lod_threshold=None # turn off level-of-detail
-
-        # p.xaxis[0].ticker = BasicTicker(desired_num_ticks = 13)
-
-        # axis labels: format time
-        p.xaxis[0].formatter = FuncTickFormatter(code='''
-                            //func arguments: ticks, x_range
-                            // assume us ticks
-                            ms = Math.round(tick * 1000)
-                            sec = Math.floor(ms / 1000)
-                            minutes = Math.floor(sec / 60)
-                            hours = Math.floor(minutes / 60)
-                            ms = ms % 1000
-                            sec = sec % 60
-                            minutes = minutes % 60
-
-                            function pad(num, size) {
-                                var s = num+"";
-                                while (s.length < size) s = "0" + s;
-                                return s;
-                            }
-
-                            if (hours > 0) {
-                                var ret_val = hours + ":" + pad(minutes, 2) + ":" + pad(sec,2)
-                            } else {
-                                var ret_val = minutes + ":" + pad(sec,2);
-                            }
-                            if (x_range.end - x_range.start < 4) {
-                                ret_val = ret_val + "." + pad(ms, 3);
-                            }
-                            return ret_val;
-                        ''', args={'x_range': p.x_range})
-
-            # make it possible to hide graphs by clicking on the label
-            # p.legend.click_policy = "hide"
+        super(DataPlotSpec, self).__init__(data, config, data_name,x_axis_label=x_axis_label,
+                                           y_axis_label=y_axis_label,title=title, plot_height=plot_height,
+                                           x_range=x_range,y_range=y_range, topic_instance=topic_instance)
 
     def add_graph(self, field_names, legends, window='hann', window_length=256, noverlap=128):
         """ add a spectrogram plot to the graph
@@ -791,34 +700,19 @@ class DataPlotSpec(DataPlot):
                 sum_psd += psd[key]
 
             # offset = int(((1024/2.0)/250.0)*1e6)
-            # add start time as offset
-            start_t = self._cur_dataset.data['timestamp'][0]/1.0e6
-            time = time + start_t
-
-            # remove box zoom tool, to add a customized version later
-            str_box_zoom = "box_zoom"
-            str_begin = TOOLS.find(str_box_zoom)
-            if str_begin != -1:
-                updated_tools = TOOLS[:str_begin] + TOOLS[(str_begin+len(str_box_zoom)+1):]
-            else:
-                updated_tools = TOOLS
+            # scale time to microseconds and add start time as offset
+            time = time * 1.0e6 + self._cur_dataset.data['timestamp'][0]
 
             color_mapper = LinearColorMapper(palette=viridis(256), low=-80, high=0)
 
             image = [10 * np.log10(sum_psd)]
-            title = self._title
+            title = self.title
             for legend in legends:
                 title += " " + legend
             title += " [dB]"
-            self._p = figure(title=title, plot_width=self._plot_width, plot_height=self._plot_height,
-                             y_range=(frequency[0], frequency[-1]),
-                             x_axis_label=self._x_axis_label,
-                             y_axis_label=self._y_axis_label, toolbar_location='above',
-                             tools=updated_tools, active_scroll=ACTIVE_SCROLL_TOOLS)
-            if self._x_range is not None:
-                # we need a copy, otherwise x-axis zooming will be synchronized
-                # between all plots
-                self._p.x_range = Range1d(self._x_range.start/1.0e6, self._x_range.end/1.0e6)
+
+            self._p.y_range = Range1d(frequency[0], frequency[-1])
+            self._p.toolbar_location='above'
             self._p.image(image=image, x=time[0], y=frequency[0], dw=(time[-1]-time[0]),
                           dh=(frequency[-1]-frequency[0]), color_mapper=color_mapper)
             color_bar = ColorBar(color_mapper=color_mapper,
@@ -827,8 +721,11 @@ class DataPlotSpec(DataPlot):
                                  formatter=PrintfTickFormatter(format="%f"),
                                  label_standoff=6, border_line_color=None, location=(0, 0))
             self._p.add_layout(color_bar, 'right')
+
             # add plot zoom tool that only zooms in time axis
-            self._p.add_tools(BoxZoomTool(dimensions="width"))
+            wheel_zoom = WheelZoomTool()
+            self._p.toolbar.tools = [PanTool(), wheel_zoom, BoxZoomTool(dimensions="width"), ResetTool(), SaveTool()]   # updated_tools
+            self._p.toolbar.active_scroll = wheel_zoom
 
         except (KeyError, IndexError, ValueError) as error:
             print(type(error), "(" + self._data_name + "):", error)
