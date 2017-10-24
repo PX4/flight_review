@@ -711,7 +711,8 @@ class DataPlotSpec(DataPlot):
                 title += " " + legend
             title += " [dB]"
 
-            max_num_data_points = 1000
+            # assume maximal data points per pixel at full resolution
+            max_num_data_points = 2.0*self._config['plot_width']
             if len(time) > max_num_data_points:
                 step_size = int(len(time) / max_num_data_points)
                 time = time[::step_size]
