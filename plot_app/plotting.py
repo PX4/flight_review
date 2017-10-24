@@ -711,8 +711,14 @@ class DataPlotSpec(DataPlot):
                 title += " " + legend
             title += " [dB]"
 
+            max_num_data_points = 1000
+            if len(time) > max_num_data_points:
+                step_size = int(len(time) / max_num_data_points)
+                time = time[::step_size]
+                image[0] = image[0][:, ::step_size]
+
             self._p.y_range = Range1d(frequency[0], frequency[-1])
-            self._p.toolbar_location= 'above'
+            self._p.toolbar_location = 'above'
             self._p.image(image=image, x=time[0], y=frequency[0], dw=(time[-1]-time[0]),
                           dh=(frequency[-1]-frequency[0]), color_mapper=color_mapper)
             color_bar = ColorBar(color_mapper=color_mapper,
