@@ -365,9 +365,10 @@ class DataPlot:
     def title(self):
         """ return the bokeh title """
         if self._p is not None:
-            return self._p.title.text
+            title_text = self._p.title.text
         else:
-            return ""
+            title_text = ""
+        return title_text
 
     @property
     def bokeh_plot(self):
@@ -652,7 +653,7 @@ class DataPlot2D(DataPlot):
 class DataPlotSpec(DataPlot):
     """
     A spectrogram plot.
-    This does not do downsampling.
+    This does not do downsample dynamically.
     """
 
     def __init__(self, data, config, data_name, x_axis_label=None,
