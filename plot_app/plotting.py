@@ -653,7 +653,7 @@ class DataPlot2D(DataPlot):
 class DataPlotSpec(DataPlot):
     """
     A spectrogram plot.
-    This does not do downsample dynamically.
+    This does not downsample dynamically.
     """
 
     def __init__(self, data, config, data_name, x_axis_label=None,
