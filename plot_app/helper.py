@@ -69,6 +69,9 @@ def get_log_filename(log_id):
         return log_id
     return os.path.join(get_log_filepath(), log_id + '.ulg')
 
+
+__last_failed_downloads = {} # dict with key=file name and a timestamp of last failed download
+
 def download_file_maybe(filename, url):
     """ download an url to filename if it does not exist or it's older than a day.
         returns True if the file can be used
@@ -82,6 +85,10 @@ def download_file_maybe(filename, url):
     else:
         need_download = True
     if need_download:
+        if filename in __last_failed_downloads:
+            if time.time() < __last_failed_downloads[filename] + 30:
+                # don't try to download too often
+                return False
         print("Downloading "+url)
         try:
             # download to a temporary random file, then move to avoid race
@@ -91,6 +98,7 @@ def download_file_maybe(filename, url):
             shutil.move(temp_file_name, filename)
         except Exception as e:
             print("Download error: "+str(e))
+            __last_failed_downloads[filename] = time.time()
             return False
     return True
 
