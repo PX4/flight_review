@@ -20,7 +20,7 @@ from config import get_log_filepath, get_airframes_filename, get_airframes_url, 
 from pyulog import *
 from pyulog.px4 import *
 
-#pylint: disable=line-too-long, global-variable-not-assigned,invalid-name
+#pylint: disable=line-too-long, global-variable-not-assigned,invalid-name,global-statement
 
 def print_timing(name, start_time):
     """ for debugging: print elapsed time, with start_time = timer(). """
@@ -103,11 +103,10 @@ def download_file_maybe(filename, url):
     return True
 
 
-def get_airframe_data(airframe_id):
-    """ return a dict of aiframe data ('name' & 'type') from an autostart id.
-    Downloads aiframes if necessary. Returns None on error
+@lru_cache(maxsize=128)
+def __get_airframe_data(airframe_id):
+    """ cached version of get_airframe_data()
     """
-
     airframe_xml = get_airframes_filename()
     if download_file_maybe(airframe_xml, get_airframes_url()):
         try:
@@ -124,6 +123,18 @@ def get_airframe_data(airframe_id):
         except:
             pass
     return None
+
+__last_airframe_cache_clear_timestamp = 0
+def get_airframe_data(airframe_id):
+    """ return a dict of aiframe data ('name' & 'type') from an autostart id.
+    Downloads aiframes if necessary. Returns None on error
+    """
+    global __last_airframe_cache_clear_timestamp
+    current_time = time.time()
+    if current_time > __last_airframe_cache_clear_timestamp + 3600:
+        __last_airframe_cache_clear_timestamp = current_time
+        __get_airframe_data.cache_clear()
+    return __get_airframe_data(airframe_id)
 
 def get_sw_releases():
     """ return a JSON object of public releases.
