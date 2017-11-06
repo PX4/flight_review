@@ -155,6 +155,11 @@ class StatisticsPlots(object):
                     if self._verbose_output:
                         print('Warning: %s with version=v0.0.0' % log.log_id)
                     continue
+                if log.duration > 7*24*3600: # probably bogus timestamp(s)
+                    if self._verbose_output:
+                        print('Warning: %s with very high duration %i' %
+                              (log.log_id, log.duration))
+                    continue
 
                 if log.sw_version == '':
                     # FIXME: does that still occur and if so why?
