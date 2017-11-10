@@ -319,7 +319,9 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
                              changed_params=changed_params, x_range=x_range)
         data_plot.add_graph(['y', 'x', 'r', 'z',
                              lambda data: ('mode_slot', data['mode_slot']/6),
-                             'aux1', 'aux2', 'kill_switch'], colors8,
+                             'aux1', 'aux2',
+                             lambda data: ('kill_switch', data['kill_switch'] == 1)],
+                            colors8,
                             ['Y / Roll', 'X / Pitch', 'Yaw', 'Throttle [0, 1]',
                              'Flight Mode', 'Aux1', 'Aux2', 'Kill Switch'])
         # TODO: add RTL switch and others? Look at params which functions are mapped?
