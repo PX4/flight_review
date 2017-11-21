@@ -727,6 +727,7 @@ class DataPlotSpec(DataPlot):
                                  major_label_text_font_size="5pt",
                                  ticker=BasicTicker(desired_num_ticks=5),
                                  formatter=PrintfTickFormatter(format="%f"),
+                                 title='[dB]',
                                  label_standoff=6, border_line_color=None, location=(0, 0))
             self._p.add_layout(color_bar, 'right')
 
