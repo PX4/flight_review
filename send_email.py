@@ -56,8 +56,8 @@ Use the following link to delete the log:
     return _send_email(destination, subject, content)
 
 
-def send_flightreport_email(destination, plot_url, rating, wind_speed,
-                            delete_url, uploader_email, info):
+def send_flightreport_email(destination, plot_url, rating_description,
+                            wind_speed, delete_url, uploader_email, info):
     """ send notification email for a flight report upload """
 
     if len(destination) == 0:
@@ -71,7 +71,7 @@ A new flight report just got uploaded:
 
 Description: {description}
 Feedback: {feedback}
-Rating: {rating}
+Rating: {rating_description}
 Wind Speed: {wind_speed}
 Uploader: {uploader_email}
 
@@ -84,7 +84,7 @@ Software git hash: {software}
 Use the following link to delete the log:
 {delete_url}
 """.format(plot_url=plot_url,
-           rating=rating, wind_speed=wind_speed,
+           rating_description=rating_description, wind_speed=wind_speed,
            delete_url=delete_url, uploader_email=uploader_email, **info)
 
     description = info['description']
@@ -94,6 +94,8 @@ Use the following link to delete the log:
             description = "{:} - {:}".format(description, info['vehicle_name'])
 
     subject = "Flight Report uploaded ({:})".format(description)
+    if info['rating'] == 'crash_sw_hw':
+        subject = '[CRASH] '+subject
     if len(subject) > 78: # subject should not be longer than that
         subject = subject[:78]
 

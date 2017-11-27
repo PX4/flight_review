@@ -206,6 +206,7 @@ class UploadHandler(tornado.web.RequestHandler):
                 info['hardware'] = ''
                 info['uuid'] = ''
                 info['software'] = ''
+                info['rating'] = rating
                 if len(vehicle_name) > 0:
                     info['vehicle_name'] = vehicle_name
 
