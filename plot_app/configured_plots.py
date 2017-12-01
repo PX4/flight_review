@@ -523,26 +523,47 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
 
 
     # estimator watchdog
-    data_plot = DataPlot(data, plot_config, 'estimator_status',
-                         y_start=0, title='Estimator Watchdog',
-                         plot_height='small', changed_params=changed_params,
-                         x_range=x_range)
-    data_plot.add_graph(
-        ['nan_flags', 'health_flags', 'timeout_flags',
-         lambda data: ('innovation_check_flags_vel_pos', data['innovation_check_flags']&0x7),
-         lambda data: ('innovation_check_flags_mag', (data['innovation_check_flags']>>3)&0x7),
-         lambda data: ('innovation_check_flags_yaw', (data['innovation_check_flags']>>6)&0x3),
-         lambda data: ('innovation_check_flags_sideslip', (data['innovation_check_flags']>>8)&0x3),
-         lambda data: ('innovation_check_flags_flow', (data['innovation_check_flags']>>10)&0x3)],
-        colors8,
-        ['NaN Flags', 'Health Flags (vel, pos, hgt)',
-         'Timeout Flags (vel, pos, hgt)',
-         'Innovation Check Bits (vel, hor pos, vert pos)',
-         'Innovation Check Bits (mag X, Y, Z)',
-         'Innovation Check Bits (yaw, airspeed)',
-         'Innovation Check Bits (synthetic sideslip, height to ground)',
-         'Innovation Check Bits (optical flow X, Y)'])
-    if data_plot.finalize() is not None: plots.append(data_plot)
+    try:
+        data_plot = DataPlot(data, plot_config, 'estimator_status',
+                             y_start=0, title='Estimator Watchdog',
+                             plot_height='small', changed_params=changed_params,
+                             x_range=x_range)
+        estimator_status = ulog.get_dataset('estimator_status').data
+        plot_data = []
+        plot_labels = []
+        input_data = [
+            ('NaN Flags', estimator_status['nan_flags']),
+            ('Health Flags (vel, pos, hgt)', estimator_status['health_flags']),
+            ('Timeout Flags (vel, pos, hgt)', estimator_status['timeout_flags']),
+            ('Velocity Check Bit', (estimator_status['innovation_check_flags'])&0x1),
+            ('Horizontal Position Check Bit', (estimator_status['innovation_check_flags']>>1)&1),
+            ('Vertical Position Check Bit', (estimator_status['innovation_check_flags']>>2)&1),
+            ('Mag X, Y, Z Check Bits', (estimator_status['innovation_check_flags']>>3)&0x7),
+            ('Yaw Check Bit', (estimator_status['innovation_check_flags']>>6)&1),
+            ('Airspeed Check Bit', (estimator_status['innovation_check_flags']>>7)&1),
+            ('Synthetic Sideslip Check Bit', (estimator_status['innovation_check_flags']>>8)&1),
+            ('Height to Ground Check Bit', (estimator_status['innovation_check_flags']>>9)&1),
+            ('Optical Flow X, Y Check Bits', (estimator_status['innovation_check_flags']>>10)&0x3),
+            ]
+        # filter: show only the flags that have non-zero samples
+        for label, data in input_data:
+            if np.amax(data) > 0.1:
+                data_label = 'flags_'+str(len(plot_data)) # just some unique string
+                plot_data.append(lambda d, data=data, label=data_label: (label, data))
+                plot_labels.append(label)
+                if len(plot_data) >= 8: # cannot add more than that
+                    break
+
+        if len(plot_data) == 0:
+            # add the plot even in the absence of any problem, so that the user
+            # can validate that (otherwise it's ambiguous: it could be that the
+            # estimator_status topic is not logged)
+            plot_data = [lambda d: ('flags', input_data[0][1])]
+            plot_labels = [input_data[0][0]]
+        data_plot.add_graph(plot_data, colors8[0:len(plot_data)], plot_labels)
+        if data_plot.finalize() is not None: plots.append(data_plot)
+    except (KeyError, IndexError) as error:
+        print('Error in estimator plot: '+str(error))
 
 
 
