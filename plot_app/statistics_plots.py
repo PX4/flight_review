@@ -475,7 +475,7 @@ class StatisticsPlots(object):
         # group minor versions closer together by manipulating the x-position
         # (we could use the release dates but we don't have that information for
         # all versions)
-        grouping_factor = 5 # higher=stronger grouping, 0=disabled
+        grouping_factor = 3 # higher=stronger grouping, 0=disabled
         versions_spaced = []
         prev_version = versions[0]
         for i in range(len(versions)):
