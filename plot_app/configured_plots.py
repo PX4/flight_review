@@ -546,11 +546,11 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
             ('Optical Flow X, Y Check Bits', (estimator_status['innovation_check_flags']>>10)&0x3),
             ]
         # filter: show only the flags that have non-zero samples
-        for label, data in input_data:
-            if np.amax(data) > 0.1:
+        for cur_label, cur_data in input_data:
+            if np.amax(cur_data) > 0.1:
                 data_label = 'flags_'+str(len(plot_data)) # just some unique string
-                plot_data.append(lambda d, data=data, label=data_label: (label, data))
-                plot_labels.append(label)
+                plot_data.append(lambda d, data=cur_data, label=data_label: (label, data))
+                plot_labels.append(cur_label)
                 if len(plot_data) >= 8: # cannot add more than that
                     break
 
