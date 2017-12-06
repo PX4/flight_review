@@ -25,6 +25,31 @@ function navigate(fragment) {
 
 {% if is_plot_page %}
 
+function showStartLoggingTime() {
+	// Show Logging start: convert timestamp to local time
+	var logging_span = $('#logging-start-element');
+	if (logging_span.is(":visible")) {
+		setTimeout(showStartLoggingTime, 500);
+		return;
+	}
+
+	var d = new Date(0);
+	d.setUTCSeconds(logging_span.text());
+	var date_str = ("0" + d.getDate()).slice(-2) + "-" +
+		("0"+(d.getMonth()+1)).slice(-2) + "-" + d.getFullYear() + " " +
+		("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
+	logging_span.text(date_str);
+	logging_span.show();
+	// FIXME: yes this is ugly: we check every 500ms for a change. Because there
+	// are some events that lead to a reloading of the DOM elements, which will
+	// reset the logging_span to the hidden state.
+	// An alternative would be to use MutationObserver(), or better some bokeh
+	// on_redraw/on_reset event (I did not see any...)
+	setTimeout(showStartLoggingTime, 500);
+}
+
+setTimeout(showStartLoggingTime, 500);
+
 function setupPlots() {
 	// do necessary setup after plots are loaded
 

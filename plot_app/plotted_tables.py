@@ -120,21 +120,9 @@ def get_heading_and_info(ulog, px4_ulog, plot_width, db_data, vehicle_data, vtol
             # we use the timestamp from the log and then convert it with JS to
             # display with local timezone
             logging_start_time = int(gps_data.data['time_utc_usec'][indices[0][0]] / 1000000)
-            js_code = """
-<script type="text/javascript">
-    var logging_span = $('#logging-start-element');
-    var d = new Date(0);
-    d.setUTCSeconds(logging_span.text());
-    var date_str = ("0" + d.getDate()).slice(-2) + "-" +
-                   ("0"+(d.getMonth()+1)).slice(-2) + "-" + d.getFullYear() + " " +
-                   ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
-    logging_span.text(date_str);
-    logging_span.show();
-</script>
-"""
             table_text_left.append(('Logging Start',
                                     '<span style="display:none" id="logging-start-element">'+
-                                    str(logging_start_time)+'</span>'+js_code))
+                                    str(logging_start_time)+'</span>'))
     except:
         # Ignore. Eg. if topic not found
         pass

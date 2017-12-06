@@ -63,7 +63,7 @@ def plot_parameter_changes(p, plots_height, changed_parameters):
         else:
             names.append('⦁ ' + name + ': {:.2f}'.format(value))
         # try to avoid overlapping text (TODO: do something more clever, dynamic?)
-        y_values.append(plots_height - 50 - (i % 4) * 10)
+        y_values.append(plots_height - 70 - (i % 4) * 10)
         i += 1
 
     if len(names) > 0:
@@ -81,7 +81,7 @@ def plot_parameter_changes(p, plots_height, changed_parameters):
 def plot_flight_modes_background(p, flight_mode_changes, vtol_states=None):
     """ plot flight modes as filling background (with different colors) to bokeh
         plot p """
-    vtol_state_height = 60
+    vtol_state_height = 40
     added_box_annotation_args = {}
     if vtol_states is not None:
         added_box_annotation_args['bottom'] = vtol_state_height
@@ -108,7 +108,7 @@ def plot_flight_modes_background(p, flight_mode_changes, vtol_states=None):
         # use screen coords so that the label always stays. It's a bit
         # unfortunate that the x position includes the x-offset of the y-axis,
         # which depends on the axis labels (e.g. 4.000e+5 creates a large offset)
-        label = Label(x=83, y=32, x_units='screen', y_units='screen',
+        label = Label(x=83, y=12, x_units='screen', y_units='screen',
                       text='VTOL mode', text_font_size='10pt', level='glyph',
                       background_fill_color='white', background_fill_alpha=0.8)
         p.add_layout(label)
@@ -188,7 +188,7 @@ def plot_map(ulog, config, map_type='plain', api_key=None, setpoints=False,
             # possible map types: satellite, roadmap, terrain, hybrid
 
             p = GMapPlot(
-                x_range=DataRange1d(), y_range=DataRange1d(), map_options=map_options,
+                x_range=Range1d(), y_range=Range1d(), map_options=map_options,
                 api_key=api_key, plot_width=plots_width, plot_height=plots_height
             )
 
