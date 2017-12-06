@@ -10,7 +10,7 @@ from bokeh.plotting import figure
 from bokeh.palettes import viridis # alternatives: magma, inferno
 from bokeh.models import (
     DatetimeTickFormatter, FixedTicker, FuncTickFormatter,
-    HoverTool, ColumnDataSource, LabelSet, CustomJS
+    HoverTool, ColumnDataSource, LabelSet #, CustomJS
     )
 
 from plotting import TOOLS, ACTIVE_SCROLL_TOOLS
@@ -332,7 +332,8 @@ class StatisticsPlots(object):
                     }
                     source.trigger('change');
                 """
-                p.y_range.callback = CustomJS(args=dict(source=source), code=jscode)
+# FIXME: this is broken on bokeh 0.12.12
+#                p.y_range.callback = CustomJS(args=dict(source=source), code=jscode)
 
         self._setup_plot(p, 'large')
 
