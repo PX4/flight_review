@@ -183,7 +183,8 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
                             colors2[0:1], [axis_name+' Estimated'], mark_nan=True)
         data_plot.change_dataset('vehicle_attitude_setpoint')
         data_plot.add_graph([lambda data: (axis+'_d', np.rad2deg(data[axis+'_d']))],
-                            colors2[1:2], [axis_name+' Setpoint'], mark_nan=True)
+                            colors2[1:2], [axis_name+' Setpoint'],
+                            mark_nan=True, use_step_lines=True)
         data_plot.change_dataset('vehicle_attitude_groundtruth')
         data_plot.add_graph([lambda data: (axis, np.rad2deg(data[axis]))],
                             [color_gray], [axis_name+' Groundtruth'])
@@ -200,7 +201,8 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
                             colors2[0:1], [axis_name+' Rate Estimated'], mark_nan=True)
         data_plot.change_dataset('vehicle_rates_setpoint')
         data_plot.add_graph([lambda data: (axis, np.rad2deg(data[axis]))],
-                            colors2[1:2], [axis_name+' Rate Setpoint'], mark_nan=True)
+                            colors2[1:2], [axis_name+' Rate Setpoint'],
+                            mark_nan=True, use_step_lines=True)
         data_plot.change_dataset('vehicle_attitude_groundtruth')
         data_plot.add_graph([lambda data: (axis+'speed', np.rad2deg(data[axis+'speed']))],
                             [color_gray], [axis_name+' Rate Groundtruth'])
@@ -218,7 +220,8 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
                              x_range=x_range)
         data_plot.add_graph([axis], colors2[0:1], [axis.upper()+' Estimated'], mark_nan=True)
         data_plot.change_dataset('vehicle_local_position_setpoint')
-        data_plot.add_graph([axis], colors2[1:2], [axis.upper()+' Setpoint'], mark_nan=True)
+        data_plot.add_graph([axis], colors2[1:2], [axis.upper()+' Setpoint'],
+                            mark_nan=True, use_step_lines=True)
         plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
 
         if data_plot.finalize() is not None: plots.append(data_plot)

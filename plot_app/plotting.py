@@ -406,13 +406,16 @@ class DataPlot:
             self._cur_dataset = None
 
 
-    def add_graph(self, field_names, colors, legends, use_downsample=True, mark_nan=False):
+    def add_graph(self, field_names, colors, legends, use_downsample=True,
+                  mark_nan=False, use_step_lines=False):
         """ add 1 or more lines to a graph
 
         field_names can be a list of fields from the data set, or a list of
         functions with the data set as argument and returning a tuple of
         (field_name, data)
         :param mark_nan: if True, add an indicator to the plot when one of the graphs is NaN
+        :param use_step_lines: if True, render step lines (after each point)
+        instead of rendering a straight line to the next point
         """
         if self._had_error: return
         try:
@@ -460,8 +463,13 @@ class DataPlot:
                 data_source = ColumnDataSource(data=data_set)
 
             for field_name, color, legend in zip(field_names_expanded, colors, legends):
-                p.line(x='timestamp', y=field_name, source=data_source,
-                       legend=legend, line_width=2, line_color=color)
+                if use_step_lines:
+                    p.step(x='timestamp', y=field_name, source=data_source,
+                           legend=legend, line_width=2, line_color=color,
+                           mode="after")
+                else:
+                    p.line(x='timestamp', y=field_name, source=data_source,
+                           legend=legend, line_width=2, line_color=color)
 
         except (KeyError, IndexError, ValueError) as error:
             print(type(error), "("+self._data_name+"):", error)
