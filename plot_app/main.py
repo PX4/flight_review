@@ -196,7 +196,8 @@ else:
             error_message = ('<h3>Internal Server Error</h3>'
                              '<p>Please open an issue on <a '
                              'href="https://github.com/PX4/flight_review/issues" target="_blank">'
-                             'https://github.com/PX4/flight_review/issues</a> with a link to this log.')
+                             'https://github.com/PX4/flight_review/issues</a> with a link '
+                             'to this log.')
             div = Div(text="<h3>"+error_message+"</h3>", width=int(plot_width*0.9))
             plots = [widgetbox(div, width=int(plot_width*0.9))]
 
