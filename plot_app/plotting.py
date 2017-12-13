@@ -690,6 +690,7 @@ class DataPlotSpec(DataPlot):
             data_set['timestamp'] = self._cur_dataset.data['timestamp']
 
             # calculate the sampling frequency
+            # (Note: logging dropouts are not taken into account here)
             delta_t = ((data_set['timestamp'][-1] - data_set['timestamp'][0]) * 1.0e-6) / len(data_set['timestamp'])
             sampling_frequency = int(1.0 / delta_t)
 
@@ -744,6 +745,7 @@ class DataPlotSpec(DataPlot):
             self._p.toolbar.tools = [PanTool(), wheel_zoom, BoxZoomTool(dimensions="width"), ResetTool(), SaveTool()]   # updated_tools
             self._p.toolbar.active_scroll = wheel_zoom
 
-        except (KeyError, IndexError, ValueError) as error:
+        except (KeyError, IndexError, ValueError, ZeroDivisionError) as error:
             print(type(error), "(" + self._data_name + "):", error)
             self._had_error = True
+
