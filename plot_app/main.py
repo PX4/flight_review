@@ -3,6 +3,7 @@
 from timeit import default_timer as timer
 import sys
 import sqlite3
+import traceback
 
 from bokeh.io import curdoc
 from bokeh.layouts import column, widgetbox
@@ -180,10 +181,24 @@ else:
             ]
         curdoc().template_variables['vtol_modes'] = vtol_modes
 
-        plots = generate_plots(ulog, px4_ulog, db_data, vehicle_data)
+        try:
+            plots = generate_plots(ulog, px4_ulog, db_data, vehicle_data)
 
-        title = 'Flight Review - '+px4_ulog.get_mav_type()
+            title = 'Flight Review - '+px4_ulog.get_mav_type()
 
+        except Exception as error:
+            # catch all errors to avoid showing a blank page. Note that if we
+            # get here, there's a bug somewhere that needs to be fixed!
+            traceback.print_exc()
+
+            title = 'Internal Error'
+
+            error_message = ('<h3>Internal Server Error</h3>'
+                             '<p>Please open an issue on <a '
+                             'href="https://github.com/PX4/flight_review/issues" target="_blank">'
+                             'https://github.com/PX4/flight_review/issues</a> with a link to this log.')
+            div = Div(text="<h3>"+error_message+"</h3>", width=int(plot_width*0.9))
+            plots = [widgetbox(div, width=int(plot_width*0.9))]
 
     else:
 
