@@ -11,6 +11,7 @@ from bokeh.models import (
     )
 from bokeh.palettes import viridis
 from bokeh.models.widgets import DataTable, DateFormatter, TableColumn
+from bokeh import events
 
 from downsampling import DynamicDownsample
 import numpy as np
@@ -63,6 +64,7 @@ def plot_parameter_changes(p, plots_height, changed_parameters):
         else:
             names.append('⦁ ' + name + ': {:.2f}'.format(value))
         # try to avoid overlapping text (TODO: do something more clever, dynamic?)
+        # (when changing this, make sure there's no overlap with flight mode labels)
         y_values.append(plots_height - 70 - (i % 4) * 10)
         i += 1
 
@@ -78,23 +80,70 @@ def plot_parameter_changes(p, plots_height, changed_parameters):
     return None
 
 
-def plot_flight_modes_background(p, flight_mode_changes, vtol_states=None):
-    """ plot flight modes as filling background (with different colors) to bokeh
-        plot p """
+def plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states=None):
+    """ plot flight modes as filling background (with different colors) to a
+    DataPlot object """
     vtol_state_height = 40
     added_box_annotation_args = {}
+    p = data_plot.bokeh_plot
     if vtol_states is not None:
         added_box_annotation_args['bottom'] = vtol_state_height
         added_box_annotation_args['bottom_units'] = 'screen'
+    annotations = []
+    labels_y_pos = []
+    labels_x_pos = []
+    labels_text = []
+    labels_color = []
+    labels_y_offset = data_plot.plot_height - 60
+    if data_plot.has_param_change_labels:
+        # make sure there's no overlap with changed parameter labels
+        labels_y_offset -= 10 + 4 * 10
+
     for i in range(len(flight_mode_changes)-1):
         t_start, mode = flight_mode_changes[i]
         t_end, mode_next = flight_mode_changes[i + 1]
         if mode in flight_modes_table:
             mode_name, color = flight_modes_table[mode]
-            p.add_layout(BoxAnnotation(left=int(t_start), right=int(t_end),
+            annotation = BoxAnnotation(left=int(t_start), right=int(t_end),
                                        fill_alpha=0.09, line_color=None,
                                        fill_color=color,
-                                       **added_box_annotation_args))
+                                       **added_box_annotation_args)
+            annotations.append(annotation)
+            p.add_layout(annotation)
+
+            if flight_mode_changes[i+1][0] - t_start > 1e6: # filter fast
+                                                 # switches to avoid overlap
+                labels_text.append(mode_name)
+                labels_x_pos.append(t_start)
+                labels_y_pos.append(labels_y_offset)
+                labels_color.append(color)
+
+
+    # plot flight mode names as labels
+    # they're only visible when the mouse is over the plot
+    if len(labels_text) > 0:
+        source = ColumnDataSource(data=dict(x=labels_x_pos, text=labels_text,
+                                            y=labels_y_pos, textcolor=labels_color))
+        labels = LabelSet(x='x', y='y', text='text',
+                          y_units='screen', level='underlay',
+                          source=source, render_mode='canvas',
+                          text_font_size='10pt',
+                          text_color='textcolor', text_alpha=0.85,
+                          background_fill_color='white',
+                          background_fill_alpha=0.8, angle=90/180*np.pi,
+                          text_align='right', text_baseline='top')
+        labels.visible = False # initially hidden
+        p.add_layout(labels)
+
+        # callback doc: https://bokeh.pydata.org/en/latest/docs/user_guide/interaction/callbacks.html
+        code = """
+        labels.visible = cb_obj.event_name == "mouseenter";
+        """
+        callback = CustomJS(args=dict(labels=labels), code=code)
+        p.js_on_event(events.MouseEnter, callback)
+        p.js_on_event(events.MouseLeave, callback)
+
+
     if vtol_states is not None:
         for i in range(len(vtol_states)-1):
             t_start, mode = vtol_states[i]
@@ -381,6 +430,11 @@ class DataPlot:
         return self._param_change_label
 
     @property
+    def has_param_change_labels(self):
+        """ Does the plot have changed parameter labels? """
+        return self._param_change_label is not None
+
+    @property
     def had_error(self):
         """ Returns true if the previous plotting calls had an error (e.g. due
         to missing data in the log) """
@@ -538,6 +592,11 @@ class DataPlot:
             return None
         self._setup_plot()
         return self._p
+
+    @property
+    def plot_height(self):
+        """ get the height of the plot in screen pixels """
+        return self._config['plot_height'][self._plot_height_name]
 
     def _setup_plot(self):
         plots_width = self._config['plot_width']
