@@ -481,10 +481,13 @@ class StatisticsPlots(object):
         prev_version = versions[0]
         for i in range(len(versions)):
             version = versions[i]
-            if prev_version.split('.')[0:2] != version.split('.')[0:2]:
+            if prev_version.split('.')[0:2] == version.split('.')[0:2]:
+                version_display = 'x.'+version.split('.')[2]
+            else:
                 versions_spaced.extend(['']*grouping_factor)
+                version_display = version
             data_hours['x'][i] = len(versions_spaced)
-            versions_spaced.append(version)
+            versions_spaced.append(version_display)
             prev_version = version
 
         # hover tool
