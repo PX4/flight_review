@@ -722,6 +722,8 @@ class DataPlotSpec(DataPlot):
     """
     A spectrogram plot.
     This does not downsample dynamically.
+
+    A spectrogram plot is only added to the plotting page if the sampling frequency of the dataset is higher than 100Hz.
     """
 
     def __init__(self, data, config, data_name, x_axis_label=None,
@@ -754,56 +756,59 @@ class DataPlotSpec(DataPlot):
             delta_t = ((data_set['timestamp'][-1] - data_set['timestamp'][0]) * 1.0e-6) / len(data_set['timestamp'])
             sampling_frequency = int(1.0 / delta_t)
 
-            field_names_expanded = self._expand_field_names(field_names, data_set)
+            if sampling_frequency < 100:
+                self._had_error = True
+            else:
+                field_names_expanded = self._expand_field_names(field_names, data_set)
 
-            # calculate the spectrogram
-            psd = dict()
-            for key in field_names_expanded:
-                frequency, time, psd[key] = signal.spectrogram(
-                    data_set[key], fs=sampling_frequency, window=window,
-                    nperseg=window_length, noverlap=noverlap, scaling='density')
+                # calculate the spectrogram
+                psd = dict()
+                for key in field_names_expanded:
+                    frequency, time, psd[key] = signal.spectrogram(
+                        data_set[key], fs=sampling_frequency, window=window,
+                        nperseg=window_length, noverlap=noverlap, scaling='density')
 
-            # sum all psd's
-            key_it = iter(psd)
-            sum_psd = psd[next(key_it)]
-            for key in key_it:
-                sum_psd += psd[key]
+                # sum all psd's
+                key_it = iter(psd)
+                sum_psd = psd[next(key_it)]
+                for key in key_it:
+                    sum_psd += psd[key]
 
-            # offset = int(((1024/2.0)/250.0)*1e6)
-            # scale time to microseconds and add start time as offset
-            time = time * 1.0e6 + self._cur_dataset.data['timestamp'][0]
+                # offset = int(((1024/2.0)/250.0)*1e6)
+                # scale time to microseconds and add start time as offset
+                time = time * 1.0e6 + self._cur_dataset.data['timestamp'][0]
 
-            color_mapper = LinearColorMapper(palette=viridis(256), low=-80, high=0)
+                color_mapper = LinearColorMapper(palette=viridis(256), low=-80, high=0)
 
-            image = [10 * np.log10(sum_psd)]
-            title = self.title
-            for legend in legends:
-                title += " " + legend
-            title += " [dB]"
+                image = [10 * np.log10(sum_psd)]
+                title = self.title
+                for legend in legends:
+                    title += " " + legend
+                title += " [dB]"
 
-            # assume maximal data points per pixel at full resolution
-            max_num_data_points = 2.0*self._config['plot_width']
-            if len(time) > max_num_data_points:
-                step_size = int(len(time) / max_num_data_points)
-                time = time[::step_size]
-                image[0] = image[0][:, ::step_size]
+                # assume maximal data points per pixel at full resolution
+                max_num_data_points = 2.0*self._config['plot_width']
+                if len(time) > max_num_data_points:
+                    step_size = int(len(time) / max_num_data_points)
+                    time = time[::step_size]
+                    image[0] = image[0][:, ::step_size]
 
-            self._p.y_range = Range1d(frequency[0], frequency[-1])
-            self._p.toolbar_location = 'above'
-            self._p.image(image=image, x=time[0], y=frequency[0], dw=(time[-1]-time[0]),
-                          dh=(frequency[-1]-frequency[0]), color_mapper=color_mapper)
-            color_bar = ColorBar(color_mapper=color_mapper,
-                                 major_label_text_font_size="5pt",
-                                 ticker=BasicTicker(desired_num_ticks=5),
-                                 formatter=PrintfTickFormatter(format="%f"),
-                                 title='[dB]',
-                                 label_standoff=6, border_line_color=None, location=(0, 0))
-            self._p.add_layout(color_bar, 'right')
+                self._p.y_range = Range1d(frequency[0], frequency[-1])
+                self._p.toolbar_location = 'above'
+                self._p.image(image=image, x=time[0], y=frequency[0], dw=(time[-1]-time[0]),
+                              dh=(frequency[-1]-frequency[0]), color_mapper=color_mapper)
+                color_bar = ColorBar(color_mapper=color_mapper,
+                                     major_label_text_font_size="5pt",
+                                     ticker=BasicTicker(desired_num_ticks=5),
+                                     formatter=PrintfTickFormatter(format="%f"),
+                                     title='[dB]',
+                                     label_standoff=6, border_line_color=None, location=(0, 0))
+                self._p.add_layout(color_bar, 'right')
 
-            # add plot zoom tool that only zooms in time axis
-            wheel_zoom = WheelZoomTool()
-            self._p.toolbar.tools = [PanTool(), wheel_zoom, BoxZoomTool(dimensions="width"), ResetTool(), SaveTool()]   # updated_tools
-            self._p.toolbar.active_scroll = wheel_zoom
+                # add plot zoom tool that only zooms in time axis
+                wheel_zoom = WheelZoomTool()
+                self._p.toolbar.tools = [PanTool(), wheel_zoom, BoxZoomTool(dimensions="width"), ResetTool(), SaveTool()]   # updated_tools
+                self._p.toolbar.active_scroll = wheel_zoom
 
         except (KeyError, IndexError, ValueError, ZeroDivisionError) as error:
             print(type(error), "(" + self._data_name + "):", error)
