@@ -52,6 +52,7 @@ with con:
                 "Feedback TEXT, " # additional feedback
                 "Type TEXT, " # upload type: 'personal' (or '') or 'flightreport'
                 "VideoUrl TEXT, "
+                "ErrorLabel TEXT, " # the type of error (if any) that occurred during flight
                 "Public INT, " # if 1 this log can be publicly listed
                 "Token TEXT, " # Security token (currently used to delete the entry)
                 "CONSTRAINT Id_PK PRIMARY KEY (Id))")
@@ -76,6 +77,9 @@ with con:
         if not 'VideoUrl' in column_names:
             print('Adding column VideoUrl')
             cur.execute("ALTER TABLE Logs ADD COLUMN VideoUrl TEXT DEFAULT ''")
+        if not 'ErrorLabel' in column_names:
+            print('Adding column ErrorLabel')
+            cur.execute("ALTER TABLE Logs ADD COLUMN ErrorLabel TEXT DEFAULT ''")
         if not 'Public' in column_names:
             print('Adding column Public')
             cur.execute("ALTER TABLE Logs ADD COLUMN Public INT DEFAULT 0")

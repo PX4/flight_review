@@ -110,6 +110,7 @@ extra_patterns = [
     (r'/?', UploadHandler), #root should point to upload
     (r'/download', DownloadHandler),
     (r'/dbinfo', DBInfoHandler),
+    (r'/error_label', UpdateErrorLabelHandler),
     (r"/stats", RedirectHandler, {"url": "/plot_app?stats=1"}),
 ]
 
