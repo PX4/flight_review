@@ -13,11 +13,12 @@ from bokeh.server.server import Server
 from bokeh.application.handlers import DirectoryHandler
 # this is needed for the following imports
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'plot_app'))
-from helper import set_log_id_is_filename, print_cache_info
-from config import debug_print_timing
 from tornado.web import RedirectHandler
 from tornado_handlers import DownloadHandler, UploadHandler, BrowseHandler, \
     EditEntryHandler, DBInfoHandler
+
+from helper import set_log_id_is_filename, print_cache_info
+from config import debug_print_timing
 
 #pylint: disable=invalid-name
 

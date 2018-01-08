@@ -2,8 +2,8 @@
 
 from timeit import default_timer as timer
 import numpy as np
-from helper import print_timing
 from bokeh.models import ColumnDataSource
+from helper import print_timing
 
 
 class DynamicDownsample:

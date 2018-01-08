@@ -2,10 +2,10 @@
 
 import cgi # for html escaping
 
-from helper import get_log_filename, load_ulog_file
-
 from pyulog import *
 from pyulog.px4 import *
+
+from helper import get_log_filename, load_ulog_file
 
 #pylint: disable=missing-docstring, deprecated-method, too-few-public-methods
 

@@ -13,9 +13,10 @@ from bokeh.palettes import viridis
 from bokeh.models.widgets import DataTable, DateFormatter, TableColumn
 from bokeh import events
 
-from downsampling import DynamicDownsample
 import numpy as np
 from scipy import signal
+
+from downsampling import DynamicDownsample
 from helper import (
     map_projection, WGS84_to_mercator, flight_modes_table, vtol_modes_table
     )

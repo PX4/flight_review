@@ -12,13 +12,14 @@ import xml.etree.ElementTree # airframe parsing
 import shutil
 import uuid
 import numpy as np
+
+from pyulog import *
+from pyulog.px4 import *
+
 from config import get_log_filepath, get_airframes_filename, get_airframes_url, \
                    get_parameters_filename, get_parameters_url, \
                    get_log_cache_size, debug_print_timing, \
                    get_releases_filename
-
-from pyulog import *
-from pyulog.px4 import *
 
 #pylint: disable=line-too-long, global-variable-not-assigned,invalid-name,global-statement
 
