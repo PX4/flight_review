@@ -40,6 +40,7 @@ function showStartLoggingTime() {
 		("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
 	logging_span.text(date_str);
 	logging_span.show();
+	$('[data-toggle="tooltip"]').tooltip({html: true});
 	// FIXME: yes this is ugly: we check every 500ms for a change. Because there
 	// are some events that lead to a reloading of the DOM elements, which will
 	// reset the logging_span to the hidden state.
@@ -128,7 +129,7 @@ $(function() { //on startup
 
 $(document).ready(function(){
 	// initialize the tooltip's
-	$('[data-toggle="tooltip"]').tooltip();
+	$('[data-toggle="tooltip"]').tooltip({html: true});
 });
 
 /* resize the plots */

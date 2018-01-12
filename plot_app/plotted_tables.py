@@ -2,6 +2,7 @@
 
 import cgi # for html escaping
 from math import sqrt
+import datetime
 
 import numpy as np
 
@@ -118,11 +119,27 @@ def get_heading_and_info(ulog, px4_ulog, plot_width, db_data, vehicle_data, vtol
         indices = np.nonzero(gps_data.data['time_utc_usec'])
         if len(indices[0]) > 0:
             # we use the timestamp from the log and then convert it with JS to
-            # display with local timezone
+            # display with local timezone.
+            # In addition we add a tooltip to show the timezone from the log
             logging_start_time = int(gps_data.data['time_utc_usec'][indices[0][0]] / 1000000)
-            table_text_left.append(('Logging Start',
-                                    '<span style="display:none" id="logging-start-element">'+
-                                    str(logging_start_time)+'</span>'))
+
+            utc_offset_min = ulog.initial_parameters.get('SDLOG_UTC_OFFSET', 0)
+            utctimestamp = datetime.datetime.utcfromtimestamp(
+                logging_start_time+utc_offset_min*60).replace(tzinfo=datetime.timezone.utc)
+
+            tooltip = '''This is your local timezone.
+<br />
+Log timezone: {}
+<br />
+SDLOG_UTC_OFFSET: {}'''.format(utctimestamp.strftime('%d-%m-%Y %H:%M'), utc_offset_min)
+            tooltip = 'data-toggle="tooltip" data-delay=\'{"show":0, "hide":100}\' '+ \
+                'title="'+tooltip+'" '
+            table_text_left.append(
+                ('Logging Start '+
+                 '<i '+tooltip+' class="fa fa-question" aria-hidden="true" '+
+                 'style="font-size: larger; color:#666"></i>',
+                 '<span style="display:none" id="logging-start-element">'+
+                 str(logging_start_time)+'</span>'))
     except:
         # Ignore. Eg. if topic not found
         pass
@@ -298,7 +315,8 @@ def get_heading_and_info(ulog, px4_ulog, plot_width, db_data, vehicle_data, vtol
         if tooltip is None:
             tooltip = ''
         else:
-            tooltip = 'data-toggle="tooltip" delay="{show: 500, hide: 100}" title="'+tooltip+'" '
+            tooltip = 'data-toggle="tooltip" data-placement="left" '+ \
+                'data-delay=\'{"show": 1000, "hide": 100}\' title="'+tooltip+'" '
         table = '<table '+tooltip
         if max_width is not None:
             table += ' style="max-width: '+max_width+';"'
