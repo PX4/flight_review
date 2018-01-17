@@ -301,7 +301,8 @@ class StatisticsPlots(object):
                     release_date_str = release['published_at']
                     release_date = datetime.datetime.strptime(release_date_str,
                                                               "%Y-%m-%dT%H:%M:%SZ")
-                    if release_date > first_date and not 'rc' in tag.lower():
+                    if release_date > first_date and not 'rc' in tag.lower() \
+                        and not 'beta' in tag.lower():
                         release_dict['dates'].append(release_date)
                         release_dict['tags'].append(tag)
                         release_dict['y'].append(y_pos)
