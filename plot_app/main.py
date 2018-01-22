@@ -49,10 +49,13 @@ if GET_arguments is not None and 'stats' in GET_arguments:
     plots.append(widgetbox(div_info))
 
     div = Div(text="<h3>Flight Report Logs <small>(Public Logs only)</small></h3>")
-    # TODO add a per version table?
     div_info = Div(text="Total Flight Hours over all versions: %.1f"%
                    statistics.total_public_flight_duration())
-    plots.append(widgetbox([div, div_info]))
+    div_info_release = Div(text="Total Flight Hours for the latest major" \
+            " release %s (starting from the first RC candidate): %.1f"%
+                           (statistics.latest_major_release()+'.x',
+                            statistics.total_public_flight_duration_latest_release()))
+    plots.append(widgetbox([div, div_info, div_info_release]))
 
     p = statistics.plot_public_airframe_statistics()
     plots.append(p)

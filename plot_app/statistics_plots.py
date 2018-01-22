@@ -180,6 +180,8 @@ class StatisticsPlots(object):
         self._all_ratings = set()
         self._all_flight_modes = set()
         self._total_duration = 0 # in hours, public logs only
+        self._total_last_version_duration = 0 # in hours, public logs only
+        self._latest_major_release = ""
 
         for log in self._public_logs:
             if not log.sw_version in self._version_data:
@@ -222,6 +224,16 @@ class StatisticsPlots(object):
             ratings[log.rating] += 1
 
             self._total_duration += log.duration / 3600.
+
+
+        if len(self._version_data) > 0:
+            latest_version = sorted(
+                self._version_data, key=functools.cmp_to_key(_Log.compare_version))[-1]
+            latest_major_version = latest_version.split('.')[0:2]
+            self._latest_major_release = '.'.join(latest_major_version)
+            for log in self._public_logs:
+                if log.sw_version.split('.')[0:2] == latest_major_version:
+                    self._total_last_version_duration += log.duration / 3600.
 
     def num_logs_total(self):
         """ get the total number of logs on the server """
@@ -344,6 +356,14 @@ class StatisticsPlots(object):
         """ get total public flight hours """
         return self._total_duration
 
+    def total_public_flight_duration_latest_release(self):
+        """ get total public flight hours for the latest major release (includes
+            all minor releases & RC candidates. """
+        return self._total_last_version_duration
+
+    def latest_major_release(self):
+        """ get the version of the latest major release in the form 'v1.2'. """
+        return self._latest_major_release
 
     def plot_public_boards_statistics(self):
         """
