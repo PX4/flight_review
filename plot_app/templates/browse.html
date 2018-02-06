@@ -13,7 +13,23 @@ this script</a> for automated download of public log files.
 </p>
 
 <table id="logs_table" class="table table-striped table-bordered table-condensed">
-	{{ table_data }}
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Upload Date</th>
+                <th>Description</th>
+                <th>Type</th>
+                <th>Airframe</th>
+                <th>Hardware</th>
+                <th>Software</th>
+                <th>Duration</th>
+                <th>Rating</th>
+                <th>Errors</th>
+                <th>Flight Modes</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
 </table>
 
 
@@ -32,7 +48,8 @@ this script</a> for automated download of public log files.
 
 $(document).ready(function() {
 	$('#logs_table').DataTable({
-		"order": [[0, 'desc']],
+		/* "order": [[0, 'desc']], */
+		"ordering": false, // ordering currently not implemented by server
 
 		"columns": [
 			null,
@@ -46,7 +63,10 @@ $(document).ready(function() {
 			{ "width": "13%" }, /* rating */
 			null,
 			{ "width": "11%" } /* flight modes */
-		]
+		],
+
+		"serverSide": true,
+		"ajax": "browse_data_retrieval"
 	});
 } );
 

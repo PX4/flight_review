@@ -534,42 +534,30 @@ def generate_db_data_from_log_file(log_id, db_connection=None):
 
     return db_data_gen
 
-
-class BrowseHandler(tornado.web.RequestHandler):
-    """ Browse public log file Tornado request handler """
+class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
+    """ Ajax data retrieval handler """
 
     def get(self, *args, **kwargs):
-        table_header = """
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Upload Date</th>
-                <th>Description</th>
-                <th>Type</th>
-                <th>Airframe</th>
-                <th>Hardware</th>
-                <th>Software</th>
-                <th>Duration</th>
-                <th>Rating</th>
-                <th>Errors</th>
-                <th>Flight Modes</th>
-            </tr>
-        </thead>
-        <tbody>
-        """
-        table_footer = "</tbody>"
-        table_data = ""
+        search_str = self.get_argument('search[value]', '').lower()
+        data_start = int(self.get_argument('start'))
+        data_length = int(self.get_argument('length'))
+        draw_counter = int(self.get_argument('draw'))
+
+        json_output = dict()
+        json_output['draw'] = draw_counter
+
 
         # get the logs (but only the public ones)
         con = sqlite3.connect(get_db_filename(), detect_types=sqlite3.PARSE_DECLTYPES)
         cur = con.cursor()
-        cur.execute('select Id, Date, Description, WindSpeed, Rating, VideoUrl '
-                    'from Logs where Public = 1')
-        # need to fetch all here, because we will do more SQL calls while
-        # iterating (having multiple cursor's does not seem to work)
-        db_tuples = cur.fetchall()
-        counter = 1
-        for db_tuple in db_tuples:
+
+        cur.execute('SELECT Id, Date, Description, WindSpeed, Rating, VideoUrl '
+                    'FROM Logs WHERE Public = 1 ORDER BY Date DESC')
+
+
+        def get_columns_from_tuple(db_tuple, counter):
+            """ load the columns (list of strings) from a db_tuple
+            """
             db_data = DBData()
             log_id = db_tuple[0]
             log_date = db_tuple[1].strftime('%Y-%m-%d')
@@ -590,7 +578,7 @@ class BrowseHandler(tornado.web.RequestHandler):
                     db_data_gen = generate_db_data_from_log_file(log_id, con)
                 except Exception as e:
                     print('Failed to load log file: '+str(e))
-                    continue
+                    return None
             else: # get it from the DB
                 db_data_gen = DBDataGenerated()
                 db_data_gen.duration_s = db_tuple[1]
@@ -638,40 +626,72 @@ class BrowseHandler(tornado.web.RequestHandler):
             # mess up the layout)
             description = html_long_word_force_break(db_data.description)
 
-            table_data += """
-<tr>
-<td>{counter}</td>
-<td><a href="plot_app?log={log_id}">{date}</a></td>
-<td>{description}</td>
-<td>{mav_type}</td>
-<td>{airframe}</td>
-<td>{hw}</td>
-<td>{sw}</td>
-<td>{duration}</td>
-<td>{rating}</td>
-<td>{num_errors}</td>
-<td>{flight_modes}</td>
-</tr>
-""".format(log_id=log_id, counter=counter,
-           date=log_date,
-           description=description,
-           rating=db_data.rating_str(),
-           wind_speed=db_data.wind_speed_str(),
-           mav_type=db_data_gen.mav_type,
-           airframe=airframe,
-           hw=db_data_gen.sys_hw,
-           sw=ver_sw,
-           duration=duration_str,
-           num_errors=db_data_gen.num_logged_errors,
-           flight_modes=flight_modes
-          )
-            counter += 1
+            return [
+                counter,
+                '<a href="plot_app?log='+log_id+'">'+log_date+'</a>',
+                description,
+                db_data_gen.mav_type,
+                airframe,
+                db_data_gen.sys_hw,
+                ver_sw,
+                duration_str,
+                db_data.rating_str(),
+                db_data_gen.num_logged_errors,
+                flight_modes
+                ]
+
+        # need to fetch all here, because we will do more SQL calls while
+        # iterating (having multiple cursor's does not seem to work)
+        db_tuples = cur.fetchall()
+        json_output['recordsTotal'] = len(db_tuples)
+        json_output['data'] = []
+        if data_length == -1:
+            data_length = len(db_tuples)
+
+        filtered_counter = 0
+        if search_str == '':
+            # speed-up the request by iterating only over the requested items
+            counter = len(db_tuples) - data_start + 1
+            for i in range(data_start, data_start + data_length):
+                counter -= 1
+
+                columns = get_columns_from_tuple(db_tuples[i], counter)
+                if columns is None:
+                    continue
+
+                json_output['data'].append(columns)
+            filtered_counter = len(db_tuples)
+        else:
+            counter = len(db_tuples) + 1
+            for db_tuple in db_tuples:
+                counter -= 1
+
+                columns = get_columns_from_tuple(db_tuple, counter)
+                if columns is None:
+                    continue
+
+                if any([search_str in str(column).lower() for column in columns]):
+                    if filtered_counter >= data_start and \
+                        filtered_counter < data_start + data_length:
+                        json_output['data'].append(columns)
+                    filtered_counter += 1
+
 
         cur.close()
         con.close()
 
+        json_output['recordsFiltered'] = filtered_counter
+
+        self.set_header('Content-Type', 'application/json')
+        self.write(json.dumps(json_output))
+
+
+class BrowseHandler(tornado.web.RequestHandler):
+    """ Browse public log file Tornado request handler """
+
+    def get(self, *args, **kwargs):
         template = _ENV.get_template(BROWSE_TEMPLATE)
-        self.write(template.render(table_data=table_header + table_data + table_footer))
+        self.write(template.render())
 
 class DBInfoHandler(tornado.web.RequestHandler):
     """ Get database info Tornado request handler """
@@ -688,7 +708,6 @@ class DBInfoHandler(tornado.web.RequestHandler):
         # need to fetch all here, because we will do more SQL calls while
         # iterating (having multiple cursor's does not seem to work)
         db_tuples = cur.fetchall()
-        counter = 1
         for db_tuple in db_tuples:
             jsondict = dict()
             db_data = DBData()
