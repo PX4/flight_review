@@ -50,6 +50,7 @@ $(document).ready(function() {
 	$('#logs_table').DataTable({
 		/* "order": [[0, 'desc']], */
 		"ordering": false, // ordering currently not implemented by server
+		"lengthMenu": [ 5, 10, 25, 50, 75, 100 ],
 
 		"columns": [
 			null,
