@@ -652,7 +652,7 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
         if search_str == '':
             # speed-up the request by iterating only over the requested items
             counter = len(db_tuples) - data_start + 1
-            for i in range(data_start, data_start + data_length):
+            for i in range(data_start, min(data_start + data_length, len(db_tuples))):
                 counter -= 1
 
                 columns = get_columns_from_tuple(db_tuples[i], counter)
