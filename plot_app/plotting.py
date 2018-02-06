@@ -545,7 +545,7 @@ class DataPlot:
 
             for field_name, color, legend in zip(field_names_expanded, colors, legends):
                 p.circle(x='timestamp', y=field_name, source=data_source,
-                         legend=legend, line_width=2, size=6, line_color=color,
+                         legend=legend, line_width=2, size=4, line_color=color,
                          fill_color=None)
 
         except (KeyError, IndexError, ValueError) as error:
