@@ -7,6 +7,11 @@ $.fn.scrollView = function () {
     });
 }
 
+$(".chosen-select").chosen({
+    no_results_text: "Oops, nothing found!",
+    width: "100%"
+  });
+
 var do_not_scroll = false;
 function navigate(fragment) {
 	// jump to the fragment and handle the sticky header properly
