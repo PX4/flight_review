@@ -1,0 +1,12 @@
+Cesium.js
+---------
+version: 1.40
+
+/Build:
+ This directory contains the Cesium release from https://cesiumjs.org/downloads/
+ (deleted CesiumUnminified & Documentation)
+/SampleData:
+ from Apps/SampleData
+
+/models: our own models
+
