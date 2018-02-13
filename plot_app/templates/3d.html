@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <!-- Tell IE to use the latest, best version. -->
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <!-- Make the application on mobile take up the full browser screen and disable user scaling. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+  <title>3D View - Flight Review</title>
+  <script src="plot_app/static/cesium/Build/Cesium/Cesium.js"></script>
+  <script src="plot_app/static/js/two.min.js"></script>
+  <script src="plot_app/static/js/radio_controller.js"></script>
+  <style>
+      @import url(plot_app/static/cesium/Build/Cesium/Widgets/widgets.css);
+      @import url(plot_app/static/cesium/Build/Cesium/Widgets/lighter.css);
+      html, body, #cesiumContainer {
+          width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden;
+      }
+	  body {
+		  background: #000;
+		  color: #eee;
+		  font-family: sans-serif;
+		  font-size: 9pt;
+		  padding: 0;
+		  margin: 0;
+		  width: 100%;
+		  height: 100%;
+		  overflow: hidden;
+	  }
+	  #toolbar {
+		  background: rgba(42, 42, 42, 0.8);
+		  padding: 4px;
+		  border-radius: 4px;
+		  margin: 5px;
+		  padding: 2px 5px;
+		  position: absolute;
+		  top: 0;
+		  left: 0;
+	  }
+	  #toolbar input {
+		  vertical-align: middle;
+		  padding-top: 2px;
+		  padding-bottom: 2px;
+	  }
+	  #toolbar td {
+		  text-align: right;
+	  }
+	  #toolbar .header {
+		  font-weight: bold;
+	  }
+
+      #radio-controller {
+		  position: absolute;
+		  width: 300px;
+		  height: 200px;
+		  top: 100%;
+		  left: 100%;
+		  margin-left: -320px;
+		  margin-top: -300px;
+      }
+  </style>
+</head>
+<body>
+  <div id="cesiumContainer"></div>
+  <div id="radio-controller"></div>
+
+  <div id="toolbar">
+	  <table><tbody>
+			  <!-- <tr><td class="header">Options</td></tr> -->
+			  <tr>
+				  <td>Model Size</td>
+				  <td>
+					  <input type="range" min="1" max="100" step="1" data-bind="value: size, valueUpdate: 'input'">
+					  <input type="text" size="5" data-bind="value: size">
+				  </td>
+			  </tr>
+			  <tr>
+				  <td>Show Flight Path</td>
+				  <td>
+					  <input type="checkbox" value="true" data-bind="checked: path_visible, valueUpdate: 'input'">
+				  </td>
+			  </tr>
+			  <tr>
+				  <td>Camera Tracks Vehicle</td>
+				  <td>
+					  <input type="checkbox" value="false" data-bind="checked: track_vehicle, valueUpdate: 'input'">
+				  </td>
+			  </tr>
+		  </tbody></table>
+  </div>
+
+  <script>
+
+
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    terrainProviderViewModels : [], //Disable terrain changing
+    infoBox : false, //Disable InfoBox widget
+    selectionIndicator : false, //Disable selection indicator
+	navigationInstructionsInitiallyVisible : false
+});
+var scene = viewer.scene;
+
+//Lighting based on sun/moon positions
+scene.globe.enableLighting = false; // generally a bit too dark when enabled
+
+//Use STK World Terrain
+viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
+    url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
+    requestWaterMask : true,
+    requestVertexNormals : true
+});
+
+//Enable depth testing so things behind the terrain disappear.
+scene.globe.depthTestAgainstTerrain = true;
+
+var skyAtmosphere = scene.skyAtmosphere;
+skyAtmosphere.brightnessShift = 0.2;
+
+//Set the random number seed for consistent results.
+Cesium.Math.setRandomNumberSeed(3);
+
+// input data from the log file (via jinja arguments)
+var flight_modes = {{ flight_modes }};
+var manual_control_setpoints = {{ manual_control_setpoints }};
+var takeoff_altitude = {{ takeoff_altitude }};
+var takeoff_position = Cesium.Cartographic.fromDegrees(
+	{{ takeoff_longitude }}, {{ takeoff_latitude }});
+var position_data = {{ position_data }};
+var start = Cesium.JulianDate.fromIso8601({{ start_timestamp }});
+var boot_timestamp = Cesium.JulianDate.fromIso8601({{ boot_timestamp }});
+var stop = Cesium.JulianDate.fromIso8601({{ end_timestamp }});
+var attitude_data = {{ attitude_data }};
+
+var model_scale_factor = {{ model_scale_factor }}; // model-specific scale factor
+var model_uri = "{{ model_uri }}";
+
+//Make sure viewer is at the desired time.
+viewer.clock.startTime = start.clone();
+viewer.clock.stopTime = stop.clone();
+viewer.clock.currentTime = start.clone();
+viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP; //Loop at the end
+viewer.clock.multiplier = 1;
+viewer.clock.shouldAnimate = false; // do not autoplay
+
+viewer.animation.viewModel.setShuttleRingTicks([
+	0.01, 0.02, 0.05,
+	0.1, 0.25, 0.5,
+	1, 2, 5, 10, 15, 30, 60,
+	100, 300, 600, 1000]);
+
+//Set timeline to simulation bounds
+viewer.timeline.zoomTo(start, stop);
+
+
+function computePositionProperty(altitude_offset) {
+    var property = new Cesium.SampledPositionProperty();
+	var position;
+    
+    for (var i = 0; i < position_data.length; ++i) {
+        var cur_pos = position_data[i];
+        var time = Cesium.JulianDate.fromIso8601(cur_pos[0]);
+        position = Cesium.Cartesian3.fromDegrees(cur_pos[1], cur_pos[2],
+			cur_pos[3] + altitude_offset);
+        property.addSample(time, position);
+
+        //Also create a point for each sample we generate.
+        /*
+		// TODO: if enabled, take takeoff offset into account (avoid adding twice)
+        viewer.entities.add({
+            position : position,
+            point : {
+                pixelSize : 8,
+                color : Cesium.Color.TRANSPARENT,
+                outlineColor : Cesium.Color.YELLOW,
+                outlineWidth : 3
+            }
+        });
+        */
+    }
+    return property;
+}
+
+function computeOrientationProperty() {
+	//var orientationProperty = new Cesium.SampledProperty(Cesium.Quaternion);
+	var orientationProperty = new Cesium.TimeIntervalCollectionProperty();
+
+	var origin = Cesium.Cartesian3.fromRadians(takeoff_position.longitude,
+		 takeoff_position.latitude);
+	// assumes the position over the whole flight does not change too much
+	// (we neglect the earth curvature)
+
+	var transform_matrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
+	// get 3x3 rot matrix
+    var rotation_matrix = new Cesium.Matrix3();
+    Cesium.Matrix4.getRotation(transform_matrix, rotation_matrix);
+
+    // rotate by 90 deg to point towards north (instead of east)
+    var m = Cesium.Matrix3.fromRotationZ(Cesium.Math.toRadians(90.0));
+    rotation_matrix = Cesium.Matrix3.multiply(rotation_matrix, m, new Cesium.Matrix3());
+    // rotation quaterion from ENU to ECEF
+    var q_enu_to_ecef = Cesium.Quaternion.fromRotationMatrix(rotation_matrix);
+
+	
+    
+    for (i = 0; i < attitude_data.length; ++i) {
+        var cur_attitude = attitude_data[i];
+        var time_att = Cesium.JulianDate.fromIso8601(cur_attitude[0]);
+        // we need to swap the y & z axis: in NED the body-frame y-axis points to the right
+        // and the z axis down, whereas in ECEF the y-axis points to the left and the z-axis
+        // upwards (x-axis points forward in both coordinate systems)
+        var q = new Cesium.Quaternion(cur_attitude[1], -cur_attitude[2],
+                                               -cur_attitude[3], cur_attitude[4]);
+        var orientation = new Cesium.Quaternion();
+        Cesium.Quaternion.multiply(q_enu_to_ecef, q, orientation);
+        //orientationProperty.addSample(time_att, orientation); // this uses interpolation
+        
+        // avoid using iterpolation (which causes problems)
+        if (i < attitude_data.length - 1) {
+            var next_attitude = attitude_data[i+1];
+            var time_att_next = Cesium.JulianDate.fromIso8601(next_attitude[0]);
+			var timeInterval = new Cesium.TimeInterval({
+				start : time_att,
+				stop : time_att_next,
+				isStartIncluded : true,
+				isStopIncluded : false,
+				data : orientation
+			});
+			orientationProperty.intervals.addInterval(timeInterval);
+        }
+        
+    }
+    
+    return orientationProperty;
+}
+
+//Compute the entity position & orientation properties
+var positionProperty = computePositionProperty(0);
+var orientationProperty = computeOrientationProperty();
+
+// flight modes
+var flightModesProperty = new Cesium.TimeIntervalCollectionProperty();
+for (i = 0; i < flight_modes.length - 1; ++i) {
+	var cur_flight_mode = flight_modes[i];
+	var next_flight_mode = flight_modes[i+1];
+	var cur_time = Cesium.JulianDate.fromIso8601(cur_flight_mode[0]);
+	var next_time = Cesium.JulianDate.fromIso8601(next_flight_mode[0]);
+
+	var timeInterval = new Cesium.TimeInterval({
+		start : cur_time,
+		stop : next_time,
+		isStartIncluded : true,
+		isStopIncluded : false,
+		data : cur_flight_mode[1]
+	});
+	flightModesProperty.intervals.addInterval(timeInterval);
+}
+
+// manual control setpoints
+var manualControlSetpointsProperty = new Cesium.TimeIntervalCollectionProperty();
+for (i = 0; i < manual_control_setpoints.length - 1; ++i) {
+	var cur_sp = manual_control_setpoints[i];
+	var next_sp = manual_control_setpoints[i+1];
+	var cur_time = Cesium.JulianDate.fromIso8601(cur_sp[0]);
+	var next_time = Cesium.JulianDate.fromIso8601(next_sp[0]);
+	var manual_control_setpoint = Cesium.Cartesian4.fromElements(cur_sp[1],
+		 cur_sp[2], cur_sp[3], cur_sp[4]);
+
+	var timeInterval = new Cesium.TimeInterval({
+		start : cur_time,
+		stop : next_time,
+		isStartIncluded : true,
+		isStopIncluded : false,
+		data : manual_control_setpoint
+	});
+	manualControlSetpointsProperty.intervals.addInterval(timeInterval);
+}
+
+var default_model_scale = 20;
+
+//Actually create the entity
+var entity = viewer.entities.add({
+
+    //Set the entity availability to the same interval as the simulation time.
+    availability : new Cesium.TimeIntervalCollection([new Cesium.TimeInterval({
+        start : start,
+        stop : stop
+    })]),
+
+    //Use our computed positions & orientations
+    position : positionProperty,
+    orientation : orientationProperty,
+
+    //Load the Cesium plane model to represent the entity
+    model : {
+        uri : model_uri,
+        minimumPixelSize : 64,
+        scale: default_model_scale * model_scale_factor,
+    },
+
+    //Show the path as a yellow line
+    path : {
+        resolution : 1,
+        material : new Cesium.PolylineGlowMaterialProperty({
+            glowPower : 0.1,
+            color : Cesium.Color.YELLOW
+        }),
+        width : 10
+    }
+});
+
+// sample the ground height at takeoff position to get the offset (there can be
+// an offset of several meters)
+var promise = Cesium.sampleTerrainMostDetailed(viewer.terrainProvider, [ takeoff_position ]);
+Cesium.when(promise, function(updatedPositions) {
+	var ground_offset = takeoff_position.height - takeoff_altitude;
+    console.log('Ground Offset in meters: ' + ground_offset);
+	// re-compute the positions taking the ground offset into account.
+	// add 2 meters more to allow for inaccuracies
+	var positionProperty = computePositionProperty(ground_offset + 2);
+	entity.position = positionProperty;
+});
+
+
+// Timeline: show the time the same way as in the plots: use the time since boot
+function pad(num, size) {
+	var s = num+"";
+	while (s.length < size) s = "0" + s;
+	return s;
+}
+
+function format_timestamp(boot_time_sec, show_ms) {
+    var ms = Math.round(boot_time_sec * 1000);
+	var sec = Math.floor(ms / 1000);
+	var minutes = Math.floor(sec / 60);
+	var hours = Math.floor(minutes / 60);
+	ms = ms % 1000;
+	sec = sec % 60;
+	minutes = minutes % 60;
+
+	if (hours > 0) {
+		var ret_val = hours + ":" + pad(minutes, 2) + ":" + pad(sec,2)
+	} else {
+		var ret_val = minutes + ":" + pad(sec,2);
+	}
+	if (show_ms) {
+		ret_val = ret_val + "." + pad(ms, 3);
+	}
+	return ret_val;
+}
+
+var animationViewModel = viewer.animation.viewModel;
+animationViewModel.dateFormatter = function() { return ''; };
+
+animationViewModel.timeFormatter = function(date, viewModel) {
+	var boot_time = Cesium.JulianDate.secondsDifference(date, boot_timestamp);
+	return format_timestamp(boot_time, true);
+};
+
+viewer.timeline.makeLabel = function(time) {
+	var boot_time = Cesium.JulianDate.secondsDifference(time, boot_timestamp);
+	return format_timestamp(boot_time, this._timeBarSecondsSpan < 3600);
+};
+
+viewer.timeline.updateFromClock();
+viewer.timeline.zoomTo(viewer.clock.startTime, viewer.clock.stopTime);
+
+
+
+// Radio Controller
+radio_controller.init(document.getElementById('radio-controller'), 300, 200);
+// update the radio whenever the time changes
+viewer.clock.onTick.addEventListener(function(clock) {
+	 var manual_sp = manualControlSetpointsProperty.getValue(clock.currentTime);
+	 var flight_mode = flightModesProperty.getValue(clock.currentTime);
+	 if (flight_mode === undefined) flight_mode = '';
+	 radio_controller.setFlightMode(flight_mode);
+	 if (manual_sp === undefined) {
+		 radio_controller.updateSticks(0, 0, 0, 0);
+	 } else {
+		 // this is mode 2 (map throttle from [0, 1] to [-1, 1])
+		 radio_controller.updateSticks(manual_sp.w, manual_sp.z*2.-1.,
+			 manual_sp.y, manual_sp.x);
+	 }
+
+	 // stick history
+	 var stick_history = [];
+	 var time = clock.currentTime.clone();
+	 for (var i = 0; i < 30; ++i) {
+		 manual_sp = manualControlSetpointsProperty.getValue(time);
+		 if (manual_sp !== undefined) {
+			 stick_history.unshift([manual_sp.w, manual_sp.z*2.-1.,
+				 manual_sp.y, manual_sp.x]);
+		 }
+		 Cesium.JulianDate.addSeconds(time, -0.03333, time);
+	 }
+	 radio_controller.updateHistory(stick_history);
+
+	 radio_controller.redraw();
+});
+
+
+// additional keyboard handling
+document.addEventListener('keyup', function(e) {
+	if (e.keyCode == ' '.charCodeAt(0)) { // space
+		viewer.clock.shouldAnimate = !viewer.clock.shouldAnimate;
+	} else if (e.keyCode == 37) { // arrow left
+		if (viewer.clock.multiplier > 0)
+			viewer.clock.multiplier = -viewer.clock.multiplier;
+		viewer.clock.shouldAnimate = true;
+	} else if (e.keyCode == 39) { // arrow right
+		if (viewer.clock.multiplier < 0)
+			viewer.clock.multiplier = -viewer.clock.multiplier;
+		viewer.clock.shouldAnimate = true;
+	} else if (e.keyCode == 38) { // arrow up
+		viewer.clock.multiplier *= 1.5;
+	} else if (e.keyCode == 40) { // arrow down
+		viewer.clock.multiplier /= 1.5;
+	}
+}, false);
+
+
+// UI: configuration
+var viewModel = {
+    size : default_model_scale,
+    path_visible : true,
+    track_vehicle : false,
+};
+// Convert the viewModel members into knockout observables.
+Cesium.knockout.track(viewModel);
+
+// Bind the viewModel to the DOM elements of the UI that call for it.
+var toolbar = document.getElementById('toolbar');
+Cesium.knockout.applyBindings(viewModel, toolbar);
+
+Cesium.knockout.getObservable(viewModel, 'size').subscribe(
+    function(newValue) {
+		entity.model.scale = newValue * model_scale_factor;
+    }
+);
+Cesium.knockout.getObservable(viewModel, 'path_visible').subscribe(
+    function(newValue) {
+		entity.path.show = newValue;
+    }
+);
+Cesium.knockout.getObservable(viewModel, 'track_vehicle').subscribe(
+    function(newValue) {
+		if (newValue) {
+			viewer.trackedEntity = entity;
+		} else {
+			viewer.trackedEntity = undefined;
+		}
+    }
+);
+
+
+// initial view: show the vehicle from top
+viewer.zoomTo(entity, new Cesium.HeadingPitchRange(0,
+	Cesium.Math.toRadians(-90), 200));
+
+  </script>
+</body>
+</html>
+

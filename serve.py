@@ -16,7 +16,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'plot_
 from tornado.web import RedirectHandler
 from tornado_handlers import DownloadHandler, UploadHandler, BrowseHandler, \
     BrowseDataRetrievalHandler, \
-    EditEntryHandler, DBInfoHandler
+    EditEntryHandler, DBInfoHandler, ThreeDHandler, RadioControllerHandler
 
 from helper import set_log_id_is_filename, print_cache_info
 from config import debug_print_timing
@@ -41,6 +41,8 @@ parser.add_argument('--use-xheaders', action='store_true',
 parser.add_argument('-f', '--file', metavar='file.ulg', action='store',
                     help='Directly show an ULog file, only for local use (implies -s)',
                     default=None)
+parser.add_argument('--3d', dest='threed', action='store_true',
+                    help='Open 3D page (only if --file is provided)')
 parser.add_argument('--num-procs', dest='numprocs', type=int, action='store',
                     help="""Number of worker processes. Default to 1.
                     0 will autodetect number of cores""",
@@ -83,10 +85,13 @@ server_kwargs['http_server_kwargs'] = {'max_buffer_size': 300 * 1024 * 1024}
 
 
 show_ulog_file = False
+show_3d_page = False
 if args.file != None:
     ulog_file = os.path.abspath(args.file)
     show_ulog_file = True
     args.show = True
+    show_3d_page = args.threed
+
 set_log_id_is_filename(show_ulog_file)
 
 
@@ -95,6 +100,8 @@ extra_patterns = [
     (r'/upload', UploadHandler),
     (r'/browse', BrowseHandler),
     (r'/browse_data_retrieval', BrowseDataRetrievalHandler),
+    (r'/3d', ThreeDHandler),
+    (r'/radio_controller', RadioControllerHandler),
     (r'/edit_entry', EditEntryHandler),
     (r'/?', UploadHandler), #root should point to upload
     (r'/download', DownloadHandler),
@@ -109,7 +116,10 @@ if args.show:
     def show_callback():
         """ callback to open a browser window after server is fully initialized"""
         if show_ulog_file:
-            server.show('/plot_app?log='+ulog_file)
+            if show_3d_page:
+                server.show('/3d?log='+ulog_file)
+            else:
+                server.show('/plot_app?log='+ulog_file)
         else:
             server.show('/upload')
     server.io_loop.add_callback(show_callback)

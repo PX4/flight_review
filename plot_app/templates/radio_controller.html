@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<!-- this is just a test page that renders the radio controller -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <script src="plot_app/static/js/two.min.js"></script>
+  <script src="plot_app/static/js/radio_controller.js"></script>
+</head>
+<body>
+	<!--<div id="radio-controller" style="background-color: #33aa33;"></div> -->
+  <div id="radio-controller"></div>
+
+  <script>
+
+var elem = document.getElementById('radio-controller');
+radio_controller.init(elem, 300, 200);
+radio_controller.updateSticks(0.3, 0.1, 0.1, 1);
+radio_controller.setFlightMode('Manual');
+radio_controller.updateHistory([[0, -1, 0, 0], [0.1, -0.8, 0, 0],
+	[0.3, -0.3, 0, 0], [0.3, 0.1, 0, 0]]);
+radio_controller.updateHistory([[-0.3, -1, 0, 0], [-0.1, -0.8, -0.1, 0],
+	[0.3, -0.3, 0, 0.7], [0.3, 0.1, 0, 1]]);
+radio_controller.redraw();
+
+  </script>
+</body>
+</html>
