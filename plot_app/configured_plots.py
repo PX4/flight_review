@@ -27,12 +27,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
 
 
     # initialize flight mode changes
-    try:
-        cur_dataset = ulog.get_dataset('vehicle_status')
-        flight_mode_changes = cur_dataset.list_value_changes('nav_state')
-        flight_mode_changes.append((ulog.last_timestamp, -1))
-    except (KeyError, IndexError) as error:
-        flight_mode_changes = []
+    flight_mode_changes = get_flight_mode_changes(ulog)
 
     # VTOL state changes
     vtol_states = None
