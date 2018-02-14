@@ -421,3 +421,24 @@ def print_cache_info():
 def clear_ulog_cache():
     """ clear/invalidate the ulog cache """
     load_ulog_file.cache_clear()
+
+error_labels_table = {
+    'Other': (1, '#eecc00'), # yellow
+    'Vibration': (2, '#cc0000'), # red
+    }
+
+def validate_error_labels_and_get_ids(text_error_labels):
+    """
+    validate the text error labels and return a list of corresponding ids
+    :param text_error_labels: a list of error label strings
+    :return: a integer list of error label ids
+    """
+
+    error_ids = []
+    try:
+        for text_label in text_error_labels:
+            error_ids.append(error_labels_table[text_label][0])
+        return error_ids
+    except:
+        print('error validating error labels')
+        raise

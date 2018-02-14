@@ -14,13 +14,27 @@ $(".chosen-select").chosen({
 
  $( "#error-label" )
   .change(function () {
-    error_labels = [];
+    var error_labels = "";
     $( "select option:selected" ).each(function() {
-       error_labels.push($( this ).text())
+        error_labels += $( this ).text() + ",";
+       //error_labels.push($( this ).text())
     });
 
-    alert( error_labels );
-  })
+
+    $.ajax({
+        type: "GET",
+        url: "http://localhost:5006/error_label",
+        //data: { log : "b3b5c29a-92f3-46ea-87a3-4080640187dc", labels : error_labels },
+        data: { log : "{{log_id}}", labels : error_labels },
+        dataType: "text"
+    }).done(function (res) {
+        alert("AJAX call successful: " + res);
+    }).fail(function (jqXHR, textStatus, errorThrown) {
+        alert("AJAX call failed: " + textStatus + ", " + errorThrown);
+    });
+
+  });
+
 
 var do_not_scroll = false;
 function navigate(fragment) {
