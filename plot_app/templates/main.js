@@ -12,6 +12,16 @@ $(".chosen-select").chosen({
     width: "100%"
   });
 
+ $( "#error-label" )
+  .change(function () {
+    error_labels = [];
+    $( "select option:selected" ).each(function() {
+       error_labels.push($( this ).text())
+    });
+
+    alert( error_labels );
+  })
+
 var do_not_scroll = false;
 function navigate(fragment) {
 	// jump to the fragment and handle the sticky header properly
