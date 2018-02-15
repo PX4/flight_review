@@ -4,6 +4,7 @@ from timeit import default_timer as timer
 import sys
 import sqlite3
 import traceback
+import os
 
 from bokeh.io import curdoc
 from bokeh.layouts import column, widgetbox

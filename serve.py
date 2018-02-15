@@ -14,9 +14,13 @@ from bokeh.application.handlers import DirectoryHandler
 # this is needed for the following imports
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'plot_app'))
 from tornado.web import RedirectHandler
-from tornado_handlers import DownloadHandler, UploadHandler, BrowseHandler, \
-    BrowseDataRetrievalHandler, \
-    EditEntryHandler, DBInfoHandler, ThreeDHandler, RadioControllerHandler
+from tornado_handlers.download import DownloadHandler
+from tornado_handlers.upload import UploadHandler
+from tornado_handlers.browse import BrowseHandler, BrowseDataRetrievalHandler
+from tornado_handlers.edit_entry import EditEntryHandler
+from tornado_handlers.db_info_json import DBInfoHandler
+from tornado_handlers.three_d import ThreeDHandler
+from tornado_handlers.radio_controller import RadioControllerHandler
 
 from helper import set_log_id_is_filename, print_cache_info
 from config import debug_print_timing

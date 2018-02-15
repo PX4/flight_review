@@ -57,7 +57,7 @@ The web site is structured around a bokeh application in `plot_app`
 (`plot_app/configured_plots.py` contains all the configured plots). This
 application also handles the statistics page, as it contains bokeh plots as
 well. The other pages (upload, browse, ...) are implemented as tornado handlers
-in `tornado_handlers.py`.
+in `tornado_handlers/`.
 
 Tornado uses a single-threaded event loop. This means all operations should be
 non-blocking (see also http://www.tornadoweb.org/en/stable/guide/async.html).
