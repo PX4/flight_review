@@ -40,12 +40,16 @@ function initMap() {
 
 {% if is_plot_page %}
 
-<p>
 <select id="error-label" class="chosen-select" data-placeholder="Add a detected error..." multiple="" tabindex="-1" style="display: none;" >
 	<option>Vibration</option>
+	<option>Airframe-design</option>
+	<option>Sensor-error</option>
+	<option>Component-failure</option>
+	<option>Software</option>
+	<option>Human-error</option>
+	<option>External-conditions</option>
 	<option>Other</option>
 </select>
-	</p>
 
 <div id="loading-plots" style="height: 50px;"><p><big>Loading Plots...</big></p></div>
 {% endif %}

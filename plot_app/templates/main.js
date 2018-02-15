@@ -26,10 +26,6 @@ $(".chosen-select").chosen({
         url: "http://localhost:5006/error_label",
         data: { log : "{{log_id}}", labels : error_labels },
         dataType: "text"
-    }).done(function (res) {
-        alert("AJAX call successful: " + res);
-    }).fail(function (jqXHR, textStatus, errorThrown) {
-        alert("AJAX call failed: " + textStatus + ", " + errorThrown);
     });
 
   });

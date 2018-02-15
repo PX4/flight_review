@@ -425,6 +425,12 @@ def clear_ulog_cache():
 error_labels_table = {
     'Other': (1, '#eecc00'), # yellow
     'Vibration': (2, '#cc0000'), # red
+    'Airframe-design': (3, '#00cc33'), # green
+    'Sensor-error': (4, '#66cc00'), # olive
+    'Component-failure': (5, '#00cccc'), # light blue
+    'Software': (6, '#0033cc'), # dark blue
+    'Human-error': (7, '#ee9900'), # orange
+    'External-conditions': (8, '#6600cc'), # purple
     }
 
 def validate_error_labels_and_get_ids(text_error_labels):
