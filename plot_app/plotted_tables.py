@@ -49,7 +49,8 @@ def _get_vtol_means_per_mode(vtol_states, timestamps, data):
 
 
 
-def get_heading_and_info(ulog, px4_ulog, plot_width, db_data, vehicle_data, vtol_states):
+def get_heading_and_info(ulog, px4_ulog, plot_width, db_data, vehicle_data,
+                         vtol_states, link_to_3d_page):
     """
     get a bokeh widgetbox object with the html heading text and some tables with
     additional text info, such as logging duration, max speed etc.
@@ -59,7 +60,15 @@ def get_heading_and_info(ulog, px4_ulog, plot_width, db_data, vehicle_data, vtol
     sys_name = ''
     if 'sys_name' in ulog.msg_info_dict:
         sys_name = cgi.escape(ulog.msg_info_dict['sys_name']) + ' '
-    div = Div(text="<h1>"+sys_name + px4_ulog.get_mav_type()+"</h1>", width=int(plot_width*0.9))
+
+    if any(elem.name == 'vehicle_global_position' for elem in ulog.data_list):
+        link_to_3d = "<a class='btn btn-primary' href='"+link_to_3d_page+"'>Open 3D View</a>"
+    else:
+        link_to_3d = ''
+
+    div = Div(text="<table width='100%'><tr><td><h1>"+sys_name + px4_ulog.get_mav_type()+
+              "</h1></td><td align='right'>" + link_to_3d+"</td></tr></table>",
+              width=int(plot_width*0.999))
     header_divs = [div]
     if db_data.description != '':
         div_descr = Div(text="<h4>"+db_data.description+"</h4>", width=int(plot_width*0.9))

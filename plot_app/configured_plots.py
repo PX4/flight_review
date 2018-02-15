@@ -19,7 +19,7 @@ from plotted_tables import (
 #pylint: disable=consider-using-enumerate
 
 
-def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
+def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
     """ create a list of bokeh plots (and widgets) to show """
 
     plots = []
@@ -48,7 +48,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
 
     # heading & all the text info on top (logging duration, max speed, ...)
     plots.append(get_heading_and_info(ulog, px4_ulog, plot_width,
-                                      db_data, vehicle_data, vtol_states))
+                                      db_data, vehicle_data, vtol_states, link_to_3d_page))
 
 
     # hardfault

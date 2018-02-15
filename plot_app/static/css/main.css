@@ -19,13 +19,13 @@ h1 {
     margin: 2em 0 0 0;
     color: #2e484c;
     font-family: 'Titillium Web', sans-serif;
-    font-size: 1.8em;
+    font-size: 23px;
 	font-weight: 700;
     text-transform: uppercase;
 }
 h1 .name {
     color: #222;
-    font-size: 0.9em;
+    font-size: 28px;
     text-transform: none;
 	padding-left: 3px;
 }
@@ -172,6 +172,10 @@ table.dataTable td {
 	box-shadow: none;
 	color: #9685BA;
 	border-color:#9685BA;
+}
+
+a.btn-primary{
+	color: #fff;
 }
 
 input {

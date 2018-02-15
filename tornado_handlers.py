@@ -848,6 +848,7 @@ class ThreeDHandler(tornado.web.RequestHandler):
             attitude_data=attitude_data,
             model_scale_factor=model_scale_factor,
             model_uri=model_uri,
+            log_id=log_id,
             bing_api_key=get_bing_maps_api_key()))
 
     def write_error(self, status_code, **kwargs):

@@ -184,8 +184,10 @@ else:
             ]
         curdoc().template_variables['vtol_modes'] = vtol_modes
 
+        link_to_3d_page = '3d?log='+log_id
+
         try:
-            plots = generate_plots(ulog, px4_ulog, db_data, vehicle_data)
+            plots = generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page)
 
             title = 'Flight Review - '+px4_ulog.get_mav_type()
 
