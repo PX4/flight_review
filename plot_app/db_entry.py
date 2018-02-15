@@ -19,6 +19,7 @@ class DBData:
         self.wind_speed = -1
         self.rating = ''
         self.video_url = ''
+        self.error_labels = []
 
     def wind_speed_str(self):
         return self.wind_speed_str_static(self.wind_speed)
@@ -46,6 +47,7 @@ class DBData:
         jsondict['wind_speed'] = self.wind_speed
         jsondict['rating'] = self.rating
         jsondict['video_url'] = self.video_url
+        jsondict['error_labels'] = self.error_labels
         return jsondict
 
 

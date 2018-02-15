@@ -437,7 +437,7 @@ def validate_error_labels_and_get_ids(text_error_labels):
     error_ids = []
     try:
         for text_label in text_error_labels:
-            error_ids.append(error_labels_table[text_label][0])
+            error_ids.append(error_labels_table[text_label.capitalize()][0])
         return error_ids
     except:
         print('error validating error labels')

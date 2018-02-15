@@ -22,9 +22,8 @@ $(".chosen-select").chosen({
 
 
     $.ajax({
-        type: "GET",
+        type: "POST",
         url: "http://localhost:5006/error_label",
-        //data: { log : "b3b5c29a-92f3-46ea-87a3-4080640187dc", labels : error_labels },
         data: { log : "{{log_id}}", labels : error_labels },
         dataType: "text"
     }).done(function (res) {
