@@ -24,14 +24,15 @@ from helper import get_total_flight_time, validate_url, get_log_filename, \
     load_ulog_file, get_airframe_name, ULogException
 
 #pylint: disable=relative-beyond-top-level
-from .common import get_jinja_env, CustomHTTPError, generate_db_data_from_log_file
+from .common import get_jinja_env, CustomHTTPError, generate_db_data_from_log_file, \
+    TornadoRequestHandlerBase
 from .send_email import send_notification_email, send_flightreport_email
 from .multipart_streamer import MultiPartStreamer
 
 UPLOAD_TEMPLATE = 'upload.html'
 
 
-#pylint: disable=attribute-defined-outside-init,too-many-statements
+#pylint: disable=attribute-defined-outside-init,too-many-statements, unused-argument
 
 
 def update_vehicle_db_entry(cur, ulog, log_id, vehicle_name):
@@ -72,14 +73,16 @@ def update_vehicle_db_entry(cur, ulog, log_id, vehicle_name):
 
 
 @tornado.web.stream_request_body
-class UploadHandler(tornado.web.RequestHandler):
+class UploadHandler(TornadoRequestHandlerBase):
     """ Upload log file Tornado request handler: handles page requests and POST
     data """
 
     def initialize(self):
+        """ initialize the instance """
         self.multipart_streamer = None
 
     def prepare(self):
+        """ called before a new request """
         if self.request.method.upper() == 'POST':
             if 'expected_size' in self.request.arguments:
                 self.request.connection.set_max_body_size(
@@ -91,14 +94,17 @@ class UploadHandler(tornado.web.RequestHandler):
             self.multipart_streamer = MultiPartStreamer(total)
 
     def data_received(self, chunk):
+        """ called whenever new data is received """
         if self.multipart_streamer:
             self.multipart_streamer.data_received(chunk)
 
     def get(self, *args, **kwargs):
+        """ GET request callback """
         template = get_jinja_env().get_template(UPLOAD_TEMPLATE)
         self.write(template.render())
 
     def post(self, *args, **kwargs):
+        """ POST request callback """
         if self.multipart_streamer:
             try:
                 self.multipart_streamer.data_complete()
@@ -302,16 +308,3 @@ class UploadHandler(tornado.web.RequestHandler):
             finally:
                 self.multipart_streamer.release_parts()
 
-    def write_error(self, status_code, **kwargs):
-        html_template = """
-<html><title>Error {status_code}</title>
-<body>HTTP Error {status_code}{error_message}</body>
-</html>
-"""
-        error_message = ''
-        if 'exc_info' in kwargs:
-            e = kwargs["exc_info"][1]
-            if isinstance(e, CustomHTTPError) and e.error_message:
-                error_message = ': '+e.error_message
-        self.write(html_template.format(status_code=status_code,
-                                        error_message=error_message))

@@ -11,10 +11,10 @@ import tornado.web
 # this is needed for the following imports
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../plot_app'))
 from config import get_db_filename
-from db_entry import DBData, DBDataGenerated
+from db_entry import DBData
 
 #pylint: disable=relative-beyond-top-level
-from .common import generate_db_data_from_log_file
+from .common import get_generated_db_data_from_log
 
 #pylint: disable=abstract-method
 
@@ -47,33 +47,9 @@ class DBInfoHandler(tornado.web.RequestHandler):
             db_data.video_url = db_tuple[5]
             jsondict.update(db_data.to_json_dict())
 
-            # try to get the additional data from the DB
-            cur.execute('select * from LogsGenerated where Id = ?', [log_id])
-            db_tuple = cur.fetchone()
-            if db_tuple is None: # need to generate from file
-                try:
-                    # Note that this is not necessary in most cases, as the entry is
-                    # also generated after uploading (but with a timeout)
-                    db_data_gen = generate_db_data_from_log_file(log_id, con)
-                except Exception as e:
-                    print('Failed to load log file: '+str(e))
-                    continue
-            else: # get it from the DB
-                db_data_gen = DBDataGenerated()
-                db_data_gen.duration_s = db_tuple[1]
-                db_data_gen.mav_type = db_tuple[2]
-                db_data_gen.estimator = db_tuple[3]
-                db_data_gen.sys_autostart_id = db_tuple[4]
-                db_data_gen.sys_hw = db_tuple[5]
-                db_data_gen.ver_sw = db_tuple[6]
-                db_data_gen.num_logged_errors = db_tuple[7]
-                db_data_gen.num_logged_warnings = db_tuple[8]
-                db_data_gen.flight_modes = \
-                    set([int(x) for x in db_tuple[9].split(',') if len(x) > 0])
-                db_data_gen.ver_sw_release = db_tuple[10]
-                db_data_gen.vehicle_uuid = db_tuple[11]
-                db_data_gen.flight_mode_durations = \
-                    [tuple(map(int, x.split(':'))) for x in db_tuple[12].split(',') if len(x) > 0]
+            db_data_gen = get_generated_db_data_from_log(log_id, con, cur)
+            if db_data_gen is None:
+                continue
 
             jsondict.update(db_data_gen.to_json_dict())
             jsonlist.append(jsondict)

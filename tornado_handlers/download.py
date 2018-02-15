@@ -21,14 +21,15 @@ from helper import get_log_filename, validate_log_id, \
 from config import get_db_filename, get_kml_filepath
 
 #pylint: disable=relative-beyond-top-level
-from .common import CustomHTTPError
+from .common import CustomHTTPError, TornadoRequestHandlerBase
 
-#pylint: disable=abstract-method
+#pylint: disable=abstract-method, unused-argument
 
-class DownloadHandler(tornado.web.RequestHandler):
+class DownloadHandler(TornadoRequestHandlerBase):
     """ Download log file Tornado request handler """
 
     def get(self, *args, **kwargs):
+        """ GET request callback """
         log_id = self.get_argument('log')
         if not validate_log_id(log_id):
             raise tornado.web.HTTPError(400, 'Invalid Parameter')
@@ -169,17 +170,3 @@ class DownloadHandler(tornado.web.RequestHandler):
                     self.write(data)
                 self.finish()
 
-
-    def write_error(self, status_code, **kwargs):
-        html_template = """
-<html><title>Error {status_code}</title>
-<body>HTTP Error {status_code}{error_message}</body>
-</html>
-"""
-        error_message = ''
-        if 'exc_info' in kwargs:
-            e = kwargs["exc_info"][1]
-            if isinstance(e, CustomHTTPError) and e.error_message:
-                error_message = ': '+e.error_message
-        self.write(html_template.format(status_code=status_code,
-                                        error_message=error_message))

@@ -15,16 +15,18 @@ from helper import validate_log_id, get_log_filename, load_ulog_file, \
     get_flight_mode_changes, flight_modes_table
 
 #pylint: disable=relative-beyond-top-level
-from .common import get_jinja_env, CustomHTTPError
+from .common import get_jinja_env, CustomHTTPError, TornadoRequestHandlerBase
 
 THREED_TEMPLATE = '3d.html'
 
-#pylint: disable=abstract-method
+#pylint: disable=abstract-method, unused-argument
 
-class ThreeDHandler(tornado.web.RequestHandler):
+class ThreeDHandler(TornadoRequestHandlerBase):
     """ Tornado Request Handler to render the 3D Cesium.js page """
 
     def get(self, *args, **kwargs):
+        """ GET request callback """
+
         # load the log file
         log_id = self.get_argument('log')
         if not validate_log_id(log_id):
@@ -175,16 +177,3 @@ class ThreeDHandler(tornado.web.RequestHandler):
             log_id=log_id,
             bing_api_key=get_bing_maps_api_key()))
 
-    def write_error(self, status_code, **kwargs):
-        html_template = """
-<html><title>Error {status_code}</title>
-<body>HTTP Error {status_code}{error_message}</body>
-</html>
-"""
-        error_message = ''
-        if 'exc_info' in kwargs:
-            e = kwargs["exc_info"][1]
-            if isinstance(e, CustomHTTPError) and e.error_message:
-                error_message = ': '+e.error_message
-        self.write(html_template.format(status_code=status_code,
-                                        error_message=error_message))
