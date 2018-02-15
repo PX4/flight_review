@@ -171,6 +171,13 @@ class StatisticsPlots(object):
                     print('Warning: %s with autostart_id=0' % log.log_id)
                     continue
 
+                try:
+                    if int(log.sw_version[1:].split('.')[0]) > 10:
+                        print('Warning: %s with large version %s' % (log.log_id, log.sw_version))
+                        continue
+                except:
+                    continue
+
                 self._public_logs.append(log)
 
 
