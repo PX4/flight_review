@@ -1,6 +1,6 @@
 """ This contains the list of all drawn plots on the log plotting page """
 
-import cgi # for html escaping
+from html import escape
 
 from bokeh.layouts import widgetbox
 from bokeh.models import Range1d
@@ -15,7 +15,7 @@ from plotted_tables import (
     get_heading_and_info
     )
 
-#pylint: disable=deprecated-method, cell-var-from-loop, undefined-loop-variable,
+#pylint: disable=cell-var-from-loop, undefined-loop-variable,
 #pylint: disable=consider-using-enumerate
 
 
@@ -60,7 +60,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
             'here</a> how to debug):</p>')
         counter = 1
         for hardfault in ulog.msg_info_multiple_dict['hardfault_plain']:
-            hardfault_text = cgi.escape(''.join(hardfault)).replace('\n', '<br/>')
+            hardfault_text = escape(''.join(hardfault)).replace('\n', '<br/>')
             hardfault_html += ('<p>Hardfault #'+str(counter)+':<br/><pre>'+
                                hardfault_text+'</pre></p>')
             counter += 1
@@ -685,11 +685,11 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
     for state in ['pre', 'post']:
         if 'perf_top_'+state+'flight' in ulog.msg_info_multiple_dict:
             current_top_data = ulog.msg_info_multiple_dict['perf_top_'+state+'flight'][0]
-            flight_data = cgi.escape('\n'.join(current_top_data))
+            flight_data = escape('\n'.join(current_top_data))
             top_data += '<p>'+state.capitalize()+' Flight:<br/><pre>'+flight_data+'</pre></p>'
         if 'perf_counter_'+state+'flight' in ulog.msg_info_multiple_dict:
             current_perf_data = ulog.msg_info_multiple_dict['perf_counter_'+state+'flight'][0]
-            flight_data = cgi.escape('\n'.join(current_perf_data))
+            flight_data = escape('\n'.join(current_perf_data))
             perf_data += '<p>'+state.capitalize()+' Flight:<br/><pre>'+flight_data+'</pre></p>'
 
     additional_data_html = ''

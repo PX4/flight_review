@@ -1,13 +1,13 @@
 """ Database entry classes """
 
-import cgi # for html escaping
+from html import escape
 
 from pyulog import *
 from pyulog.px4 import *
 
 from helper import get_log_filename, load_ulog_file
 
-#pylint: disable=missing-docstring, deprecated-method, too-few-public-methods
+#pylint: disable=missing-docstring, too-few-public-methods
 
 class DBData:
     """ simple class that contains information from the DB entry of a single
@@ -86,15 +86,15 @@ class DBDataGenerated:
         obj.mav_type = px4_ulog.get_mav_type()
         obj.estimator = px4_ulog.get_estimator()
         obj.sys_autostart_id = ulog.initial_parameters.get('SYS_AUTOSTART', 0)
-        obj.sys_hw = cgi.escape(ulog.msg_info_dict.get('ver_hw', ''))
-        obj.ver_sw = cgi.escape(ulog.msg_info_dict.get('ver_sw', ''))
+        obj.sys_hw = escape(ulog.msg_info_dict.get('ver_hw', ''))
+        obj.ver_sw = escape(ulog.msg_info_dict.get('ver_sw', ''))
         version_info = ulog.get_version_info()
         if version_info is not None:
             obj.ver_sw_release = 'v{}.{}.{} {}'.format(*version_info)
         obj.num_logged_errors = 0
         obj.num_logged_warnings = 0
         if 'sys_uuid' in ulog.msg_info_dict:
-            obj.vehicle_uuid = cgi.escape(ulog.msg_info_dict['sys_uuid'])
+            obj.vehicle_uuid = escape(ulog.msg_info_dict['sys_uuid'])
 
         for m in ulog.logged_messages:
             if m.log_level <= ord('3'):

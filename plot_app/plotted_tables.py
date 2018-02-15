@@ -1,6 +1,6 @@
 """ methods to generate various tables used in configured_plots.py """
 
-import cgi # for html escaping
+from html import escape
 from math import sqrt
 import datetime
 
@@ -15,7 +15,6 @@ from helper import (
     get_total_flight_time
     )
 
-#pylint: disable=deprecated-method
 #pylint: disable=consider-using-enumerate
 
 
@@ -59,7 +58,7 @@ def get_heading_and_info(ulog, px4_ulog, plot_width, db_data, vehicle_data,
     # Heading
     sys_name = ''
     if 'sys_name' in ulog.msg_info_dict:
-        sys_name = cgi.escape(ulog.msg_info_dict['sys_name']) + ' '
+        sys_name = escape(ulog.msg_info_dict['sys_name']) + ' '
 
     if any(elem.name == 'vehicle_global_position' for elem in ulog.data_list):
         link_to_3d = "<a class='btn btn-primary' href='"+link_to_3d_page+"'>Open 3D View</a>"
@@ -91,7 +90,7 @@ def get_heading_and_info(ulog, px4_ulog, plot_width, db_data, vehicle_data,
     # HW & SW
     sys_hardware = ''
     if 'ver_hw' in ulog.msg_info_dict:
-        sys_hardware = cgi.escape(ulog.msg_info_dict['ver_hw'])
+        sys_hardware = escape(ulog.msg_info_dict['ver_hw'])
         table_text_left.append(('Hardware', sys_hardware))
 
     release_str = ulog.get_version_info_str()
@@ -105,14 +104,14 @@ def get_heading_and_info(ulog, px4_ulog, plot_width, db_data, vehicle_data,
     if 'ver_sw_branch' in ulog.msg_info_dict:
         branch_info = '<br> branch: '+ulog.msg_info_dict['ver_sw_branch']
     if 'ver_sw' in ulog.msg_info_dict:
-        ver_sw = cgi.escape(ulog.msg_info_dict['ver_sw'])
+        ver_sw = escape(ulog.msg_info_dict['ver_sw'])
         ver_sw_link = 'https://github.com/PX4/Firmware/commit/'+ver_sw
         table_text_left.append(('Software Version', release_str +
                                 '<a href="'+ver_sw_link+'" target="_blank">'+ver_sw[:8]+'</a>'+
                                 release_str_suffix+branch_info))
 
     if 'sys_os_name' in ulog.msg_info_dict and 'sys_os_ver_release' in ulog.msg_info_dict:
-        os_name = cgi.escape(ulog.msg_info_dict['sys_os_name'])
+        os_name = escape(ulog.msg_info_dict['sys_os_name'])
         os_ver = ulog.get_version_info_str('sys_os_ver_release')
         if os_ver is not None:
             table_text_left.append(('OS Version', os_name + ', ' + os_ver))
@@ -187,7 +186,7 @@ SDLOG_UTC_OFFSET: {}'''.format(utctimestamp.strftime('%d-%m-%Y %H:%M'), utc_offs
 
     # vehicle UUID (and name if provided). SITL does not have a UUID
     if 'sys_uuid' in ulog.msg_info_dict and sys_hardware != 'SITL':
-        sys_uuid = cgi.escape(ulog.msg_info_dict['sys_uuid'])
+        sys_uuid = escape(ulog.msg_info_dict['sys_uuid'])
         if vehicle_data is not None and vehicle_data.name != '':
             sys_uuid = sys_uuid + ' (' + vehicle_data.name + ')'
         if len(sys_uuid) > 0:

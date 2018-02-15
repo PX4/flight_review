@@ -5,6 +5,7 @@ import sys
 import sqlite3
 import traceback
 import os
+from html import escape
 
 from bokeh.io import curdoc
 from bokeh.layouts import column, widgetbox
@@ -17,7 +18,7 @@ from db_entry import *
 from configured_plots import generate_plots
 from statistics_plots import StatisticsPlots
 
-#pylint: disable=invalid-name, redefined-outer-name, deprecated-method
+#pylint: disable=invalid-name, redefined-outer-name
 
 
 GET_arguments = curdoc().session_context.request.arguments
@@ -141,7 +142,7 @@ else:
 
             # vehicle data
             if 'sys_uuid' in ulog.msg_info_dict:
-                sys_uuid = cgi.escape(ulog.msg_info_dict['sys_uuid'])
+                sys_uuid = escape(ulog.msg_info_dict['sys_uuid'])
 
                 cur.execute('select LatestLogId, Name, FlightTime '
                             'from Vehicle where UUID = ?', [sys_uuid])
