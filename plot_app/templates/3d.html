@@ -92,6 +92,10 @@
   <script>
 
 
+{% if bing_api_key != '' %}
+Cesium.BingMapsApi.defaultKey = "{{ bing_api_key }}";
+{% endif %}
+
 var viewer = new Cesium.Viewer('cesiumContainer', {
     terrainProviderViewModels : [], //Disable terrain changing
     infoBox : false, //Disable InfoBox widget
