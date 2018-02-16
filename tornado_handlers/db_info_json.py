@@ -45,7 +45,8 @@ class DBInfoHandler(tornado.web.RequestHandler):
             db_data.wind_speed = db_tuple[3]
             db_data.rating = db_tuple[4]
             db_data.video_url = db_tuple[5]
-            db_data.error_labels = sorted([int(x) for x in db_tuple[6].split(',') if len(x) > 0]) if db_tuple[6] else []
+            db_data.error_labels = sorted([int(x) for x in db_tuple[6].split(',') if len(x) > 0]) \
+                if db_tuple[6] else []
             jsondict.update(db_data.to_json_dict())
 
             db_data_gen = get_generated_db_data_from_log(log_id, con, cur)
