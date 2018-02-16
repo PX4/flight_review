@@ -21,6 +21,7 @@ from tornado_handlers.edit_entry import EditEntryHandler
 from tornado_handlers.db_info_json import DBInfoHandler
 from tornado_handlers.three_d import ThreeDHandler
 from tornado_handlers.radio_controller import RadioControllerHandler
+from tornado_handlers.error_labels import UpdateErrorLabelHandler
 
 from helper import set_log_id_is_filename, print_cache_info
 from config import debug_print_timing
