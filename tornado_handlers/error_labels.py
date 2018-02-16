@@ -46,3 +46,9 @@ class UpdateErrorLabelHandler(tornado.web.RequestHandler):
         con.commit()
         cur.close()
         con.close()
+
+        self.write('OK')
+
+    def data_received(self, chunk):
+        """ called whenever new data is received """
+        pass
