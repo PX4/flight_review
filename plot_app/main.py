@@ -129,8 +129,8 @@ else:
         try:
             con = sqlite3.connect(get_db_filename(), detect_types=sqlite3.PARSE_DECLTYPES)
             cur = con.cursor()
-            cur.execute('select Description, Feedback, Type, WindSpeed, Rating, VideoUrl '
-                        'from Logs where Id = ?', [log_id])
+            cur.execute('select Description, Feedback, Type, WindSpeed, Rating, VideoUrl, '
+                        'ErrorLabels from Logs where Id = ?', [log_id])
             db_tuple = cur.fetchone()
             if db_tuple is not None:
                 db_data.description = db_tuple[0]
@@ -139,6 +139,9 @@ else:
                 db_data.wind_speed = db_tuple[3]
                 db_data.rating = db_tuple[4]
                 db_data.video_url = db_tuple[5]
+                db_data.error_labels = sorted(
+                    [int(x) for x in db_tuple[6].split(',') if len(x) > 0]) \
+                    if db_tuple[6] else []
 
             # vehicle data
             if 'sys_uuid' in ulog.msg_info_dict:
@@ -214,7 +217,6 @@ else:
 
         div = Div(text="<h3>"+error_message+"</h3>", width=int(plot_width*0.9))
         plots = [widgetbox(div, width=int(plot_width*0.9))]
-
 
     # layout
     layout = column(plots, sizing_mode='scale_width')

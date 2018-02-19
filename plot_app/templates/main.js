@@ -7,29 +7,6 @@ $.fn.scrollView = function () {
     });
 }
 
-$(".chosen-select").chosen({
-    no_results_text: "Oops, nothing found!",
-    width: "100%"
-  });
-
- $( "#error-label" )
-  .change(function () {
-    var error_labels = "";
-    $( "select option:selected" ).each(function() {
-        error_labels += $( this ).text() + ",";
-       //error_labels.push($( this ).text())
-    });
-
-
-    $.ajax({
-        type: "POST",
-        url: "http://localhost:5006/error_label",
-        data: { log : "{{log_id}}", labels : error_labels },
-        dataType: "text"
-    });
-
-  });
-
 
 var do_not_scroll = false;
 function navigate(fragment) {
@@ -47,7 +24,34 @@ function navigate(fragment) {
 	}, 10);
 }
 
+
 {% if is_plot_page %}
+
+function showErrorLabelSelect(){
+
+    $(".chosen-select").chosen({
+        no_results_text: "Oops, nothing found!",
+        width: "100%"
+    });
+
+    $("#error-label").change(function () {
+
+        var error_labels = "";
+        $( "select option:selected" ).each(function() {
+             error_labels += $( this ).text() + ",";
+        });
+        $.ajax({
+            type: "POST",
+            url: "/error_label",
+            data: { log : "{{log_id}}", labels : error_labels },
+            dataType: "text"
+        });
+    });
+
+    setTimeout(showErrorLabelSelect, 500);
+}
+
+setTimeout(showErrorLabelSelect, 500);
 
 function showStartLoggingTime() {
 	// Show Logging start: convert timestamp to local time

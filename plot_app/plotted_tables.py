@@ -12,7 +12,7 @@ from bokeh.models.widgets import DataTable, TableColumn, Div
 
 from helper import (
     get_default_parameters, get_airframe_name,
-    get_total_flight_time
+    get_total_flight_time, error_labels_table
     )
 
 #pylint: disable=consider-using-enumerate
@@ -72,7 +72,6 @@ def get_heading_and_info(ulog, px4_ulog, plot_width, db_data, vehicle_data,
     if db_data.description != '':
         div_descr = Div(text="<h4>"+db_data.description+"</h4>", width=int(plot_width*0.9))
         header_divs.append(div_descr)
-
 
     ### Setup the text for the left table with various information ###
     table_text_left = []
@@ -346,7 +345,23 @@ SDLOG_UTC_OFFSET: {}'''.format(utctimestamp.strftime('%d-%m-%Y %H:%M'), utc_offs
         ' and thus requiring an accurate estimator')
     html_tables = ('<div style="display: flex; justify-content: space-between;">'+
                    left_table+right_table+'</div>')
+
     header_divs.append(Div(text=html_tables))
+
+    # add error label select after table
+    error_label_select = '' \
+        '<select id="error-label" class="chosen-select" multiple="True" '\
+        'style="display: flex; " tabindex="-1" ' \
+        'data-placeholder="Add a detected error..." " >'
+    for err_label, err_id in error_labels_table.items():
+        error_label_select += '<option'
+        if err_id in db_data.error_labels:
+            error_label_select += ' selected'
+        error_label_select += '>' + err_label + '</option>'
+    error_label_select += '</select>'
+
+    header_divs.append(Div(text=error_label_select))
+
     return widgetbox(header_divs, width=int(plot_width*0.99))
 
 
