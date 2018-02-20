@@ -425,28 +425,23 @@ def clear_ulog_cache():
 error_labels_table = {
     # the keys have to be capitalized!
     # 'validate_error_labels_and_get_ids' will return an error otherwise
-    'Other': 1,
-    'Vibration': 2,
-    'Airframe-design': 3,
-    'Sensor-error': 4,
-    'Component-failure': 5,
-    'Software': 6,
-    'Human-error': 7,
-    'External-conditions': 8
+    1: 'Other',
+    2: 'Vibration',
+    3: 'Airframe-design',
+    4: 'Sensor-error',
+    5: 'Component-failure',
+    6: 'Software',
+    7: 'Human-error',
+    8: 'External-conditions'
     }
 
-def validate_error_labels_and_get_ids(text_error_labels):
+def validate_error_ids(err_ids):
     """
-    validate the text error labels and return a list of corresponding ids
-    :param text_error_labels: a list of error label strings
-    :return: a integer list of error label ids
+    validate the err_ids
     """
 
-    error_ids = []
-    try:
-        for text_label in text_error_labels:
-            error_ids.append(error_labels_table[text_label.capitalize()])
-        return error_ids
-    except:
-        print('error validating error labels')
-        raise
+    for err_id in err_ids:
+        if err_id not in error_labels_table:
+            return False
+
+    return True

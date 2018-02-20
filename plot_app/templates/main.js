@@ -24,29 +24,64 @@ function navigate(fragment) {
 	}, 10);
 }
 
-
 {% if is_plot_page %}
+
+var cur_err_ids = {{cur_err_ids}};
+
+function init_error_labels(){
+    // initialize error labels
+
+    for(var i=0; i < cur_err_ids.length; i++){
+        if(!$("#error-label").children().eq(cur_err_ids[i]-1).prop('selected')){
+            $("#error-label").children().eq(cur_err_ids[i]-1).prop('selected', true);
+        }
+    }
+
+    $("#error-label > option").each(function(){
+        if(!cur_err_ids.includes($(this).prop('index')+1)){
+            if($(this).prop('selected')){
+                $(this).prop('selected', false)
+            }
+        }
+    });
+
+    $("#error-label").trigger('chosen:updated')
+
+}
 
 function showErrorLabelSelect(){
 
-    $(".chosen-select").chosen({
+    $("#error-label").chosen({
         no_results_text: "Oops, nothing found!",
         width: "100%"
     });
 
     $("#error-label").change(function () {
 
-        var error_labels = "";
-        $( "select option:selected" ).each(function() {
-             error_labels += $( this ).text() + ",";
+        // unfortunately the change function doesn't say which select option changed
+        // -> go through all select options & add the selected or remove the de-selected elements from the list
+        $("#error-label > option").each(function(){
+            var id = $(this).prop('index')+1;
+            if($(this).prop('selected')){
+                if(!cur_err_ids.includes(id)){
+                    cur_err_ids.push(id);
+                }
+            } else{
+                if(cur_err_ids.includes(id)){
+                    cur_err_ids.splice(cur_err_ids.indexOf(id),1)
+                }
+            }
         });
+
         $.ajax({
             type: "POST",
             url: "/error_label",
-            data: { log : "{{log_id}}", labels : error_labels },
-            dataType: "text"
+            data: JSON.stringify({ 'log' : "{{log_id}}", 'labels' : cur_err_ids }),
+            dataType: "json"
         });
     });
+
+    init_error_labels();
 
     setTimeout(showErrorLabelSelect, 500);
 }

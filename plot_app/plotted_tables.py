@@ -353,11 +353,8 @@ SDLOG_UTC_OFFSET: {}'''.format(utctimestamp.strftime('%d-%m-%Y %H:%M'), utc_offs
         '<select id="error-label" class="chosen-select" multiple="True" '\
         'style="display: flex; " tabindex="-1" ' \
         'data-placeholder="Add a detected error..." " >'
-    for err_label, err_id in error_labels_table.items():
-        error_label_select += '<option'
-        if err_id in db_data.error_labels:
-            error_label_select += ' selected'
-        error_label_select += '>' + err_label + '</option>'
+    for _, err_label in error_labels_table.items():
+        error_label_select += '<option>' + err_label + '</option>'
     error_label_select += '</select>'
 
     header_divs.append(Div(text=error_label_select))
