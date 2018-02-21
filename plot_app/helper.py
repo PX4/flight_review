@@ -423,7 +423,7 @@ def clear_ulog_cache():
     load_ulog_file.cache_clear()
 
 error_labels_table = {
-    # the keys have to be capitalized!
+    # the labels (values) have to be capitalized!
     # 'validate_error_labels_and_get_ids' will return an error otherwise
     1: 'Other',
     2: 'Vibration',

@@ -31,14 +31,12 @@ var cur_err_ids = {{cur_err_ids}};
 function init_error_labels(){
     // initialize error labels
 
-    for(var i=0; i < cur_err_ids.length; i++){
-        if(!$("#error-label").children().eq(cur_err_ids[i]-1).prop('selected')){
-            $("#error-label").children().eq(cur_err_ids[i]-1).prop('selected', true);
-        }
-    }
-
     $("#error-label > option").each(function(){
-        if(!cur_err_ids.includes($(this).prop('index')+1)){
+        if(cur_err_ids.includes(parseInt($(this).attr('id')))){
+            if(!$(this).prop('selected')){
+                $(this).prop('selected', true)
+            }
+        } else{
             if($(this).prop('selected')){
                 $(this).prop('selected', false)
             }
@@ -58,15 +56,22 @@ function showErrorLabelSelect(){
 
     $("#error-label").change(function () {
 
-        // unfortunately the change function doesn't say which select option changed
-        // -> go through all select options & add the selected or remove the de-selected elements from the list
+        /*
+        this step stores all changes in the global javascript variable cur_err_ids,
+        since a DOM update would reset the select to the initial values, otherwise.
+        unfortunately the change function doesn't tell which select option changed
+        -> need to iterate through all select options.
+        */
         $("#error-label > option").each(function(){
-            var id = $(this).prop('index')+1;
+            var id = parseInt($(this).attr('id'));
+            // push a selected error to cur_err_ids, if it wasn't included before
             if($(this).prop('selected')){
                 if(!cur_err_ids.includes(id)){
                     cur_err_ids.push(id);
                 }
             } else{
+            // remove a de-selected error id from cur_err_ids,
+            // if it was included before
                 if(cur_err_ids.includes(id)){
                     cur_err_ids.splice(cur_err_ids.indexOf(id),1)
                 }
