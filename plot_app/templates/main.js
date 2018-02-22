@@ -32,7 +32,7 @@ function init_error_labels(){
     // initialize error labels
 
     $("#error-label > option").each(function(){
-        if(cur_err_ids.includes(parseInt($(this).attr('id')))){
+        if(cur_err_ids.includes(parseInt($(this).attr('data-id')))){
             if(!$(this).prop('selected')){
                 $(this).prop('selected', true)
             }
@@ -63,15 +63,15 @@ function showErrorLabelSelect(){
         -> need to iterate through all select options.
         */
         $("#error-label > option").each(function(){
-            var id = parseInt($(this).attr('id'));
+            var id = parseInt($(this).attr('data-id'));
             // push a selected error to cur_err_ids, if it wasn't included before
             if($(this).prop('selected')){
                 if(!cur_err_ids.includes(id)){
                     cur_err_ids.push(id);
                 }
             } else{
-            // remove a de-selected error id from cur_err_ids,
-            // if it was included before
+                // remove a de-selected error id from cur_err_ids,
+                // if it was included before
                 if(cur_err_ids.includes(id)){
                     cur_err_ids.splice(cur_err_ids.indexOf(id),1)
                 }

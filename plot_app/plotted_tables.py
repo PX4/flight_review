@@ -354,7 +354,7 @@ SDLOG_UTC_OFFSET: {}'''.format(utctimestamp.strftime('%d-%m-%Y %H:%M'), utc_offs
         'style="display: flex; " tabindex="-1" ' \
         'data-placeholder="Add a detected error..." " >'
     for err_id, err_label in error_labels_table.items():
-        error_label_select += '<option id="{:d}">{:s}</option>'.format(err_id, err_label)
+        error_label_select += '<option data-id="{:d}">{:s}</option>'.format(err_id, err_label)
     error_label_select += '</select>'
 
     header_divs.append(Div(text=error_label_select))

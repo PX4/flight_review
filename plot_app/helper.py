@@ -433,6 +433,7 @@ error_labels_table = {
     6: 'Software',
     7: 'Human-error',
     8: 'External-conditions'
+       # Note: when adding new labels, always increase the id, never re-use a lower value
     }
 
 def validate_error_ids(err_ids):
