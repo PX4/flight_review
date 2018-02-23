@@ -179,7 +179,7 @@ SDLOG_UTC_OFFSET: {}'''.format(utctimestamp.strftime('%d-%m-%Y %H:%M'), utc_offs
         if h > 0: flight_time_str += '{:d} hours '.format(h)
         if m > 0: flight_time_str += '{:d} minutes '.format(m)
         flight_time_str += '{:d} seconds '.format(s)
-        table_text_left.append(('Vehicle Flight Time', flight_time_str))
+        table_text_left.append(('Vehicle Life<br/>Flight Time', flight_time_str))
 
     table_text_left.append(('', '')) # spacing
 
