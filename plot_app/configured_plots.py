@@ -4,7 +4,7 @@ from html import escape
 
 from bokeh.layouts import widgetbox
 from bokeh.models import Range1d
-from bokeh.models.widgets import Div, Button
+from bokeh.models.widgets import Div, Button, CheckboxButtonGroup
 from bokeh.io import curdoc
 
 from helper import *
@@ -651,6 +651,12 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
                 'title': plot_title
                 })
 
+    linkAxesButton = CheckboxButtonGroup(labels=["Link X Axes"])
+    def linkAxesCB(attr,old,new):
+        pass
+    linkAxesButton.on_change('active',linkAxesCB)
+    plots.append(linkAxesButton)
+    
 
     # changed parameters
     plots.append(get_changed_parameters(ulog.initial_parameters, plot_width))
