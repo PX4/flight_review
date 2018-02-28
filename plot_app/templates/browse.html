@@ -1,7 +1,7 @@
 
 {% include 'header.html' %}
 
-<h1>Browse public log files</h1>
+<h3>Browse public Log Files</h3>
 
 <p>
 Use <a href="https://github.com/PX4/flight_review/blob/master/download_logs.py">
@@ -12,7 +12,8 @@ this script</a> for automated download of public log files.
 
 </p>
 
-<table id="logs_table" class="table table-striped table-bordered table-condensed">
+<table id="logs_table" style="border-collapse: collapse !important"
+	class="table table-sm table-striped table-bordered table-condensed">
         <thead>
             <tr>
                 <th>#</th>
@@ -37,11 +38,11 @@ this script</a> for automated download of public log files.
 
 
 <!-- include & setup DataTables library (with Bootstrap stylesheets) -->
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.13/css/dataTables.bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.16/css/dataTables.bootstrap4.min.css">
 
-<script type="text/javascript" charset="utf-8" src="//cdn.datatables.net/1.10.13/js/jquery.dataTables.js"></script>
+<script type="text/javascript" charset="utf-8" src="//cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
 
-<script type="text/javascript" charset="utf-8" src="https://cdn.datatables.net/1.10.13/js/dataTables.bootstrap.min.js"></script>
+<script type="text/javascript" charset="utf-8" src="https://cdn.datatables.net/1.10.16/js/dataTables.bootstrap4.min.js"></script>
 
 
 <script type="text/javascript">

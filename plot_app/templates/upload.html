@@ -1,7 +1,7 @@
 
 {% include 'header.html' %}
 
-<h1>Upload a Log File</h1>
+<h3>Upload a Log File</h3>
 
 <p>
 Select and upload a log file for plotting and analysis.
@@ -11,12 +11,16 @@ You can browse through public log files on <a href="/browse">this page</a>.
 
 
 <ul class="nav nav-tabs">
-	<li class="active"><a data-toggle="tab" href="#personal">Personal</a></li>
-	<li><a data-toggle="tab" href="#flightreport">Flight Report</a></li>
+	<li class="nav-item active">
+		<a class="nav-link active" data-toggle="tab" href="#personal">Personal</a>
+	</li>
+	<li class="nav-item">
+		<a class="nav-link" data-toggle="tab" href="#flightreport">Flight Report</a>
+	</li>
 </ul>
 
 <div class="tab-content">
-	<div id="personal" class="tab-pane fade in active">
+	<div id="personal" class="tab-pane in active">
 
 		<!-- Personal Tab -->
 		<table class="spaced">
@@ -31,14 +35,22 @@ You can browse through public log files on <a href="/browse">this page</a>.
 					</td>
 				</tr>
 				<tr>
-					<td class="left">Description (optional):</td><td><input class="align-right" type="text" name="description" /></td>
+					<td class="left">Description <small>(optional)</small>:</td>
+					<td>
+						<input class="form-control" placeholder="" name="description" type="text">
+					</td>
 				</tr>
 				<tr>
-					<td class="left">Additional Feedback (optional):</td><td><textarea
-		 class="align-right" cols="20" rows="3" name="feedback"></textarea></td>
+					<td class="left">Additional Feedback <small>(optional)</small>:</td>
+					<td>
+						<textarea class="form-control" cols="20" rows="3" name="feedback"></textarea>
+					</td>
 				</tr>
 				<tr>
-					<td class="left">E-Mail (optional):</td><td><input class="align-right" type="text" name="email" /></td>
+					<td class="left">E-Mail <small>(optional)</small>:</td>
+					<td>
+						<input class="form-control" type="text" name="email" />
+					</td>
 				</tr>
 				<tr>
 					<td colspan="2"><small>Will only be used to send you a link to
@@ -46,23 +58,36 @@ You can browse through public log files on <a href="/browse">this page</a>.
 				</tr>
 				<tr>
 					<td colspan="2">
-						<label><input type="checkbox" name="allowForAnalysis" value="true"> Allow
+						<div class="custom-control custom-checkbox">
+							<input class="custom-control-input" name="allowForAnalysis"
+							id="allowForAnalysis" type="checkbox" value="true">
+							<label class="custom-control-label" for="allowForAnalysis">Allow
 							this log file to be used for statistical analysis.</label>
+						</div>
 					</td>
 				</tr>
 				<!--
 				<tr>
 				<td colspan="2">
-				<label><input type="checkbox" name="obfuscated" value="true">
-				Obfuscate location information in the log.</label>
+						<div class="custom-control custom-checkbox">
+							<input class="custom-control-input" name="obfuscated"
+							id="obfuscated" type="checkbox" value="true">
+							<label class="custom-control-label" for="obfuscated">
+							Obfuscate location information in the log.</label>
+						</div>
 				</td>
 				</tr>
 				-->
 				<tr>
-					<td class="left">ULog File:</td><td><input class="align-right" type="file" name="filearg" /></td>
+					<td class="left">ULog File:</td>
+					<td>
+						<label class="btn btn-outline-primary align-right">
+							Browse... <input type="file" hidden name="filearg">
+						</label>
+					</td>
 				</tr>
 				<tr>
-					<td></td><td><input class="btn btn-common align-right"
+					<td></td><td><input class="btn btn-primary align-right"
 						 id="upload-button" type="submit" value="Upload" /></td>
 				</tr>
 			</form>
@@ -86,26 +111,36 @@ You can browse through public log files on <a href="/browse">this page</a>.
 					</td>
 				</tr>
 				<tr>
-					<td class="left">Test Description:</td><td><input class="align-right" type="text" name="description" /></td>
+					<td class="left">Test Description:</td>
+					<td>
+						<input class="form-control" placeholder="" name="description" type="text">
+					</td>
 				</tr>
 				<tr>
-					<td class="left">Additional Feedback:</td><td><textarea
-					class="align-right" cols="20" rows="3" name="feedback"></textarea></td>
+					<td class="left">Additional Feedback:</td>
+					<td>
+						<textarea class="form-control" cols="20" rows="3" name="feedback"></textarea>
+					</td>
 				</tr>
 				<tr>
-					<td class="left">Vehicle Name <small>(optional)</small>:</td>
-					<td><input class="align-right" type="text" name="vehicleName" /></td>
+					<td class="left">Vehicle Name <small>(optional)</small>:
+					<td>
+						<input class="form-control" placeholder="" name="vehicleName" type="text">
+					</td>
 				</tr>
 				<tr>
-					<td class="left">E-Mail:</td><td><input class="align-right" type="text" name="email" /></td>
+					<td class="left">E-Mail:</td>
+					<td>
+						<input class="form-control" type="text" name="email" />
+					</td>
 				</tr>
 				<tr>
 					<td colspan="2"><small>May be used to request additional information.</small></td>
 				</tr>
 				<tr>
 					<td class="left">Wind Speed:</td><td>
-						<select class="align-right" name="windSpeed">
-							<option value="-1" selected="selected">Please select:</option>
+						<select class="custom-select" name=windSpeed>
+							<option value="-1" selected="selected">Please select</option>
 							<!-- Beafort Scale -->
 							<option value="0">Calm</option>
 							<option value="5">Breeze</option>
@@ -117,8 +152,8 @@ You can browse through public log files on <a href="/browse">this page</a>.
 				<tr>
 					<td class="left">Flight Rating:</td>
 					<td>
-						<select class="align-right" name="rating">
-							<option value="notset" selected="selected">Please select:</option>
+						<select class="custom-select" name="rating">
+							<option value="notset" selected="selected">Please select</option>
 							<option value="crash_pilot">Crashed (Pilot error)</option>
 							<option value="crash_sw_hw">Crashed (Software or Hardware issue)</option>
 							<option value="unsatisfactory">Unsatisfactory</option>
@@ -128,19 +163,31 @@ You can browse through public log files on <a href="/browse">this page</a>.
 					</td>
 				</tr>
 				<tr>
-					<td class="left">Video Url:</td><td><input class="align-right" type="text" name="videoUrl" /></td>
-				</tr>
-				<tr>
-					<td colspan="2">
-						<label><input type="checkbox" checked="checked" name="public" value="true">
-							Make this log publicly available (on <a href="browse">this page</a>).</label>
+					<td class="left">Video Url:</td>
+					<td>
+						<input class="form-control" type="text" name="videoUrl" />
 					</td>
 				</tr>
 				<tr>
-					<td class="left">ULog File:</td><td><input class="align-right" type="file" name="filearg" /></td>
+					<td colspan="2">
+						<div class="custom-control custom-checkbox">
+							<input class="custom-control-input" name="public"
+							id="public" checked="checked" type="checkbox" value="true">
+							<label class="custom-control-label" for="public">
+								Make this log publicly available (on <a href="browse">this page</a>).</label>
+						</div>
+					</td>
 				</tr>
 				<tr>
-					<td></td><td><input class="btn btn-common align-right"
+					<td class="left">ULog File:</td>
+					<td>
+						<label class="btn btn-outline-primary align-right">
+							Browse... <input type="file" hidden name="filearg">
+						</label>
+					</td>
+				</tr>
+				<tr>
+					<td></td><td><input class="btn btn-primary align-right"
 						 id="upload-button" type="submit" value="Upload" /></td>
 				</tr>
 			</form>

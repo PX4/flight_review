@@ -36,10 +36,10 @@ if GET_arguments is not None and 'stats' in GET_arguments:
 
 
     # title
-    div = Div(text="<h1>Statistics</h1>")
+    div = Div(text="<h3>Statistics</h3>")
     plots.append(widgetbox(div))
 
-    div = Div(text="<h3>All Logs</h3>")
+    div = Div(text="<h4>All Logs</h4>")
     plots.append(widgetbox(div))
 
     p = statistics.plot_log_upload_statistics([colors8[0], colors8[1], colors8[3],
@@ -50,7 +50,8 @@ if GET_arguments is not None and 'stats' in GET_arguments:
                    (statistics.num_logs_ci(), statistics.num_logs_total()))
     plots.append(widgetbox(div_info))
 
-    div = Div(text="<h3>Flight Report Logs <small>(Public Logs only)</small></h3>")
+    div = Div(text="<br/><h4>Flight Report Logs "
+              "<small class='text-muted'>(Public Logs only)</small></h4>")
     div_info = Div(text="Total Flight Hours over all versions: %.1f"%
                    statistics.total_public_flight_duration())
     div_info_release = Div(text="Total Flight Hours for the latest major" \
@@ -119,7 +120,6 @@ else:
 
     print_timing("Data Loading", start_time)
     start_time = timer()
-
 
     if error_message == '':
 
@@ -209,14 +209,14 @@ else:
                              'href="https://github.com/PX4/flight_review/issues" target="_blank">'
                              'https://github.com/PX4/flight_review/issues</a> with a link '
                              'to this log.')
-            div = Div(text="<h3>"+error_message+"</h3>", width=int(plot_width*0.9))
+            div = Div(text=error_message, width=int(plot_width*0.9))
             plots = [widgetbox(div, width=int(plot_width*0.9))]
 
     else:
 
         title = 'Error'
 
-        div = Div(text="<h3>"+error_message+"</h3>", width=int(plot_width*0.9))
+        div = Div(text="<h3>Error</h3><p>"+error_message+"</p>", width=int(plot_width*0.9))
         plots = [widgetbox(div, width=int(plot_width*0.9))]
 
     # layout

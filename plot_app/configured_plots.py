@@ -694,13 +694,13 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
 
     additional_data_html = ''
     if len(top_data) > 0:
-        additional_data_html += '<h4>Processes</h4>'+top_data
+        additional_data_html += '<h5>Processes</h5>'+top_data
     if len(perf_data) > 0:
-        additional_data_html += '<h4>Performance Counters</h4>'+perf_data
+        additional_data_html += '<h5>Performance Counters</h5>'+perf_data
     if len(additional_data_html) > 0:
         # hide by default & use a button to expand
         additional_data_html = '''
-<button class="btn btn-common" data-toggle="collapse" style="min-width:0;"
+<button class="btn btn-secondary" data-toggle="collapse" style="min-width:0;"
  data-target="#show-additional-data">Show additional Data</button>
 <div id="show-additional-data" class="collapse">
 {:}
