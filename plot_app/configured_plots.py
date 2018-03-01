@@ -13,7 +13,7 @@ from plotting import *
 from plotted_tables import (
     get_logged_messages, get_changed_parameters,
     get_info_table_html, get_heading_html, get_error_labels_html,
-    get_hardfault_html
+    get_hardfault_html, get_time_series_plots
     )
 
 #pylint: disable=cell-var-from-loop, undefined-loop-variable,
