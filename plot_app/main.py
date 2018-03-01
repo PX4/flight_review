@@ -211,6 +211,7 @@ else:
                              'to this log.')
             div = Div(text=error_message, width=int(plot_width*0.9))
             plots = [widgetbox(div, width=int(plot_width*0.9))]
+            curdoc().template_variables['internal_error'] = True
 
     else:
 

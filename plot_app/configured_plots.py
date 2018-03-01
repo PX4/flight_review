@@ -12,7 +12,8 @@ from config import *
 from plotting import *
 from plotted_tables import (
     get_logged_messages, get_changed_parameters,
-    get_heading_and_info
+    get_info_table_html, get_heading_html, get_error_labels_html,
+    get_hardfault_html
     )
 
 #pylint: disable=cell-var-from-loop, undefined-loop-variable,
@@ -46,26 +47,22 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
         vtol_states = None
 
 
-    # heading & all the text info on top (logging duration, max speed, ...)
-    plots.append(get_heading_and_info(ulog, px4_ulog, plot_width,
-                                      db_data, vehicle_data, vtol_states, link_to_3d_page))
+
+    # Heading
+    curdoc().template_variables['title_html'] = get_heading_html(
+        ulog, px4_ulog, db_data, link_to_3d_page)
+
+    # info text on top (logging duration, max speed, ...)
+    curdoc().template_variables['info_table_html'] = \
+        get_info_table_html(ulog, px4_ulog, db_data, vehicle_data, vtol_states)
+
+    curdoc().template_variables['error_labels_html'] = get_error_labels_html()
+
+    hardfault_html = get_hardfault_html(ulog)
+    if hardfault_html is not None:
+        curdoc().template_variables['hardfault_html'] = hardfault_html
 
 
-    # hardfault
-    if 'hardfault_plain' in ulog.msg_info_multiple_dict:
-        hardfault_html = (
-            '<p><b> <font color="#e0212d">This log contains hardfault data from a software crash'
-            '</font></b> (see <a '
-            'href="https://dev.px4.io/en/debug/gdb_debugging.html#debugging-hard-faults-in-nuttx">'
-            'here</a> how to debug):</p>')
-        counter = 1
-        for hardfault in ulog.msg_info_multiple_dict['hardfault_plain']:
-            hardfault_text = escape(''.join(hardfault)).replace('\n', '<br/>')
-            hardfault_html += ('<p>Hardfault #'+str(counter)+':<br/><pre>'+
-                               hardfault_text+'</pre></p>')
-            counter += 1
-        hardfault_div = Div(text=hardfault_html, width=int(plot_width*0.9))
-        plots.append(widgetbox(hardfault_div, width=int(plot_width*0.9)))
 
 
 # FIXME: for now, we use Google maps directly without bokeh, because it's not working reliably

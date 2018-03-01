@@ -26,13 +26,11 @@ function navigate(fragment) {
 
 {% if is_plot_page %}
 
-var cur_err_ids = {{cur_err_ids}};
-
-function init_error_labels(){
+function init_error_labels(error_ids) {
     // initialize error labels
 
     $("#error-label > option").each(function(){
-        if(cur_err_ids.includes(parseInt($(this).attr('data-id')))){
+        if(error_ids.includes(parseInt($(this).attr('data-id')))){
             if(!$(this).prop('selected')){
                 $(this).prop('selected', true)
             }
@@ -44,62 +42,12 @@ function init_error_labels(){
     });
 
     $("#error-label").trigger('chosen:updated')
-
 }
 
-function showErrorLabelSelect(){
+$(function() { //on startup
 
-    $("#error-label").chosen({
-        no_results_text: "Oops, nothing found!",
-        width: "100%"
-    });
-
-    $("#error-label").change(function () {
-
-        /*
-        this step stores all changes in the global javascript variable cur_err_ids,
-        since a DOM update would reset the select to the initial values, otherwise.
-        unfortunately the change function doesn't tell which select option changed
-        -> need to iterate through all select options.
-        */
-        $("#error-label > option").each(function(){
-            var id = parseInt($(this).attr('data-id'));
-            // push a selected error to cur_err_ids, if it wasn't included before
-            if($(this).prop('selected')){
-                if(!cur_err_ids.includes(id)){
-                    cur_err_ids.push(id);
-                }
-            } else{
-                // remove a de-selected error id from cur_err_ids,
-                // if it was included before
-                if(cur_err_ids.includes(id)){
-                    cur_err_ids.splice(cur_err_ids.indexOf(id),1)
-                }
-            }
-        });
-
-        $.ajax({
-            type: "POST",
-            url: "/error_label",
-            data: JSON.stringify({ 'log' : "{{log_id}}", 'labels' : cur_err_ids }),
-            dataType: "json"
-        });
-    });
-
-    init_error_labels();
-
-    setTimeout(showErrorLabelSelect, 500);
-}
-
-setTimeout(showErrorLabelSelect, 500);
-
-function showStartLoggingTime() {
 	// Show Logging start: convert timestamp to local time
 	var logging_span = $('#logging-start-element');
-	if (logging_span.is(":visible")) {
-		setTimeout(showStartLoggingTime, 500);
-		return;
-	}
 
 	var d = new Date(0);
 	d.setUTCSeconds(logging_span.text());
@@ -108,16 +56,35 @@ function showStartLoggingTime() {
 		("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
 	logging_span.text(date_str);
 	logging_span.show();
-	$('[data-toggle="tooltip"]').tooltip({html: true});
-	// FIXME: yes this is ugly: we check every 500ms for a change. Because there
-	// are some events that lead to a reloading of the DOM elements, which will
-	// reset the logging_span to the hidden state.
-	// An alternative would be to use MutationObserver(), or better some bokeh
-	// on_redraw/on_reset event (I did not see any...)
-	setTimeout(showStartLoggingTime, 500);
-}
 
-setTimeout(showStartLoggingTime, 500);
+
+	// init error labels
+    var error_labels = $("#error-label");
+	error_labels.chosen({
+        no_results_text: "Oops, nothing found!",
+        width: "100%"
+    });
+
+    error_labels.change(function () {
+
+		var error_ids = [];
+        $("#error-label > option").each(function() {
+            if($(this).prop('selected')) {
+				var id = parseInt($(this).attr('data-id'));
+				error_ids.push(id);
+            }
+        });
+
+        $.ajax({
+            type: "POST",
+            url: "/error_label",
+            data: JSON.stringify({ 'log' : "{{log_id}}", 'labels' : error_ids }),
+            dataType: "json"
+        });
+    });
+
+    init_error_labels({{cur_err_ids}});
+});
 
 function setupPlots() {
 	// do necessary setup after plots are loaded

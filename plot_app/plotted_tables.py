@@ -47,15 +47,10 @@ def _get_vtol_means_per_mode(vtol_states, timestamps, data):
     return (mean_mc, mean_fw)
 
 
-
-def get_heading_and_info(ulog, px4_ulog, plot_width, db_data, vehicle_data,
-                         vtol_states, link_to_3d_page):
+def get_heading_html(ulog, px4_ulog, db_data, link_to_3d_page):
     """
-    get a bokeh widgetbox object with the html heading text and some tables with
-    additional text info, such as logging duration, max speed etc.
+    Get the html (as string) for the heading information (plots title)
     """
-
-    # Heading
     sys_name = ''
     if 'sys_name' in ulog.msg_info_dict:
         sys_name = escape(ulog.msg_info_dict['sys_name']) + ' '
@@ -66,12 +61,17 @@ def get_heading_and_info(ulog, px4_ulog, plot_width, db_data, vehicle_data,
     else:
         link_to_3d = ''
 
-    div = Div(text="<table width='100%'><tr><td><h3>"+sys_name + px4_ulog.get_mav_type()+
-              "</h3></td><td align='right'>" + link_to_3d+"</td></tr></table>")
-    header_divs = [div]
+    title_html = ("<table width='100%'><tr><td><h3>"+sys_name + px4_ulog.get_mav_type()+
+                  "</h3></td><td align='right'>" + link_to_3d+"</td></tr></table>")
     if db_data.description != '':
-        div_descr = Div(text="<h4>"+db_data.description+"</h4>", width=int(plot_width*0.9))
-        header_divs.append(div_descr)
+        title_html += "<h5>"+db_data.description+"</h5>"
+    return title_html
+
+def get_info_table_html(ulog, px4_ulog, db_data, vehicle_data, vtol_states):
+    """
+    Get the html (as string) for a table with additional text info,
+    such as logging duration, max speed etc.
+    """
 
     ### Setup the text for the left table with various information ###
     table_text_left = []
@@ -343,24 +343,58 @@ SDLOG_UTC_OFFSET: {}'''.format(utctimestamp.strftime('%d-%m-%Y %H:%M'), utc_offs
         table_text_right,
         'Note: most of these values are based on estimations from the vehicle,'
         ' and thus require an accurate estimator')
-    html_tables = ('<div style="display: flex; justify-content: space-between;">'+
-                   left_table+right_table+'</div>')
+    html_tables = ('<p><div style="display: flex; justify-content: space-between;">'+
+                   left_table+right_table+'</div></p>')
 
-    header_divs.append(Div(text=html_tables))
+    return html_tables
 
-    # add error label select after table
-    error_label_select = '' \
+
+def get_error_labels_html():
+    """
+    Get the html (as string) for user-selectable error labels
+    """
+    error_label_select = \
         '<select id="error-label" class="chosen-select" multiple="True" '\
-        'style="display: flex; " tabindex="-1" ' \
+        'style="display: none; " tabindex="-1" ' \
         'data-placeholder="Add a detected error..." " >'
     for err_id, err_label in error_labels_table.items():
         error_label_select += '<option data-id="{:d}">{:s}</option>'.format(err_id, err_label)
-    error_label_select += '</select>'
+    error_label_select = '<p>' + error_label_select + '</select></p>'
 
-    header_divs.append(Div(text=error_label_select))
+    return error_label_select
 
-    return widgetbox(header_divs, width=int(plot_width*0.99))
+def get_hardfault_html(ulog):
+    """
+    Get the html (as string) for hardfault information,
+    if the log contains any, otherwise returns None
+    """
+    if 'hardfault_plain' in ulog.msg_info_multiple_dict:
 
+        hardfault_html = """
+<div class="card text-white bg-danger mb-3">
+  <div class="card-header">Warning</div>
+  <div class="card-body">
+    <h4 class="card-title">Software Crash</h4>
+    <p class="card-text">
+        This log contains hardfault data from a software crash
+        (see <a style="color:#fff; text-decoration: underline;"
+        href="https://dev.px4.io/en/debug/gdb_debugging.html#debugging-hard-faults-in-nuttx">
+        here</a> how to debug).
+        <br/>
+        The hardfault data is shown below.
+        </p>
+  </div>
+</div>
+"""
+
+        counter = 1
+        for hardfault in ulog.msg_info_multiple_dict['hardfault_plain']:
+            hardfault_text = escape(''.join(hardfault)).replace('\n', '<br/>')
+            hardfault_html += ('<p>Hardfault #'+str(counter)+':<br/><pre>'+
+                               hardfault_text+'</pre></p>')
+            counter += 1
+        return hardfault_html
+    return None
 
 def get_changed_parameters(initial_parameters, plot_width):
     """

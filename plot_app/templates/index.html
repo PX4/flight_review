@@ -1,6 +1,14 @@
 
 {% include 'header.html' %}
 
+
+{% if not internal_error %}
+
+{{ title_html }}
+{{ hardfault_html }}
+{{ info_table_html }}
+{{ error_labels_html }}
+
 {% if has_position_data %}
 <!-- Google Maps -->
 <div id="google-map"></div>
@@ -42,6 +50,8 @@ function initMap() {
 
 <div id="loading-plots" style="height: 50px;"><p><big>Loading Plots...</big></p></div>
 {% endif %}
+
+{% endif %} {# internal_error #}
 
 {{ plot_div|indent(8) }}
 
