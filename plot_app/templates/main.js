@@ -223,11 +223,10 @@ function setSize(size) {
 		google.maps.event.trigger(g_google_map, "resize");
 	}
 
-	/* get the bokeh document. If we had a bokeh object, like a plot, we
-	could use plot.document. The following works w/o, but maybe there's a
-	simpler way? */
-	bokeh_doc = Bokeh.index[Object.keys(Bokeh.index)[0]].model.document
-	bokeh_doc.resize(); //trigger resize event
+	// FIXME: this is supposed to work, but it does not (with bokeh 0.12.14) :/
+	for (var key in Bokeh.index) {
+		Bokeh.index[key].resize();
+	}
 }
 
 {% endif %} {# is_plot_page #}
