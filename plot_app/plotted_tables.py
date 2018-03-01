@@ -490,7 +490,7 @@ def get_time_series_plots(flight_mode_changes, ulog, px4_ulog, plot_width, db_da
     # Altitude estimate
     data_plot = DataPlot(data, plot_config, 'vehicle_gps_position',
                          y_axis_label='[m]', title='Altitude Estimate',
-                         changed_params=changed_params, x_range=x_range)
+                         changed_params=changed_params, x_range=x_range, linkRange=linkXAxes)
     data_plot.add_graph([lambda data: ('alt', data['alt']*0.001)],
                         colors8[0:1], ['GPS Altitude'])
     data_plot.change_dataset('sensor_combined')
@@ -517,7 +517,7 @@ def get_time_series_plots(flight_mode_changes, ulog, px4_ulog, plot_width, db_da
         data_plot = DataPlot(data, plot_config, 'vehicle_attitude',
                              y_axis_label='[deg]', title=axis_name+' Angle',
                              plot_height='small', changed_params=changed_params,
-                             x_range=x_range)
+                             x_range=x_range, linkRange=linkXAxes)
         data_plot.add_graph([lambda data: (axis, np.rad2deg(data[axis]))],
                             colors2[0:1], [axis_name+' Estimated'], mark_nan=True)
         data_plot.change_dataset('vehicle_attitude_setpoint')
@@ -528,14 +528,14 @@ def get_time_series_plots(flight_mode_changes, ulog, px4_ulog, plot_width, db_da
         data_plot.add_graph([lambda data: (axis, np.rad2deg(data[axis]))],
                             [color_gray], [axis_name+' Groundtruth'])
         plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
-
+        
         if data_plot.finalize() is not None: plots.append(data_plot)
 
         # rate
         data_plot = DataPlot(data, plot_config, 'vehicle_attitude',
                              y_axis_label='[deg/s]', title=axis_name+' Angular Rate',
                              plot_height='small', changed_params=changed_params,
-                             x_range=x_range)
+                             x_range=x_range, linkRange=linkXAxes)
         data_plot.add_graph([lambda data: (axis+'speed', np.rad2deg(data[axis+'speed']))],
                             colors2[0:1], [axis_name+' Rate Estimated'], mark_nan=True)
         data_plot.change_dataset('vehicle_rates_setpoint')
@@ -546,7 +546,7 @@ def get_time_series_plots(flight_mode_changes, ulog, px4_ulog, plot_width, db_da
         data_plot.add_graph([lambda data: (axis+'speed', np.rad2deg(data[axis+'speed']))],
                             [color_gray], [axis_name+' Rate Groundtruth'])
         plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
-
+        
         if data_plot.finalize() is not None: plots.append(data_plot)
 
 
@@ -556,13 +556,13 @@ def get_time_series_plots(flight_mode_changes, ulog, px4_ulog, plot_width, db_da
         data_plot = DataPlot(data, plot_config, 'vehicle_local_position',
                              y_axis_label='[m]', title='Local Position '+axis.upper(),
                              plot_height='small', changed_params=changed_params,
-                             x_range=x_range)
+                             x_range=x_range, linkRange=linkXAxes)
         data_plot.add_graph([axis], colors2[0:1], [axis.upper()+' Estimated'], mark_nan=True)
         data_plot.change_dataset('vehicle_local_position_setpoint')
         data_plot.add_graph([axis], colors2[1:2], [axis.upper()+' Setpoint'],
                             mark_nan=True, use_step_lines=True)
         plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
-
+        
         if data_plot.finalize() is not None: plots.append(data_plot)
 
 
@@ -571,7 +571,7 @@ def get_time_series_plots(flight_mode_changes, ulog, px4_ulog, plot_width, db_da
     data_plot = DataPlot(data, plot_config, 'vehicle_local_position',
                          y_axis_label='[m/s]', title='Velocity',
                          plot_height='small', changed_params=changed_params,
-                         x_range=x_range)
+                         x_range=x_range, linkRange=linkXAxes)
     data_plot.add_graph(['vx', 'vy', 'vz'], colors3, ['X', 'Y', 'Z'])
     plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
 
@@ -583,7 +583,7 @@ def get_time_series_plots(flight_mode_changes, ulog, px4_ulog, plot_width, db_da
         data_plot = DataPlot(data, plot_config, 'vehicle_vision_position',
                              y_axis_label='[m]', title='Vision Position',
                              plot_height='small', changed_params=changed_params,
-                             x_range=x_range)
+                             x_range=x_range, linkRange=linkXAxes)
         data_plot.add_graph(['x', 'y', 'z'], colors3, ['X', 'Y', 'Z'], mark_nan=True)
         plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
 
@@ -598,13 +598,14 @@ def get_time_series_plots(flight_mode_changes, ulog, px4_ulog, plot_width, db_da
         data_plot = DataPlot(data, plot_config, 'vehicle_vision_position',
                              y_axis_label='[m]', title='Vision Velocity',
                              plot_height='small', changed_params=changed_params,
-                             x_range=x_range)
+                             x_range=x_range, linkRange=linkXAxes)
         data_plot.add_graph(['vx', 'vy', 'vz'], colors3, ['X', 'Y', 'Z'], mark_nan=True)
         plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
 
         data_plot.change_dataset('vehicle_local_position_groundtruth')
         data_plot.add_graph(['vx', 'vy', 'vz'], colors8[2:5],
                             ['Groundtruth X', 'Groundtruth Y', 'Groundtruth Z'])
+
         if data_plot.finalize() is not None: plots.append(data_plot)
 
 
@@ -613,7 +614,7 @@ def get_time_series_plots(flight_mode_changes, ulog, px4_ulog, plot_width, db_da
         data_plot = DataPlot(data, plot_config, 'vehicle_vision_attitude',
                              y_axis_label='[deg]', title='Vision Attitude',
                              plot_height='small', changed_params=changed_params,
-                             x_range=x_range)
+                             x_range=x_range, linkRange=linkXAxes)
         data_plot.add_graph([lambda data: ('roll', np.rad2deg(data['roll'])),
                              lambda data: ('pitch', np.rad2deg(data['pitch'])),
                              lambda data: ('yaw', np.rad2deg(data['yaw']))],
@@ -637,7 +638,7 @@ def get_time_series_plots(flight_mode_changes, ulog, px4_ulog, plot_width, db_da
             data_plot = DataPlot(data, plot_config, 'vehicle_global_position',
                                  y_axis_label='[m/s]', title='Airspeed',
                                  plot_height='small',
-                                 changed_params=changed_params, x_range=x_range)
+                                 changed_params=changed_params, x_range=x_range, linkRange=linkXAxes)
             data_plot.add_graph([lambda data: ('groundspeed_estimated',
                                                np.sqrt(data['vel_n']**2 + data['vel_e']**2))],
                                 colors3[2:3], ['Ground Speed Estimated'])
@@ -658,7 +659,7 @@ def get_time_series_plots(flight_mode_changes, ulog, px4_ulog, plot_width, db_da
         data_plot = DataPlot(data, plot_config, 'manual_control_setpoint',
                              title='Manual Control Inputs (Radio or Joystick)',
                              plot_height='small', y_range=Range1d(-1.1, 1.1),
-                             changed_params=changed_params, x_range=x_range)
+                             changed_params=changed_params, x_range=x_range, linkRange=linkXAxes)
         data_plot.add_graph(['y', 'x', 'r', 'z',
                              lambda data: ('mode_slot', data['mode_slot']/6),
                              'aux1', 'aux2',
@@ -675,7 +676,7 @@ def get_time_series_plots(flight_mode_changes, ulog, px4_ulog, plot_width, db_da
         data_plot = DataPlot(data, plot_config, 'rc_channels',
                              title='Raw Radio Control Inputs',
                              plot_height='small', y_range=Range1d(-1.1, 1.1),
-                             changed_params=changed_params, x_range=x_range)
+                             changed_params=changed_params, x_range=x_range, linkRange=linkXAxes)
         num_rc_channels = 8
         if data_plot.dataset:
             max_channels = np.amax(data_plot.dataset.data['channel_count'])
@@ -698,10 +699,11 @@ def get_time_series_plots(flight_mode_changes, ulog, px4_ulog, plot_width, db_da
     # actuator controls 0
     data_plot = DataPlot(data, plot_config, 'actuator_controls_0',
                          y_start=0, title='Actuator Controls 0', plot_height='small',
-                         changed_params=changed_params, x_range=x_range)
+                         changed_params=changed_params, x_range=x_range, linkRange=linkXAxes)
     data_plot.add_graph(['control[0]', 'control[1]', 'control[2]', 'control[3]'],
                         colors8[0:4], ['Roll', 'Pitch', 'Yaw', 'Thrust'], mark_nan=True)
     plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
+
     if data_plot.finalize() is not None: plots.append(data_plot)
 
     # actuator controls 1
@@ -709,17 +711,18 @@ def get_time_series_plots(flight_mode_changes, ulog, px4_ulog, plot_width, db_da
     data_plot = DataPlot(data, plot_config, 'actuator_controls_1',
                          y_start=0, title='Actuator Controls 1 (VTOL in Fixed-Wing mode)',
                          plot_height='small', changed_params=changed_params,
-                         x_range=x_range)
+                         x_range=x_range, linkRange=linkXAxes)
     data_plot.add_graph(['control[0]', 'control[1]', 'control[2]', 'control[3]'],
                         colors8[0:4], ['Roll', 'Pitch', 'Yaw', 'Thrust'], mark_nan=True)
     plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
+
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
     # actuator outputs 0: Main
     data_plot = DataPlot(data, plot_config, 'actuator_outputs',
                          y_start=0, title='Actuator Outputs (Main)', plot_height='small',
-                         changed_params=changed_params, x_range=x_range)
+                         changed_params=changed_params, x_range=x_range, linkRange=linkXAxes)
     num_actuator_outputs = 8
     if data_plot.dataset:
         max_outputs = np.amax(data_plot.dataset.data['noutputs'])
@@ -735,7 +738,7 @@ def get_time_series_plots(flight_mode_changes, ulog, px4_ulog, plot_width, db_da
     data_plot = DataPlot(data, plot_config, 'actuator_outputs',
                          y_start=0, title='Actuator Outputs (AUX)', plot_height='small',
                          changed_params=changed_params, topic_instance=1,
-                         x_range=x_range)
+                         x_range=x_range, linkRange=linkXAxes)
     num_actuator_outputs = 8
     # only plot if at least one of the outputs is not constant
     all_constant = True
@@ -760,9 +763,10 @@ def get_time_series_plots(flight_mode_changes, ulog, px4_ulog, plot_width, db_da
     data_plot = DataPlot(data, plot_config, 'sensor_combined',
                          y_axis_label='[m/s^2]', title='Raw Acceleration',
                          plot_height='small', changed_params=changed_params,
-                         x_range=x_range)
+                         x_range=x_range, linkRange=linkXAxes)
     data_plot.add_graph(['accelerometer_m_s2[0]', 'accelerometer_m_s2[1]',
                          'accelerometer_m_s2[2]'], colors3, ['X', 'Y', 'Z'])
+
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
@@ -771,12 +775,13 @@ def get_time_series_plots(flight_mode_changes, ulog, px4_ulog, plot_width, db_da
     data_plot = DataPlot(data, plot_config, 'sensor_combined',
                          y_axis_label='[deg/s]', title='Raw Angular Speed (Gyroscope)',
                          plot_height='small', changed_params=changed_params,
-                         x_range=x_range)
+                         x_range=x_range, linkRange=linkXAxes)
     data_plot.add_graph([
         lambda data: ('gyro_rad[0]', np.rad2deg(data['gyro_rad[0]'])),
         lambda data: ('gyro_rad[1]', np.rad2deg(data['gyro_rad[1]'])),
         lambda data: ('gyro_rad[2]', np.rad2deg(data['gyro_rad[2]']))],
                         colors3, ['X', 'Y', 'Z'])
+
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
@@ -785,10 +790,11 @@ def get_time_series_plots(flight_mode_changes, ulog, px4_ulog, plot_width, db_da
     data_plot = DataPlot(data, plot_config, 'sensor_combined',
                          y_axis_label='[gauss]', title='Raw Magnetic Field Strength',
                          plot_height='small', changed_params=changed_params,
-                         x_range=x_range)
+                         x_range=x_range, linkRange=linkXAxes)
     data_plot.add_graph(['magnetometer_ga[0]', 'magnetometer_ga[1]',
                          'magnetometer_ga[2]'], colors3,
                         ['X', 'Y', 'Z'])
+
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
@@ -796,9 +802,10 @@ def get_time_series_plots(flight_mode_changes, ulog, px4_ulog, plot_width, db_da
     data_plot = DataPlot(data, plot_config, 'distance_sensor',
                          y_start=0, y_axis_label='[m]', title='Distance Sensor',
                          plot_height='small', changed_params=changed_params,
-                         x_range=x_range)
+                         x_range=x_range, linkRange=linkXAxes)
     data_plot.add_graph(['current_distance', 'covariance'], colors3[0:2],
                         ['Distance', 'Covariance'])
+
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
@@ -809,10 +816,11 @@ def get_time_series_plots(flight_mode_changes, ulog, px4_ulog, plot_width, db_da
     data_plot = DataPlot(data, plot_config, 'vehicle_gps_position',
                          title='GPS Uncertainty', y_range=Range1d(0, 40),
                          plot_height='small', changed_params=changed_params,
-                         x_range=x_range)
+                         x_range=x_range, linkRange=linkXAxes)
     data_plot.add_graph(['eph', 'epv', 'satellites_used', 'fix_type'], colors8[::2],
                         ['Horizontal position accuracy [m]', 'Vertical position accuracy [m]',
                          'Num Satellites used', 'GPS Fix'])
+
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
@@ -820,16 +828,17 @@ def get_time_series_plots(flight_mode_changes, ulog, px4_ulog, plot_width, db_da
     data_plot = DataPlot(data, plot_config, 'vehicle_gps_position',
                          y_start=0, title='GPS Noise & Jamming',
                          plot_height='small', changed_params=changed_params,
-                         x_range=x_range)
+                         x_range=x_range, linkRange=linkXAxes)
     data_plot.add_graph(['noise_per_ms', 'jamming_indicator'], colors3[0:2],
                         ['Noise per ms', 'Jamming Indicator'])
+
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
     # thrust and magnetic field
     data_plot = DataPlot(data, plot_config, 'sensor_combined',
                          y_start=0, title='Thrust and Magnetic Field', plot_height='small',
-                         changed_params=changed_params, x_range=x_range)
+                         changed_params=changed_params, x_range=x_range, linkRange=linkXAxes)
     data_plot.add_graph(
         [lambda data: ('len_mag', np.sqrt(data['magnetometer_ga[0]']**2 +
                                           data['magnetometer_ga[1]']**2 +
@@ -838,6 +847,7 @@ def get_time_series_plots(flight_mode_changes, ulog, px4_ulog, plot_width, db_da
     data_plot.change_dataset('actuator_controls_0')
     data_plot.add_graph([lambda data: ('thrust', data['control[3]'])],
                         colors2[1:2], ['Thrust'])
+
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
@@ -847,19 +857,21 @@ def get_time_series_plots(flight_mode_changes, ulog, px4_ulog, plot_width, db_da
                              plot_height='small', x_range=x_range)
     data_plot.add_graph(['accelerometer_m_s2[0]', 'accelerometer_m_s2[1]', 'accelerometer_m_s2[2]'],
                         ['X', 'Y', 'Z'])
+
     if data_plot.finalize() is not None: plots.append(data_plot)
 
     # power
     data_plot = DataPlot(data, plot_config, 'battery_status',
                          y_start=0, title='Power',
                          plot_height='small', changed_params=changed_params,
-                         x_range=x_range)
+                         x_range=x_range, linkRange=linkXAxes)
     data_plot.add_graph(['voltage_v', 'voltage_filtered_v',
                          'current_a', lambda data: ('discharged_mah', data['discharged_mah']/100),
                          lambda data: ('remaining', data['remaining']*10)],
                         colors8[::2]+colors8[1:2],
                         ['Voltage [V]', 'Voltage filtered [V]', 'Current [A]',
                          'Discharged Amount [mAh / 100]', 'Battery remaining [0=empty, 10=full]'])
+
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
@@ -869,7 +881,7 @@ def get_time_series_plots(flight_mode_changes, ulog, px4_ulog, plot_width, db_da
         data_plot = DataPlot(data, plot_config, 'estimator_status',
                              y_start=0, title='Estimator Watchdog',
                              plot_height='small', changed_params=changed_params,
-                             x_range=x_range)
+                             x_range=x_range, linkRange=linkXAxes)
         estimator_status = ulog.get_dataset('estimator_status').data
         plot_data = []
         plot_labels = []
@@ -903,6 +915,7 @@ def get_time_series_plots(flight_mode_changes, ulog, px4_ulog, plot_width, db_da
             plot_data = [lambda d: ('flags', input_data[0][1])]
             plot_labels = [input_data[0][0]]
         data_plot.add_graph(plot_data, colors8[0:len(plot_data)], plot_labels)
+
         if data_plot.finalize() is not None: plots.append(data_plot)
     except (KeyError, IndexError) as error:
         print('Error in estimator plot: '+str(error))
@@ -912,11 +925,12 @@ def get_time_series_plots(flight_mode_changes, ulog, px4_ulog, plot_width, db_da
     # RC Quality
     data_plot = DataPlot(data, plot_config, 'input_rc',
                          title='RC Quality', plot_height='small', y_range=Range1d(0, 1),
-                         changed_params=changed_params, x_range=x_range)
+                         changed_params=changed_params, x_range=x_range, linkRange=linkXAxes)
     data_plot.add_graph([lambda data: ('rssi', data['rssi']/100), 'rc_lost'],
                         colors3[0:2], ['RSSI [0, 1]', 'RC Lost (Indicator)'])
     data_plot.change_dataset('vehicle_status')
     data_plot.add_graph(['rc_signal_lost'], colors3[2:3], ['RC Lost (Detected)'])
+
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
@@ -924,12 +938,13 @@ def get_time_series_plots(flight_mode_changes, ulog, px4_ulog, plot_width, db_da
     # cpu load
     data_plot = DataPlot(data, plot_config, 'cpuload',
                          title='CPU & RAM', plot_height='small', y_range=Range1d(0, 1),
-                         changed_params=changed_params, x_range=x_range)
+                         changed_params=changed_params, x_range=x_range, linkRange=linkXAxes)
     data_plot.add_graph(['ram_usage', 'load'], [colors3[1], colors3[2]],
                         ['RAM Usage', 'CPU Load'])
     data_plot.add_span('load', line_color=colors3[2])
     data_plot.add_span('ram_usage', line_color=colors3[1])
     plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
+
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
@@ -938,7 +953,7 @@ def get_time_series_plots(flight_mode_changes, ulog, px4_ulog, plot_width, db_da
         data_plot = DataPlot(data, plot_config, 'sensor_combined', y_range=Range1d(0, 25e3),
                              y_axis_label='[us]',
                              title='Sampling Regularity of Sensor Data', plot_height='small',
-                             changed_params=changed_params, x_range=x_range)
+                             changed_params=changed_params, x_range=x_range, linkRange=linkXAxes)
         sensor_combined = ulog.get_dataset('sensor_combined').data
         sampling_diff = np.diff(sensor_combined['timestamp'])
         min_sampling_diff = np.amin(sampling_diff)
@@ -950,6 +965,7 @@ def get_time_series_plots(flight_mode_changes, ulog, px4_ulog, plot_width, db_da
         data_plot.change_dataset('estimator_status')
         data_plot.add_graph([lambda data: ('time_slip', data['time_slip']*1e6)],
                             [colors3[1]], ['Estimator time slip (cumulative)'])
+
         if data_plot.finalize() is not None: plots.append(data_plot)
     except:
         pass

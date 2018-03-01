@@ -3,6 +3,7 @@
 from html import escape
 
 from bokeh.layouts import widgetbox
+from bokeh.models import Range1d
 from bokeh.models.widgets import Div, Button, CheckboxButtonGroup
 from bokeh.io import curdoc
 
@@ -129,8 +130,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page, linkX
             if not is_running_locally(): # do not enable Google Map if running locally
                 curdoc().template_variables['has_position_data'] = True
 
-
-
+    numOfItemsBeforePlots = len(plots)
     plots += get_time_series_plots(flight_mode_changes, ulog, px4_ulog, plot_width, db_data, vehicle_data,
                          vtol_states, linkXAxes)
 
@@ -175,10 +175,15 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page, linkX
 
     linkAxesButton = CheckboxButtonGroup(labels=["Link X Axes"])
     def linkAxesCB(attr,old,new):
-        pass
+        if len(new) > 0: #box is checked
+            newPlots = [i.bokeh_plot for i in get_time_series_plots(flight_mode_changes, ulog, px4_ulog, plot_width, db_data, vehicle_data,
+                         vtol_states,linkXAxes = True)]
+        else:
+            newPlots = [i.bokeh_plot for i in get_time_series_plots(flight_mode_changes, ulog, px4_ulog, plot_width, db_data, vehicle_data,
+                         vtol_states,linkXAxes = False)]
+        curdoc().roots[0].children[numOfItemsBeforePlots:numOfItemsBeforePlots+len(newPlots)] = newPlots
     linkAxesButton.on_change('active',linkAxesCB)
     plots.append(linkAxesButton)
-    
 
     # changed parameters
     plots.append(get_changed_parameters(ulog.initial_parameters, plot_width))
