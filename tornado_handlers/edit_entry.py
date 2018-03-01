@@ -34,14 +34,14 @@ class EditEntryHandler(tornado.web.RequestHandler):
             if confirmed == '1':
                 if self.delete_log_entry(log_id, token):
                     content = """
-<h1>Log file deleted</h1>
+<h3>Log File deleted</h3>
 <p>
 Successfully deleted the log file.
 </p>
 """
                 else:
                     content = """
-<h1>Failed</h1>
+<h3>Failed</h3>
 <p>
 Failed to delete the log file.
 </p>
@@ -51,7 +51,7 @@ Failed to delete the log file.
                 delete_url = self.request.path+'?action=delete&log='+log_id+ \
                         '&token='+token+'&confirm=1'
                 content = """
-<h1>Delete log file</h1>
+<h3>Delete Log File</h3>
 <p>
 Click <a href="{delete_url}">here</a> to confirm and delete the log {log_id}.
 </p>

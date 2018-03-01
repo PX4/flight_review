@@ -3,13 +3,14 @@
             <div class="row">
                 <div class="col-sm-12">
                     <div class="copyright-text text-center">
-						<p>&copy; 2017 PX4 Team. Source on <a
-						 href="https://github.com/PX4/flight_review">github</a>.
+                        <p>&copy; 2018 PX4 Team. Source on <a
+                         href="https://github.com/PX4/flight_review">github</a>.
+                         Theme by <a target="_blank" href="https://bootswatch.com">Bootswatch</a>.
 {% if is_plot_page or is_stats_page %}
-						 Plotted with the awesome <a target="_blank"
-						 href="http://bokeh.pydata.org">bokeh</a> library.
+                         Plotted with the awesome <a target="_blank"
+                         href="http://bokeh.pydata.org">bokeh</a> library.
 {% endif %}
-						</p>
+                        </p>
                     </div>
                 </div>
             </div>
@@ -20,9 +21,13 @@
 
 
     {{ plot_script }}
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <!-- chosen.js: fancy select boxes (for error labels) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chosen/1.8.3/chosen.jquery.min.js"></script>
+    <!-- pace.js: automatic page load progress bar -->
     <script type="text/javascript" src="plot_app/static/js/pace.min.js"></script>
+    <!-- Popper.js: required by bootstrap for tooltips -->
+    <script type="text/javascript" src="plot_app/static/js/popper.min.js"></script>
     <script type="text/javascript" src="plot_app/static/js/bootstrap.min.js"></script>
     <script type="text/javascript">
     {% include 'main.js' %}
