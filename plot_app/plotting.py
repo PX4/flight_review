@@ -372,7 +372,7 @@ class DataPlot:
     def __init__(self, data, config, data_name, x_axis_label=None,
                  y_axis_label=None, title=None, plot_height='normal',
                  y_range=None, y_start=None, changed_params=None,
-                 topic_instance=0, x_range=None, linkRange = False):
+                 topic_instance=0, x_range=None, linkRange=False):
 
         self._had_error = False
         self._previous_success = False
@@ -395,7 +395,7 @@ class DataPlot:
                 else:
                     # we need a copy, otherwise x-axis zooming will be synchronized
                     # between all plots
-                    self._p.x_range = Range1d(x_range.start,x_range.end)
+                    self._p.x_range = Range1d(x_range.start, x_range.end)
 
             if changed_params is not None:
                 self._param_change_label = \

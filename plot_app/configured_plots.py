@@ -3,7 +3,6 @@
 from html import escape
 
 from bokeh.layouts import widgetbox
-from bokeh.models import Range1d
 from bokeh.models.widgets import Div, Button, CheckboxButtonGroup
 from bokeh.io import curdoc
 
@@ -170,17 +169,17 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page, linkX
                 'title': plot_title
                 })
 
-    linkAxesButton = CheckboxButtonGroup(labels=["Link X Axes"])
-    def linkAxesCB(attr,old,new):
+    link_axes_button = CheckboxButtonGroup(labels=["Link X Axes"])
+    def link_axes_cb(attr, old, new):
         if len(new) > 0: #box is checked
-            newPlots = [i.bokeh_plot for i in get_time_series_plots(flight_mode_changes, ulog, px4_ulog, plot_width, db_data, vehicle_data,
-                         vtol_states,linkXAxes = True)]
+            new_plots = [i.bokeh_plot for i in get_time_series_plots(flight_mode_changes, ulog, px4_ulog, plot_width, db_data, vehicle_data,
+                         vtol_states, linkXAxes=True)]
         else:
-            newPlots = [i.bokeh_plot for i in get_time_series_plots(flight_mode_changes, ulog, px4_ulog, plot_width, db_data, vehicle_data,
-                         vtol_states,linkXAxes = False)]
-        curdoc().roots[0].children[numOfItemsBeforePlots:numOfItemsBeforePlots+len(newPlots)] = newPlots
-    linkAxesButton.on_change('active',linkAxesCB)
-    plots.append(linkAxesButton)
+            new_plots = [i.bokeh_plot for i in get_time_series_plots(flight_mode_changes, ulog, px4_ulog, plot_width, db_data, vehicle_data,
+                         vtol_states, linkXAxes=False)]
+        curdoc().roots[0].children[numOfItemsBeforePlots:numOfItemsBeforePlots+len(new_plots)] = new_plots
+    link_axes_button.on_change('active',link_axes_cb)
+    plots.append(link_axes_button)
 
     # changed parameters
     plots.append(get_changed_parameters(ulog.initial_parameters, plot_width))
