@@ -19,7 +19,7 @@ from plotted_tables import (
 #pylint: disable=consider-using-enumerate
 
 
-def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page, linkXAxes = False):
+def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page, link_x_axes = False):
     """ create a list of bokeh plots (and widgets) to show """
 
     plots = []
@@ -128,7 +128,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page, linkX
 
     numOfItemsBeforePlots = len(plots)
     plots += get_time_series_plots(flight_mode_changes, ulog, px4_ulog, plot_width, db_data, vehicle_data,
-                         vtol_states, linkXAxes)
+                         vtol_states, link_x_axes)
 
     # exchange all DataPlot's with the bokeh_plot and handle parameter changes
 
@@ -173,10 +173,10 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page, linkX
     def link_axes_cb(attr, old, new):
         if len(new) > 0: #box is checked
             new_plots = [i.bokeh_plot for i in get_time_series_plots(flight_mode_changes, ulog, px4_ulog, plot_width, db_data, vehicle_data,
-                         vtol_states, linkXAxes=True)]
+                         vtol_states, link_x_axes=True)]
         else:
             new_plots = [i.bokeh_plot for i in get_time_series_plots(flight_mode_changes, ulog, px4_ulog, plot_width, db_data, vehicle_data,
-                         vtol_states, linkXAxes=False)]
+                         vtol_states, link_x_axes=False)]
         curdoc().roots[0].children[numOfItemsBeforePlots:numOfItemsBeforePlots+len(new_plots)] = new_plots
     link_axes_button.on_change('active',link_axes_cb)
     plots.append(link_axes_button)
