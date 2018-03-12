@@ -7,6 +7,7 @@ from __future__ import print_function
 import argparse
 import os
 import sys
+import errno
 
 from bokeh.application import Application
 from bokeh.server.server import Server
@@ -115,7 +116,19 @@ extra_patterns = [
     (r"/stats", RedirectHandler, {"url": "/plot_app?stats=1"}),
 ]
 
-server = Server(applications, extra_patterns=extra_patterns, **server_kwargs)
+server = None
+custom_port = 5006
+while server is None:
+    try:
+        server = Server(applications, extra_patterns=extra_patterns, **server_kwargs)
+    except OSError as e:
+        # if we get a port bind error and running locally with '-f',
+        # automatically select another port (useful for opening multiple logs)
+        if e.errno == errno.EADDRINUSE and show_ulog_file:
+            custom_port += 1
+            server_kwargs['port'] = custom_port
+        else:
+            raise
 
 if args.show:
     # we have to defer opening in browser until we start up the server
