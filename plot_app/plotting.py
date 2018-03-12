@@ -498,8 +498,9 @@ class DataPlot:
                     p.add_layout(nan_line)
                 if len(nan_timestamps) > 0:
                     y_values = [30] * len(nan_timestamps)
-                    names = ['NaN'] * len(nan_timestamps)
-                    source = ColumnDataSource(data=dict(x=np.array(list(nan_timestamps))+1e5,
+                    # NaN label: add a space to separate it from the line
+                    names = [' NaN'] * len(nan_timestamps)
+                    source = ColumnDataSource(data=dict(x=np.array(list(nan_timestamps)),
                                                         names=names, y=y_values))
                     # plot as text with a fixed screen-space y offset
                     labels = LabelSet(x='x', y='y', text='names',
