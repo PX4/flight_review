@@ -146,6 +146,7 @@ var radio_controller = {
 	_moveStick: function(two, stick_data, x, y) {
 		// x, y in range [-1, 1]
 		var stick = stick_data.stick;
+		stick.opacity = 1;
 		var rect = stick_data.rect;
 		var x_pos = rect.x + (1+x) * rect.w/2;
 		var y_pos = rect.y + (1-y) * rect.h/2;
@@ -156,6 +157,11 @@ var radio_controller = {
 		// update stick positions (all value are in range [-1, 1])
 		this._moveStick(this._two, this._left_stick, x_left, y_left);
 		this._moveStick(this._two, this._right_stick, x_right, y_right);
+	},
+
+	hideSticks: function() {
+		this._left_stick.stick.opacity = 0;
+		this._right_stick.stick.opacity = 0;
 	},
 
 	setFlightMode: function(flight_mode) {

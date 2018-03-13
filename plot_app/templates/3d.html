@@ -393,7 +393,7 @@ viewer.clock.onTick.addEventListener(function(clock) {
 	 if (flight_mode === undefined) flight_mode = '';
 	 radio_controller.setFlightMode(flight_mode);
 	 if (manual_sp === undefined) {
-		 radio_controller.updateSticks(0, 0, 0, 0);
+		 radio_controller.hideSticks();
 	 } else {
 		 // this is mode 2 (map throttle from [0, 1] to [-1, 1])
 		 radio_controller.updateSticks(manual_sp.w, manual_sp.z*2.-1.,
