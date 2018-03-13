@@ -41,13 +41,19 @@ class ThreeDHandler(TornadoRequestHandlerBase):
             gps_pos = ulog.get_dataset('vehicle_gps_position').data
             vehicle_global_position = ulog.get_dataset('vehicle_global_position').data
             attitude = ulog.get_dataset('vehicle_attitude').data
-            manual_control_setpoint = ulog.get_dataset('manual_control_setpoint').data
         except (KeyError, IndexError, ValueError) as error:
             raise CustomHTTPError(
                 400,
                 'The log does not contain all required topics<br />'
                 '(vehicle_gps_position, vehicle_global_position, '
-                'vehicle_attitude and manual_control_setpoint)')
+                'vehicle_attitude)')
+
+        # manual control setpoint is optional
+        manual_control_setpoint = None
+        try:
+            manual_control_setpoint = ulog.get_dataset('manual_control_setpoint').data
+        except (KeyError, IndexError, ValueError) as error:
+            pass
 
 
         # Get the takeoff location. We use the first position with a valid fix,
@@ -84,16 +90,17 @@ class ThreeDHandler(TornadoRequestHandlerBase):
 
         # manual control setpoints (stick input)
         manual_control_setpoints_str = '[ '
-        for i in range(len(manual_control_setpoint['timestamp'])):
-            manual_x = manual_control_setpoint['x'][i]
-            manual_y = manual_control_setpoint['y'][i]
-            manual_z = manual_control_setpoint['z'][i]
-            manual_r = manual_control_setpoint['r'][i]
-            t = manual_control_setpoint['timestamp'][i] + utc_offset
-            utctimestamp = datetime.datetime.utcfromtimestamp(t/1.e6).replace(
-                tzinfo=datetime.timezone.utc)
-            manual_control_setpoints_str += '["{:}", {:.3f}, {:.3f}, {:.3f}, {:.3f}], ' \
-                .format(utctimestamp.isoformat(), manual_x, manual_y, manual_z, manual_r)
+        if manual_control_setpoint:
+            for i in range(len(manual_control_setpoint['timestamp'])):
+                manual_x = manual_control_setpoint['x'][i]
+                manual_y = manual_control_setpoint['y'][i]
+                manual_z = manual_control_setpoint['z'][i]
+                manual_r = manual_control_setpoint['r'][i]
+                t = manual_control_setpoint['timestamp'][i] + utc_offset
+                utctimestamp = datetime.datetime.utcfromtimestamp(t/1.e6).replace(
+                    tzinfo=datetime.timezone.utc)
+                manual_control_setpoints_str += '["{:}", {:.3f}, {:.3f}, {:.3f}, {:.3f}], ' \
+                    .format(utctimestamp.isoformat(), manual_x, manual_y, manual_z, manual_r)
         manual_control_setpoints_str += ' ]'
 
 
