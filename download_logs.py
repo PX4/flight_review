@@ -3,7 +3,7 @@
 import os, glob
 import argparse
 import requests
-from config_tables import *
+from plot_app.config_tables import *
 
 
 def get_arguments():
@@ -113,7 +113,6 @@ def main():
         n_downloaded = 0
         n_skipped = 0
 
-        # for i in range(n_en-1, n-1, -1): # -1 because list starts at 0
         for i in range(n_en):
             entry_id = db_entries_list[i]['log_id']
 

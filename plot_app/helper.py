@@ -16,7 +16,8 @@ import numpy as np
 from pyulog import *
 from pyulog.px4 import *
 
-from .config import get_log_filepath, get_airframes_filename, get_airframes_url, \
+from config_tables import *
+from config import get_log_filepath, get_airframes_filename, get_airframes_url, \
                    get_parameters_filename, get_parameters_url, \
                    get_log_cache_size, debug_print_timing, \
                    get_releases_filename
@@ -198,8 +199,6 @@ def get_default_parameters():
             pass
     return param_dict
 
-
-
 def WGS84_to_mercator(lon, lat):
     """ Convert lon, lat in [deg] to Mercator projection """
 # alternative that relies on the pyproj library:
@@ -286,7 +285,6 @@ class ULogException(Exception):
     pass
 
 @lru_cache(maxsize=get_log_cache_size())
-
 def load_ulog_file(file_name):
     """ load an ULog file
     :return: ULog object
