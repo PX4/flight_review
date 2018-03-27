@@ -415,7 +415,7 @@ class DataPlot:
     def title(self):
         """ return the bokeh title """
         if self._p is not None:
-            title_text = self._p.title.text
+            title_text = self._p.title.text # pylint: disable=no-member
         else:
             title_text = ""
         return title_text
