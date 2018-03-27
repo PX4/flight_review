@@ -3,13 +3,16 @@
 import os, glob
 import argparse
 import requests
+from config_tables import *
 
 
 def get_arguments():
-    parser = argparse.ArgumentParser(description='Python script for downloading public logs from the PX4/flight_review database.',
+    parser = argparse.ArgumentParser(description='Python script for downloading public logs '
+                                                 'from the PX4/flight_review database.',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--max-num', '-n', type=int, default=-1,
-                        help='Maximum number of files to download that match the search criteria. set to -1 to download all files.')
+                        help='Maximum number of files to download that match the search criteria. '
+                             'Default: download all files.')
     parser.add_argument('-d', '--download-folder', type=str, default="data/downloaded/",
                         help='The folder to store the downloaded logfiles.')
     parser.add_argument('--print', action='store_true', dest="print_entries",
@@ -20,7 +23,37 @@ def get_arguments():
                         help='The url at which the server provides the dbinfo API.')
     parser.add_argument('--download-api', type=str, default="https://review.px4.io/download",
                         help='The url at which the server provides the download API.')
+    parser.add_argument('--mav_type', type=str, default=None, nargs = '+',
+                        help='Which mav types to download. Multiple are possible. Example: Quadrotor') # 1 +
+    parser.add_argument('--flight_modes', type=str, default=None, nargs='+',
+                        help='Whether to download only data with special flight modes '
+                             'Example: Mission')
+    parser.add_argument('--error_labels', default=None, nargs='+', type=str,
+                        help='Whether to only download data with special error labels '
+                             ' Example: Vibration')
+    parser.add_argument('--rating', default=None,  type=str, nargs='+',
+                        help='possible ratings of the data. Example: good excellent')
     return parser.parse_args()
+
+
+def flight_modes_to_ids(flight_modes):  # gets a string 'Manual' id=Zahl
+    """
+    returns a list of mode ids for a list of mode labels
+    """
+    flight_ids = []
+    for i in flight_modes_table:
+        if flight_modes_table[i][0] in flight_modes:
+            flight_ids.append(i)  # adds to list
+    return flight_ids
+
+
+def error_labels_to_ids(error_labels):  # gets a string
+    """
+    returns a list of error ids for a list of error labels
+    """
+    error_id_table = {label: id for id, label in error_labels_table.items()} # creates new dictionary
+    error_ids = [error_id_table[error_label] for error_label in error_labels] # creates list of error_ids
+    return error_ids
 
 
 def main():
@@ -28,33 +61,64 @@ def main():
 
     try:
         # the db_info_api sends a json file with a list of all public database entries
-        db_entries_list = requests.get(url=args.db_info_api).json()
+        db_entries_list = requests.get(url=args.db_info_api).json() # copy list
     except:
         print("Server request failed.")
         raise
 
     if args.print_entries:
-        # only print the json output
+        # only print the json output without downloading
         print(db_entries_list)
+
     else:
-        if not os.path.isdir(args.download_folder):
+        if not os.path.isdir(args.download_folder): # returns true if path is an existing directory
             print("creating download directory " + args.download_folder)
-            os.makedirs(args.download_folder)
+            os.makedirs(args.download_folder) # creates new folder
         # find already existing logs in download folder
         logfile_pattern = os.path.join(os.path.abspath(args.download_folder), "*.ulg")
         logfiles = glob.glob(os.path.join(os.getcwd(), logfile_pattern))
         logids = frozenset(os.path.splitext(os.path.basename(f))[0] for f in logfiles)
 
+        # filter for mav types
+        if args.mav_type is not None:
+            mav = [mav_type.lower() for mav_type in args.mav_type]
+            db_entries_list = [entry for entry in db_entries_list if set([entry["mav_type"].lower()]).issubset(set(mav))]
+
+        # filter for rating
+        if args.rating is not None:
+            rate = [rating.lower() for rating in args.rating]
+            db_entries_list = [entry for entry in db_entries_list if set([entry["rating"].lower()]).issubset(set(rate))]
+
+        # filter for error labels
+        if args.error_labels is not None:
+            err_labels = error_labels_to_ids(args.error_labels)
+            db_entries_list = [entry for entry in db_entries_list if set(err_labels).issubset(set(entry["error_labels"]))]
+            # compares numbers, must contain all
+
+        # filter for flight modes
+        if args.flight_modes is not None:
+            modes = flight_modes_to_ids(args.flight_modes)
+            db_entries_list = [entry for entry in db_entries_list if set(modes).issubset(set(entry["flight_modes"]))]
+            # compares numbers, must contain all
+
         # set number of files to download
-        n_en = len(db_entries_list)
-        if (args.max_num > 0):
-            n_en = min(n_en, args.max_num)
+        n_en = len(db_entries_list) # max number of logs
+        n = 0  # min number for iteration
+        if args.max_num > 0: # default is -1
+            n = n_en - min(n_en, args.max_num) # difference
+
+        # reverse list order to first download newest log files
+        db_entries_list = [db_entries_list[e] for e in range(n_en-1, n-1, -1)]
 
         n_downloaded = 0
         n_skipped = 0
+
+        # for i in range(n_en-1, n-1, -1): # -1 because list starts at 0
         for i in range(n_en):
             entry_id = db_entries_list[i]['log_id']
+
             if args.overwrite or entry_id not in logids:
+
                 file_path = os.path.join(args.download_folder, entry_id + ".ulg")
 
                 print('downloading {:}/{:} ({:})'.format(i + 1, n_en, entry_id))
