@@ -1,3 +1,4 @@
+""" configuration tables """
 
 flight_modes_table = {
     0: ('Manual', '#cc0000'), # red
