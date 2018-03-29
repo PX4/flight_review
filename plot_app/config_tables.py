@@ -1,5 +1,7 @@
 """ configuration tables """
 
+#pylint: disable=invalid-name
+
 flight_modes_table = {
     0: ('Manual', '#cc0000'), # red
     1: ('Altitude', '#eecc00'), # yellow
