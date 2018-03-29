@@ -23,36 +23,40 @@ def get_arguments():
                         help='The url at which the server provides the dbinfo API.')
     parser.add_argument('--download-api', type=str, default="https://review.px4.io/download",
                         help='The url at which the server provides the download API.')
-    parser.add_argument('--mav_type', type=str, default=None, nargs = '+',
-                        help='Which mav types to download. Multiple are possible. Example: Quadrotor') # 1 +
-    parser.add_argument('--flight_modes', type=str, default=None, nargs='+',
-                        help='Whether to download only data with special flight modes '
+    parser.add_argument('--mav-type', type=str, default=None, nargs='+',
+                        help='Which mav types to download. Multiple are possible. '
+                             'Example: Quadrotor')
+    parser.add_argument('--flight-modes', type=str, default=None, nargs='+',
+                        help='Whether to download only data with special flight modes. '
+                             'If you provide multiple, the log must contain all modes. '
                              'Example: Mission')
-    parser.add_argument('--error_labels', default=None, nargs='+', type=str,
-                        help='Whether to only download data with special error labels '
-                             ' Example: Vibration')
+    parser.add_argument('--error-labels', default=None, nargs='+', type=str,
+                        help='Whether to only download data with special error labels. '
+                             'If you provide multiple, the log must contain all labels. '
+                             'Example: Vibration')
     parser.add_argument('--rating', default=None,  type=str, nargs='+',
-                        help='possible ratings of the data. Example: good excellent')
+                        help='possible ratings of the data. '
+                             'Example: good excellent')
     return parser.parse_args()
 
 
-def flight_modes_to_ids(flight_modes):  # gets a string 'Manual' id=Zahl
+def flight_modes_to_ids(flight_modes):
     """
     returns a list of mode ids for a list of mode labels
     """
     flight_ids = []
     for i in flight_modes_table:
         if flight_modes_table[i][0] in flight_modes:
-            flight_ids.append(i)  # adds to list
+            flight_ids.append(i)
     return flight_ids
 
 
-def error_labels_to_ids(error_labels):  # gets a string
+def error_labels_to_ids(error_labels):
     """
     returns a list of error ids for a list of error labels
     """
-    error_id_table = {label: id for id, label in error_labels_table.items()} # creates new dictionary
-    error_ids = [error_id_table[error_label] for error_label in error_labels] # creates list of error_ids
+    error_id_table = {label: id for id, label in error_labels_table.items()}
+    error_ids = [error_id_table[error_label] for error_label in error_labels]
     return error_ids
 
 
@@ -61,7 +65,7 @@ def main():
 
     try:
         # the db_info_api sends a json file with a list of all public database entries
-        db_entries_list = requests.get(url=args.db_info_api).json() # copy list
+        db_entries_list = requests.get(url=args.db_info_api).json()
     except:
         print("Server request failed.")
         raise
@@ -73,7 +77,8 @@ def main():
     else:
         if not os.path.isdir(args.download_folder): # returns true if path is an existing directory
             print("creating download directory " + args.download_folder)
-            os.makedirs(args.download_folder) # creates new folder
+            os.makedirs(args.download_folder)
+
         # find already existing logs in download folder
         logfile_pattern = os.path.join(os.path.abspath(args.download_folder), "*.ulg")
         logfiles = glob.glob(os.path.join(os.getcwd(), logfile_pattern))
@@ -82,7 +87,7 @@ def main():
         # filter for mav types
         if args.mav_type is not None:
             mav = [mav_type.lower() for mav_type in args.mav_type]
-            db_entries_list = [entry for entry in db_entries_list if set([entry["mav_type"].lower()]).issubset(set(mav))]
+            db_entries_list = [entry for entry in db_entries_list if entry["mav_type"].lower() in mav]
 
         # filter for rating
         if args.rating is not None:
@@ -102,13 +107,12 @@ def main():
             # compares numbers, must contain all
 
         # set number of files to download
-        n_en = len(db_entries_list) # max number of logs
-        n = 0  # min number for iteration
-        if args.max_num > 0: # default is -1
-            n = n_en - min(n_en, args.max_num) # difference
+        n_en = len(db_entries_list)
+        if args.max_num > 0:
+            n_en = min(n_en, args.max_num)
 
         # reverse list order to first download newest log files
-        db_entries_list = [db_entries_list[e] for e in range(n_en-1, n-1, -1)]
+        db_entries_list = [entry for entry in reversed(db_entries_list)]
 
         n_downloaded = 0
         n_skipped = 0
