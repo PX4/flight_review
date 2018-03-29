@@ -4,6 +4,7 @@ import os, glob
 import argparse
 import requests
 from plot_app.config_tables import *
+import datetime
 
 
 def get_arguments():
@@ -92,7 +93,7 @@ def main():
         # filter for rating
         if args.rating is not None:
             rate = [rating.lower() for rating in args.rating]
-            db_entries_list = [entry for entry in db_entries_list if set([entry["rating"].lower()]).issubset(set(rate))]
+            db_entries_list = [entry for entry in db_entries_list if entry["rating"].lower() in rate]
 
         # filter for error labels
         if args.error_labels is not None:
@@ -111,8 +112,9 @@ def main():
         if args.max_num > 0:
             n_en = min(n_en, args.max_num)
 
-        # reverse list order to first download newest log files
-        db_entries_list = [entry for entry in reversed(db_entries_list)]
+        # sort list order to first download the newest log files
+        db_entries_list = sorted(
+            db_entries_list, key=lambda x: datetime.datetime.strptime(x['log_date'], '%Y-%m-%d'), reverse=True)
 
         n_downloaded = 0
         n_skipped = 0
