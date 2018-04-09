@@ -190,11 +190,21 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
                              plot_height='small', changed_params=changed_params,
                              x_range=x_range)
         data_plot.add_graph([lambda data: (axis+'speed', np.rad2deg(data[axis+'speed']))],
-                            colors2[0:1], [axis_name+' Rate Estimated'], mark_nan=True)
+                            colors3[0:1], [axis_name+' Rate Estimated'], mark_nan=True)
         data_plot.change_dataset('vehicle_rates_setpoint')
         data_plot.add_graph([lambda data: (axis, np.rad2deg(data[axis]))],
-                            colors2[1:2], [axis_name+' Rate Setpoint'],
+                            colors3[1:2], [axis_name+' Rate Setpoint'],
                             mark_nan=True, use_step_lines=True)
+        axis_letter = axis[0].upper()
+        rate_int_limit = '(*100)'
+        # this param is MC/VTOL only (it will not exist on FW)
+        rate_int_limit_param = 'MC_' + axis_letter + 'R_INT_LIM'
+        if rate_int_limit_param in ulog.initial_parameters:
+            rate_int_limit = '[-{0:.0f}, {0:.0f}]'.format(
+                ulog.initial_parameters[rate_int_limit_param]*100)
+        data_plot.change_dataset('rate_ctrl_status')
+        data_plot.add_graph([lambda data: (axis, data[axis+'speed_integ']*100)],
+                            colors3[2:3], [axis_name+' Rate Integral '+rate_int_limit])
         data_plot.change_dataset('vehicle_attitude_groundtruth')
         data_plot.add_graph([lambda data: (axis+'speed', np.rad2deg(data[axis+'speed']))],
                             [color_gray], [axis_name+' Rate Groundtruth'])
