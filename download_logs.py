@@ -2,9 +2,11 @@
 
 import os, glob
 import argparse
-import requests
-from plot_app.config_tables import *
+import json
 import datetime
+import requests
+
+from plot_app.config_tables import *
 
 
 def get_arguments():
@@ -72,8 +74,8 @@ def main():
         raise
 
     if args.print_entries:
-        # only print the json output without downloading
-        print(db_entries_list)
+        # only print the json output without downloading logs
+        print(json.dumps(db_entries_list, indent=4, sort_keys=True))
 
     else:
         if not os.path.isdir(args.download_folder): # returns true if path is an existing directory
