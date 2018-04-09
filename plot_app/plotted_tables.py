@@ -90,6 +90,8 @@ def get_info_table_html(ulog, px4_ulog, db_data, vehicle_data, vtol_states):
     sys_hardware = ''
     if 'ver_hw' in ulog.msg_info_dict:
         sys_hardware = escape(ulog.msg_info_dict['ver_hw'])
+        if 'ver_hw_subtype' in ulog.msg_info_dict:
+            sys_hardware += ' (' + escape(ulog.msg_info_dict['ver_hw_subtype']) + ')'
         table_text_left.append(('Hardware', sys_hardware))
 
     release_str = ulog.get_version_info_str()
