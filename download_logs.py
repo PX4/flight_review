@@ -1,6 +1,8 @@
 #! /usr/bin/env python3
+""" Script to download public logs """
 
-import os, glob
+import os
+import glob
 import argparse
 import json
 import datetime
@@ -10,6 +12,7 @@ from plot_app.config_tables import *
 
 
 def get_arguments():
+    """ Get parsed CLI arguments """
     parser = argparse.ArgumentParser(description='Python script for downloading public logs '
                                                  'from the PX4/flight_review database.',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -37,7 +40,7 @@ def get_arguments():
                         help='Whether to only download data with special error labels. '
                              'If you provide multiple, the log must contain all labels. '
                              'Example: Vibration')
-    parser.add_argument('--rating', default=None,  type=str, nargs='+',
+    parser.add_argument('--rating', default=None, type=str, nargs='+',
                         help='possible ratings of the data. '
                              'Example: good excellent')
     return parser.parse_args()
@@ -64,6 +67,7 @@ def error_labels_to_ids(error_labels):
 
 
 def main():
+    """ main script entry point """
     args = get_arguments()
 
     try:
@@ -90,23 +94,27 @@ def main():
         # filter for mav types
         if args.mav_type is not None:
             mav = [mav_type.lower() for mav_type in args.mav_type]
-            db_entries_list = [entry for entry in db_entries_list if entry["mav_type"].lower() in mav]
+            db_entries_list = [entry for entry in db_entries_list
+                               if entry["mav_type"].lower() in mav]
 
         # filter for rating
         if args.rating is not None:
             rate = [rating.lower() for rating in args.rating]
-            db_entries_list = [entry for entry in db_entries_list if entry["rating"].lower() in rate]
+            db_entries_list = [entry for entry in db_entries_list
+                               if entry["rating"].lower() in rate]
 
         # filter for error labels
         if args.error_labels is not None:
             err_labels = error_labels_to_ids(args.error_labels)
-            db_entries_list = [entry for entry in db_entries_list if set(err_labels).issubset(set(entry["error_labels"]))]
+            db_entries_list = [entry for entry in db_entries_list
+                               if set(err_labels).issubset(set(entry["error_labels"]))]
             # compares numbers, must contain all
 
         # filter for flight modes
         if args.flight_modes is not None:
             modes = flight_modes_to_ids(args.flight_modes)
-            db_entries_list = [entry for entry in db_entries_list if set(modes).issubset(set(entry["flight_modes"]))]
+            db_entries_list = [entry for entry in db_entries_list
+                               if set(modes).issubset(set(entry["flight_modes"]))]
             # compares numbers, must contain all
 
         # set number of files to download
@@ -116,7 +124,9 @@ def main():
 
         # sort list order to first download the newest log files
         db_entries_list = sorted(
-            db_entries_list, key=lambda x: datetime.datetime.strptime(x['log_date'], '%Y-%m-%d'), reverse=True)
+            db_entries_list,
+            key=lambda x: datetime.datetime.strptime(x['log_date'], '%Y-%m-%d'),
+            reverse=True)
 
         n_downloaded = 0
         n_skipped = 0
@@ -129,11 +139,11 @@ def main():
                 file_path = os.path.join(args.download_folder, entry_id + ".ulg")
 
                 print('downloading {:}/{:} ({:})'.format(i + 1, n_en, entry_id))
-                r = requests.get(url=args.download_api + "?log=" + entry_id, stream=True)
-                with open(file_path, 'wb') as f:
-                    for chunk in r.iter_content(chunk_size=1024):
+                request = requests.get(url=args.download_api + "?log=" + entry_id, stream=True)
+                with open(file_path, 'wb') as log_file:
+                    for chunk in request.iter_content(chunk_size=1024):
                         if chunk:  # filter out keep-alive new chunks
-                            f.write(chunk)
+                            log_file.write(chunk)
                 n_downloaded += 1
             else:
                 n_skipped += 1

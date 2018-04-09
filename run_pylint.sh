@@ -9,6 +9,6 @@ set -e
 
 export PYTHONPATH=plot_app
 python $pylint_exec tornado_handlers/*.py serve.py \
-	plot_app/*.py
+	plot_app/*.py download_logs.py
 
 exit 0
