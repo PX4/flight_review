@@ -26,6 +26,14 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
     plots = []
     data = ulog.data_list
 
+    # COMPATIBILITY support for old logs
+    if any(elem.name == 'vehicle_air_data' for elem in data):
+        baro_alt_meter_topic = 'vehicle_air_data'
+        magnetometer_ga_topic = 'vehicle_magnetometer'
+    else: # old
+        baro_alt_meter_topic = 'sensor_combined'
+        magnetometer_ga_topic = 'sensor_combined'
+
 
     # initialize flight mode changes
     flight_mode_changes = get_flight_mode_changes(ulog)
@@ -146,7 +154,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
                          changed_params=changed_params, x_range=x_range)
     data_plot.add_graph([lambda data: ('alt', data['alt']*0.001)],
                         colors8[0:1], ['GPS Altitude'])
-    data_plot.change_dataset('sensor_combined')
+    data_plot.change_dataset(baro_alt_meter_topic)
     data_plot.add_graph(['baro_alt_meter'], colors8[1:2], ['Barometer Altitude'])
     data_plot.change_dataset('vehicle_global_position')
     data_plot.add_graph(['alt'], colors8[2:3], ['Fused Altitude Estimation'])
@@ -334,7 +342,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
 
         if data_plot.finalize() is not None: plots.append(data_plot)
 
-    else: # it's an old log
+    else: # it's an old log (COMPATIBILITY)
         data_plot = DataPlot(data, plot_config, 'rc_channels',
                              title='Raw Radio Control Inputs',
                              plot_height='small', y_range=Range1d(-1.1, 1.1),
@@ -445,7 +453,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
 
 
     # magnetic field strength
-    data_plot = DataPlot(data, plot_config, 'sensor_combined',
+    data_plot = DataPlot(data, plot_config, magnetometer_ga_topic,
                          y_axis_label='[gauss]', title='Raw Magnetic Field Strength',
                          plot_height='small', changed_params=changed_params,
                          x_range=x_range)
@@ -490,7 +498,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
 
 
     # thrust and magnetic field
-    data_plot = DataPlot(data, plot_config, 'sensor_combined',
+    data_plot = DataPlot(data, plot_config, magnetometer_ga_topic,
                          y_start=0, title='Thrust and Magnetic Field', plot_height='small',
                          changed_params=changed_params, x_range=x_range)
     data_plot.add_graph(
