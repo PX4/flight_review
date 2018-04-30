@@ -770,7 +770,7 @@ class DataPlotSpec(DataPlot):
             # calculate the spectrogram
             psd = dict()
             for key in field_names_expanded:
-                frequency, time, psd[key] = signal.spectrogram(
+                frequency, time, psd[key] = scipy.signal.spectrogram(
                     data_set[key], fs=sampling_frequency, window=window,
                     nperseg=window_length, noverlap=noverlap, scaling='density')
 
