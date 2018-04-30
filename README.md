@@ -5,10 +5,16 @@
 This is a web application for flight log analysis. It allows users to upload
 ULog flight logs, and analyze them through the browser.
 
+
 It uses the [bokeh](http://bokeh.pydata.org) library for plotting and the
 [Tornado Web Server](http://www.tornadoweb.org).
 
-Flight Review is deployed on https://review.px4.io.
+Flight Review is deployed at https://review.px4.io.
+
+![Plot View](screenshots/plot_view.png)
+
+#### 3D View ####
+![3D View](screenshots/3d_view.gif)
 
 
 #### Installation and Setup ####
