@@ -856,9 +856,9 @@ class DataPlotFFT(DataPlot):
             # calculate the sampling frequency
             # (Note: logging dropouts are not taken into account here)
             delta_t = ((data_set['timestamp'][-1] - data_set['timestamp'][0]) * 1.0e-6) / data_len
-            sampling_frequency = int(1.0 / delta_t)
+            sampling_frequency = 1.0 / delta_t
 
-            if sampling_frequency < 100: # require min sampling freq
+            if sampling_frequency < 100 or sampling_frequency == float("inf"): # require min sampling freq
                 self._had_error = True
                 return
 
