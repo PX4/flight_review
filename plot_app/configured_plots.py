@@ -375,6 +375,24 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
     plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
     if data_plot.finalize() is not None: plots.append(data_plot)
 
+    # actuator controls (Main) FFT (for filter & output noise analysis)
+    data_plot = DataPlotFFT(data, plot_config, 'actuator_controls_0',
+                            title='Actuator Controls FFT')
+    data_plot.add_graph(['control[0]', 'control[1]', 'control[2]'],
+                        colors3, ['Roll', 'Pitch', 'Yaw'])
+    if not data_plot.had_error:
+        if 'MC_DTERM_CUTOFF' in ulog.initial_parameters:
+            data_plot.mark_frequency(
+                ulog.initial_parameters['MC_DTERM_CUTOFF'],
+                'MC_DTERM_CUTOFF')
+        if 'IMU_GYRO_CUTOFF' in ulog.initial_parameters:
+            data_plot.mark_frequency(
+                ulog.initial_parameters['IMU_GYRO_CUTOFF'],
+                'IMU_GYRO_CUTOFF', 20)
+
+    if data_plot.finalize() is not None: plots.append(data_plot)
+
+
     # actuator controls 1
     # (only present on VTOL, Fixed-wing config)
     data_plot = DataPlot(data, plot_config, 'actuator_controls_1',

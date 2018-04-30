@@ -14,7 +14,9 @@ from bokeh.models.widgets import DataTable, DateFormatter, TableColumn
 from bokeh import events
 
 import numpy as np
-from scipy import signal
+import scipy
+import scipy.fftpack
+import scipy.signal
 
 from downsampling import DynamicDownsample
 from helper import (
@@ -383,6 +385,7 @@ class DataPlot:
         self._plot_height_name = plot_height
         self._data_name = data_name
         self._cur_dataset = None
+        self._use_time_formatter = True
         try:
             self._p = figure(title=title, x_axis_label=x_axis_label,
                              y_axis_label=y_axis_label, tools=TOOLS,
@@ -624,7 +627,8 @@ class DataPlot:
         #p.lod_threshold=None # turn off level-of-detail
 
         # axis labels: format time
-        p.xaxis[0].formatter = FuncTickFormatter(code='''
+        if self._use_time_formatter:
+            p.xaxis[0].formatter = FuncTickFormatter(code='''
                     //func arguments: ticks, x_range
                     // assume us ticks
                     ms = Math.round(tick / 1000)
@@ -757,7 +761,7 @@ class DataPlotSpec(DataPlot):
             delta_t = ((data_set['timestamp'][-1] - data_set['timestamp'][0]) * 1.0e-6) / len(data_set['timestamp'])
             sampling_frequency = int(1.0 / delta_t)
 
-            if sampling_frequency < 100:
+            if sampling_frequency < 100: # require min sampling freq
                 self._had_error = True
                 return
 
@@ -815,4 +819,100 @@ class DataPlotSpec(DataPlot):
         except (KeyError, IndexError, ValueError, ZeroDivisionError) as error:
             print(type(error), "(" + self._data_name + "):", error)
             self._had_error = True
+
+class DataPlotFFT(DataPlot):
+    """
+    An FFT plot.
+    This does not downsample dynamically.
+
+    An FFT plot is only added to the plotting page if the sampling frequency of
+    the dataset is higher than 100Hz.
+    """
+
+    def __init__(self, data, config, data_name,
+                 title=None, plot_height='small',
+                 x_range=None, y_range=None, topic_instance=0):
+
+        super(DataPlotFFT, self).__init__(data, config, data_name, x_axis_label='Hz',
+                                          y_axis_label='Amplitude * 1000', title=title, plot_height=plot_height,
+                                          x_range=x_range, y_range=y_range, topic_instance=topic_instance)
+        self._use_time_formatter = False
+
+    def add_graph(self, field_names, colors, legends):
+        """ add an FFT plot to the graph
+
+        field_names: can be a list of fields from the data set, or a list of
+        functions with the data set as argument and returning a tuple of
+        (field_name, data)
+        legends: description for the field_names that will appear in the title of the plot
+        """
+
+        if self._had_error: return
+        try:
+            data_set = {}
+            data_set['timestamp'] = self._cur_dataset.data['timestamp']
+            data_len = len(data_set['timestamp'])
+
+            # calculate the sampling frequency
+            # (Note: logging dropouts are not taken into account here)
+            delta_t = ((data_set['timestamp'][-1] - data_set['timestamp'][0]) * 1.0e-6) / data_len
+            sampling_frequency = int(1.0 / delta_t)
+
+            if sampling_frequency < 100: # require min sampling freq
+                self._had_error = True
+                return
+
+            field_names_expanded = self._expand_field_names(field_names, data_set)
+
+            freqs = scipy.fftpack.fftfreq(data_len, delta_t)
+            mean_start_freq = 40
+            plot_data = []
+            for field_name, color, legend in zip(field_names_expanded, colors, legends):
+                fft_values = 1000 * 2/data_len*abs(scipy.fft(data_set[field_name]))
+                mean_fft_value = np.mean(fft_values[np.argwhere(freqs >= mean_start_freq).flatten()])
+                legend = legend + " (mean above {:} Hz: {:.2f})".format(mean_start_freq, mean_fft_value)
+                plot_data.append((fft_values, mean_fft_value, legend, color))
+
+            for fft_values, mean_fft_value, legend, color in plot_data:
+                fft_plot_values = fft_values[:len(freqs)//2]
+                freqs_plot = freqs[:len(freqs)//2]
+                # downsample if necessary
+                max_num_data_points = 3.0*self._config['plot_width']
+                if len(fft_plot_values) > max_num_data_points:
+                    step_size = int(len(fft_plot_values) / max_num_data_points)
+                    fft_plot_values = fft_plot_values[::step_size]
+                    freqs_plot = freqs_plot[::step_size]
+                self._p.line(freqs_plot, fft_plot_values,
+                             line_color=color, line_width=2, legend=legend,
+                             alpha=0.8)
+            # plot the mean lines above the fft graphs
+            for fft_values, mean_fft_value, legend, color in plot_data:
+                self._p.line([mean_start_freq, np.max(freqs)],
+                             [mean_fft_value, mean_fft_value],
+                             line_color=color, line_width=2, legend=legend)
+
+            self._p.y_range = Range1d(0, 5)
+
+        except (KeyError, IndexError, ValueError, ZeroDivisionError) as error:
+            print(type(error), "(" + self._data_name + "):", error)
+            self._had_error = True
+
+    def mark_frequency(self, frequency, label, y_screen_offset=0):
+        """
+        Add a vertical line with a label to mark a certain frequency
+        """
+        p = self._p
+        mark_color = 'black'
+        mark_line = Span(location=frequency,
+                         dimension='height', line_color=mark_color,
+                         line_width=1)
+        p.add_layout(mark_line)
+        # label: add a space to separate it from the line
+        label = ' ' + label
+        # plot as text with a fixed screen-space y offset
+        label = Label(x=frequency, y=self.plot_height/2-10-y_screen_offset,
+                      text=label, y_units='screen', level='glyph',
+                      text_font_size='8pt', text_color=mark_color,
+                      render_mode='canvas')
+        p.add_layout(label)
 
