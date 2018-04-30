@@ -396,7 +396,7 @@ class DataPlot:
 
             if changed_params is not None:
                 self._param_change_label = \
-                    plot_parameter_changes(self._p, config['plot_height'][plot_height],
+                    plot_parameter_changes(self._p, self.plot_height,
                                            changed_params)
 
             self._cur_dataset = [elem for elem in data
@@ -602,7 +602,7 @@ class DataPlot:
 
     def _setup_plot(self):
         plots_width = self._config['plot_width']
-        plots_height = self._config['plot_height'][self._plot_height_name]
+        plots_height = self.plot_height
         p = self._p
 
         p.plot_width = plots_width
