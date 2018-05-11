@@ -30,14 +30,14 @@ def get_arguments():
     parser.add_argument('--download-api', type=str, default="https://review.px4.io/download",
                         help='The url at which the server provides the download API.')
     parser.add_argument('--mav-type', type=str, default=None, nargs='+',
-                        help='Filter logs by mav type (case insensitive). Specifying multiple mav types is possible. '
-                             'e.g. Quadrotor, Hexarotor')
+                        help='Filter logs by mav type (case insensitive). Specifying multiple '
+                             'mav types is possible. e.g. Quadrotor, Hexarotor')
     parser.add_argument('--flight-modes', type=str, default=None, nargs='+',
-                        help='Filter logs by flight modes. If multiple are provided, the log must contain all modes. '
-                             'e.g. Mission')
+                        help='Filter logs by flight modes. If multiple are provided, the log must '
+                             'contain all modes. e.g. Mission')
     parser.add_argument('--error-labels', default=None, nargs='+', type=str,
-                        help='Filter logs by error labels. If multiple are provided, the log must contain all labels. '
-                             'e.g. Vibration')
+                        help='Filter logs by error labels. If multiple are provided, the log must '
+                             'contain all labels. e.g. Vibration')
     parser.add_argument('--rating', default=None, type=str, nargs='+',
                         help='Filter logs by rating. e.g. Good')
     parser.add_argument('--uuid', default=None, type=str,
@@ -118,7 +118,8 @@ def main():
 
         # filter for vehicle uuid
         if args.uuid is not None:
-            db_entries_list = [entry for entry in db_entries_list if entry['vehicle_uuid'] == args.uuid]
+            db_entries_list = [
+                entry for entry in db_entries_list if entry['vehicle_uuid'] == args.uuid]
 
         # set number of files to download
         n_en = len(db_entries_list)
