@@ -125,7 +125,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
         data_plot.change_dataset('vehicle_local_position_setpoint')
         data_plot.add_graph('y', 'x', colors2[1], 'Setpoint')
         # groundtruth (SITL only)
-        data_plot.change_dataset('vehicle_local_position_groundtruth')
+        data_plot.change_dataset('vehicle_groundtruth')
         data_plot.add_graph('y', 'x', color_gray, 'Groundtruth')
         # GPS + position setpoints
         plot_map(ulog, plot_config, map_type='plain', setpoints=True,
@@ -185,7 +185,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
         data_plot.add_graph([lambda data: (axis+'_d', np.rad2deg(data[axis+'_d']))],
                             colors2[1:2], [axis_name+' Setpoint'],
                             mark_nan=True, use_step_lines=True)
-        data_plot.change_dataset('vehicle_attitude_groundtruth')
+        data_plot.change_dataset('vehicle_groundtruth')
         data_plot.add_graph([lambda data: (axis, np.rad2deg(data[axis]))],
                             [color_gray], [axis_name+' Groundtruth'])
         plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
@@ -213,7 +213,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
         data_plot.change_dataset('rate_ctrl_status')
         data_plot.add_graph([lambda data: (axis, data[axis+'speed_integ']*100)],
                             colors3[2:3], [axis_name+' Rate Integral '+rate_int_limit])
-        data_plot.change_dataset('vehicle_attitude_groundtruth')
+        data_plot.change_dataset('vehicle_groundtruth')
         data_plot.add_graph([lambda data: (axis+'speed', np.rad2deg(data[axis+'speed']))],
                             [color_gray], [axis_name+' Rate Groundtruth'])
         plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
@@ -249,16 +249,17 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
-    # Vision position (only if topic found)
-    if any(elem.name == 'vehicle_vision_position' for elem in data):
-        data_plot = DataPlot(data, plot_config, 'vehicle_vision_position',
-                             y_axis_label='[m]', title='Vision Position',
+    # Visual Odometry (only if topic found)
+    if any(elem.name == 'vehicle_visual_odometry' for elem in data):
+        # Vision position
+        data_plot = DataPlot(data, plot_config, 'vehicle_visual_odometry',
+                             y_axis_label='[m]', title='Visual Odometry Position',
                              plot_height='small', changed_params=changed_params,
                              x_range=x_range)
         data_plot.add_graph(['x', 'y', 'z'], colors3, ['X', 'Y', 'Z'], mark_nan=True)
         plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
 
-        data_plot.change_dataset('vehicle_local_position_groundtruth')
+        data_plot.change_dataset('vehicle_groundtruth')
         data_plot.add_graph(['x', 'y', 'z'], colors8[2:5],
                             ['Groundtruth X', 'Groundtruth Y', 'Groundtruth Z'])
 
@@ -266,23 +267,22 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
 
 
         # Vision velocity
-        data_plot = DataPlot(data, plot_config, 'vehicle_vision_position',
-                             y_axis_label='[m]', title='Vision Velocity',
+        data_plot = DataPlot(data, plot_config, 'vehicle_visual_odometry',
+                             y_axis_label='[m]', title='Visual Odometry Velocity',
                              plot_height='small', changed_params=changed_params,
                              x_range=x_range)
         data_plot.add_graph(['vx', 'vy', 'vz'], colors3, ['X', 'Y', 'Z'], mark_nan=True)
         plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
 
-        data_plot.change_dataset('vehicle_local_position_groundtruth')
+        data_plot.change_dataset('vehicle_groundtruth')
         data_plot.add_graph(['vx', 'vy', 'vz'], colors8[2:5],
-                            ['Groundtruth X', 'Groundtruth Y', 'Groundtruth Z'])
+                            ['Groundtruth VX', 'Groundtruth VY', 'Groundtruth VZ'])
         if data_plot.finalize() is not None: plots.append(data_plot)
 
 
-    # Vision attitude
-    if any(elem.name == 'vehicle_vision_attitude' for elem in data):
-        data_plot = DataPlot(data, plot_config, 'vehicle_vision_attitude',
-                             y_axis_label='[deg]', title='Vision Attitude',
+        # Vision attitude
+        data_plot = DataPlot(data, plot_config, 'vehicle_visual_odometry',
+                             y_axis_label='[deg]', title='Visual Odometry Attitude',
                              plot_height='small', changed_params=changed_params,
                              x_range=x_range)
         data_plot.add_graph([lambda data: ('roll', np.rad2deg(data['roll'])),
@@ -291,12 +291,31 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
                             colors3, ['Roll', 'Pitch', 'Yaw'], mark_nan=True)
         plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
 
-        data_plot.change_dataset('vehicle_attitude_groundtruth')
+        data_plot.change_dataset('vehicle_groundtruth')
         data_plot.add_graph([lambda data: ('roll', np.rad2deg(data['roll'])),
                              lambda data: ('pitch', np.rad2deg(data['pitch'])),
                              lambda data: ('yaw', np.rad2deg(data['yaw']))],
                             colors8[2:5],
                             ['Roll Groundtruth', 'Pitch Groundtruth', 'Yaw Groundtruth'])
+
+        # Vision attitude rate
+        data_plot = DataPlot(data, plot_config, 'vehicle_visual_odometry',
+                             y_axis_label='[deg]', title='Visual Odometry Attitude Rate',
+                             plot_height='small', changed_params=changed_params,
+                             x_range=x_range)
+        data_plot.add_graph([lambda data: ('rollspeed', np.rad2deg(data['rollspeed'])),
+                             lambda data: ('pitchspeed', np.rad2deg(data['pitchspeed'])),
+                             lambda data: ('yawspeed', np.rad2deg(data['yawspeed']))],
+                            colors3, ['Roll Rate', 'Pitch Rate', 'Yaw Rate'], mark_nan=True)
+        plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
+
+        data_plot.change_dataset('vehicle_groundtruth')
+        data_plot.add_graph([lambda data: ('rollspeed', np.rad2deg(data['rollspeed'])),
+                             lambda data: ('pitchspeed', np.rad2deg(data['pitchspeed'])),
+                             lambda data: ('yawspeed', np.rad2deg(data['yawspeed']))],
+                            colors8[2:5],
+                            ['Roll Rate Groundtruth', 'Pitch Rate Groundtruth',
+                             'Yaw Rate Groundtruth'])
 
         if data_plot.finalize() is not None: plots.append(data_plot)
 
