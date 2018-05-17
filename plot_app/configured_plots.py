@@ -566,8 +566,14 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
                          'current_a', lambda data: ('discharged_mah', data['discharged_mah']/100),
                          lambda data: ('remaining', data['remaining']*10)],
                         colors8[::2]+colors8[1:2],
-                        ['Voltage [V]', 'Voltage filtered [V]', 'Current [A]',
-                         'Discharged Amount [mAh / 100]', 'Battery remaining [0=empty, 10=full]'])
+                        ['Battery Voltage [V]', 'Battery Voltage filtered [V]',
+                         'Battery Current [A]', 'Discharged Amount [mAh / 100]',
+                         'Battery remaining [0=empty, 10=full]'])
+    data_plot.change_dataset('system_power')
+    if data_plot.dataset and np.amax(data_plot.dataset.data['voltage5V_v']) > 0.0001:
+        data_plot.add_graph(['voltage5V_v'], colors8[7:8], ['5 V'])
+    if data_plot.dataset and np.amax(data_plot.dataset.data['voltage3V3_v']) > 0.0001:
+        data_plot.add_graph(['voltage3V3_v'], colors8[5:6], ['3.3 V'])
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
