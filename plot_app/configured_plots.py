@@ -27,7 +27,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
     data = ulog.data_list
 
     # COMPATIBILITY support for old logs
-    if any(elem.name == 'vehicle_air_data' for elem in data):
+    if any(elem.name == 'vehicle_air_data' or elem.name == 'vehicle_magnetometer' for elem in data):
         baro_alt_meter_topic = 'vehicle_air_data'
         magnetometer_ga_topic = 'vehicle_magnetometer'
     else: # old
