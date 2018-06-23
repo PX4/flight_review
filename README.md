@@ -21,9 +21,9 @@ Flight Review is deployed at https://review.px4.io.
 
 - clone the repository
 - use python3
-- `pip3 install bokeh jinja2 pyulog simplekml scipy` (at least version 0.12.11
-  of bokeh is required)
-- `sudo apt-get install sqlite3`
+- `sudo apt-get install sqlite3 fftw3 libfftw3-dev`
+- `pip3 install bokeh jinja2 pyulog simplekml scipy pyfftw`
+  (at least version 0.12.11 of bokeh is required)
 - configure web server config (this can be skipped for a local installation):
   create a file `config_user.ini` and copy and adjust the sections and values
   from `config_default.ini` that should be overridden.

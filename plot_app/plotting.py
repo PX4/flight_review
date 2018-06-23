@@ -15,8 +15,8 @@ from bokeh import events
 
 import numpy as np
 import scipy
-import scipy.fftpack
 import scipy.signal
+import pyfftw
 
 from downsampling import DynamicDownsample
 from helper import (
@@ -864,11 +864,19 @@ class DataPlotFFT(DataPlot):
 
             field_names_expanded = self._expand_field_names(field_names, data_set)
 
+
+            # we use fftw instead of scipy.fft, because it is much faster for
+            # input lengths that factorize into large primes.
+            pyfftw.interfaces.cache.enable()
+
             freqs = scipy.fftpack.fftfreq(data_len, delta_t)
             mean_start_freq = 40
             plot_data = []
             for field_name, color, legend in zip(field_names_expanded, colors, legends):
-                fft_values = 1000 * 2/data_len*abs(scipy.fft(data_set[field_name]))
+                # call FFTW with reduced setup effort (which is faster for our
+                # use-case with varying input lengths)
+                fft_values = 1000 * 2/data_len*abs(pyfftw.interfaces.numpy_fft.fft(
+                    data_set[field_name], planner_effort='FFTW_ESTIMATE'))
                 mean_fft_value = np.mean(fft_values[np.argwhere(freqs >= mean_start_freq).flatten()])
                 legend = legend + " (mean above {:} Hz: {:.2f})".format(mean_start_freq, mean_fft_value)
                 plot_data.append((fft_values, mean_fft_value, legend, color))

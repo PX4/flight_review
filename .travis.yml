@@ -4,8 +4,8 @@ python:
   - "3.5"
 # command to install dependencies
 install:
-    - "sudo apt-get install sqlite3"
-    - "pip install bokeh jinja2 pyulog scipy"
+    - "sudo apt-get install sqlite3 fftw3 libfftw3-dev"
+    - "pip install bokeh jinja2 pyulog scipy pyfftw"
     - "pip install requests pylint"
 # command to run code checks
 script: ./run_pylint.sh
