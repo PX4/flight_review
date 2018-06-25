@@ -22,6 +22,8 @@ Flight Review is deployed at https://review.px4.io.
 - clone the repository
 - use python3
 - `sudo apt-get install sqlite3 fftw3 libfftw3-dev`
+- if you are using Ubuntu or Debian you might have to install ATLAS as well:
+  `sudo apt-get install libatlas3-base`.
 - `pip3 install bokeh jinja2 pyulog simplekml scipy pyfftw`
   (at least version 0.12.11 of bokeh is required)
 - configure web server config (this can be skipped for a local installation):
