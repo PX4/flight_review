@@ -67,6 +67,10 @@ application also handles the statistics page, as it contains bokeh plots as
 well. The other pages (upload, browse, ...) are implemented as tornado handlers
 in `tornado_handlers/`.
 
+`plot_app/helper.py` additionally contains a list of log topics that the plot
+application can subscribe to. A topic must live in this list in order to be
+plotted.
+
 Tornado uses a single-threaded event loop. This means all operations should be
 non-blocking (see also http://www.tornadoweb.org/en/stable/guide/async.html).
 (This is currently not the case for sending emails).
@@ -96,4 +100,3 @@ It's useful to look at `print('\n'.join(sys.modules.keys()))` to check this.
 #### Contributing ####
 Contributions are welcome! Just open a pull request with detailed description
 why the changes are needed, or open an issue for bugs, feature requests, etc...
-
