@@ -243,7 +243,10 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
                          y_axis_label='[m/s]', title='Velocity',
                          plot_height='small', changed_params=changed_params,
                          x_range=x_range)
-    data_plot.add_graph(['vx', 'vy', 'vz'], colors3, ['X', 'Y', 'Z'])
+    data_plot.add_graph(['vx', 'vy', 'vz'], colors8[0:3], ['X', 'Y', 'Z'])
+    data_plot.change_dataset('vehicle_local_position_setpoint')
+    data_plot.add_graph(['vx', 'vy', 'vz'], [colors8[5], colors8[4], colors8[6]],
+                        ['X Setpoint', 'Y Setpoint', 'Z Setpoint'], use_step_lines=True)
     plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
 
     if data_plot.finalize() is not None: plots.append(data_plot)
