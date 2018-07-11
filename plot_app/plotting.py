@@ -759,6 +759,10 @@ class DataPlotSpec(DataPlot):
             # calculate the sampling frequency
             # (Note: logging dropouts are not taken into account here)
             delta_t = ((data_set['timestamp'][-1] - data_set['timestamp'][0]) * 1.0e-6) / len(data_set['timestamp'])
+            if delta_t < 0.000001: # avoid division by zero
+                self._had_error = True
+                return
+
             sampling_frequency = int(1.0 / delta_t)
 
             if sampling_frequency < 100: # require min sampling freq
