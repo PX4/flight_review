@@ -97,6 +97,12 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
 
             search_only_columns = []
 
+            if db_data_gen.ver_sw is not None:
+                search_only_columns.append(db_data_gen.ver_sw)
+
+            if db_data_gen.ver_sw_release is not None:
+                search_only_columns.append(db_data_gen.ver_sw_release)
+
             if db_data_gen.vehicle_uuid is not None:
                 search_only_columns.append(db_data_gen.vehicle_uuid)
 
