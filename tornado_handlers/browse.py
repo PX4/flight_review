@@ -2,6 +2,7 @@
 Tornado handler for the browse page
 """
 from __future__ import print_function
+import collections
 import sys
 import os
 import json
@@ -41,12 +42,8 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
         cur.execute('SELECT Id, Date, Description, WindSpeed, Rating, VideoUrl '
                     'FROM Logs WHERE Public = 1 ORDER BY Date DESC')
 
-        class Columns(object):
-            columns, search_only_columns = None, None
-
-            def __init__(self, columns, search_only_columns):
-                self.columns = columns
-                self.search_only_columns = search_only_columns
+        # pylint: disable=invalid-name
+        Columns = collections.namedtuple("Columns", "columns search_only_columns")
 
         def get_columns_from_tuple(db_tuple, counter):
             """ load the columns (list of strings) from a db_tuple
@@ -150,7 +147,8 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
                 if columns is None:
                     continue
 
-                if any([search_str in str(column).lower() for column in (columns.columns, columns.search_only_columns)]):
+                if any([search_str in str(column).lower() for column in \
+                        (columns.columns, columns.search_only_columns)]):
                     if data_start <= filtered_counter < data_start + data_length:
                         json_output['data'].append(columns.columns)
                     filtered_counter += 1
