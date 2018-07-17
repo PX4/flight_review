@@ -15,7 +15,7 @@ from helper import (
     get_total_flight_time, error_labels_table
     )
 
-#pylint: disable=consider-using-enumerate
+#pylint: disable=consider-using-enumerate,too-many-statements
 
 
 def _get_vtol_means_per_mode(vtol_states, timestamps, data):

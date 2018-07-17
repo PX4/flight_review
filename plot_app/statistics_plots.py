@@ -21,7 +21,7 @@ from helper import get_airframe_data, flight_modes_table, get_sw_releases
 #pylint: disable=too-few-public-methods,invalid-name,unused-argument,consider-using-enumerate
 #pylint: disable=unsubscriptable-object
 
-class _VersionData(object):
+class _VersionData:
     """
     class that contains various information for a single version
     """
@@ -33,7 +33,7 @@ class _VersionData(object):
         self.ratings = {}
         self.flight_mode_durations = {} # flight durations per flight mode
 
-class _Log(object):
+class _Log:
     """
     container class containing a DB entry for one log
     """
@@ -92,12 +92,12 @@ class _Log(object):
         for i in range(3):
             if version_tuples[0][i] < version_tuples[1][i]:
                 return -1
-            elif version_tuples[0][i] > version_tuples[1][i]:
+            if version_tuples[0][i] > version_tuples[1][i]:
                 return 1
         return 0
 
 
-class StatisticsPlots(object):
+class StatisticsPlots:
     """
     Class to generate statistics plots from Database entries
     """

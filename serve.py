@@ -78,12 +78,12 @@ handler = DirectoryHandler(filename=main_path)
 applications['/plot_app'] = Application(handler)
 
 server_kwargs = {}
-if args.port != None: server_kwargs['port'] = args.port
+if args.port is not None: server_kwargs['port'] = args.port
 if args.use_xheaders: server_kwargs['use_xheaders'] = args.use_xheaders
 server_kwargs['num_procs'] = args.numprocs
-if args.address != None: server_kwargs['address'] = args.address
-if args.host != None: server_kwargs['host'] = args.host
-if args.allow_websocket_origin != None:
+if args.address is not None: server_kwargs['address'] = args.address
+if args.host is not None: server_kwargs['host'] = args.host
+if args.allow_websocket_origin is not None:
     server_kwargs['allow_websocket_origin'] = args.allow_websocket_origin
 
 # increase the maximum upload size (default is 100MB)
@@ -92,7 +92,7 @@ server_kwargs['http_server_kwargs'] = {'max_buffer_size': 300 * 1024 * 1024}
 
 show_ulog_file = False
 show_3d_page = False
-if args.file != None:
+if args.file is not None:
     ulog_file = os.path.abspath(args.file)
     show_ulog_file = True
     args.show = True

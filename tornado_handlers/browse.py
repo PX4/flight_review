@@ -134,8 +134,7 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
                     continue
 
                 if any([search_str in str(column).lower() for column in columns]):
-                    if filtered_counter >= data_start and \
-                        filtered_counter < data_start + data_length:
+                    if data_start <= filtered_counter < data_start + data_length:
                         json_output['data'].append(columns)
                     filtered_counter += 1
 

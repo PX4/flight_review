@@ -107,7 +107,7 @@ class DBDataGenerated:
         try:
             cur_dataset = ulog.get_dataset('vehicle_status')
             flight_mode_changes = cur_dataset.list_value_changes('nav_state')
-            obj.flight_modes = set([x[1] for x in flight_mode_changes])
+            obj.flight_modes = {x[1] for x in flight_mode_changes}
 
             # get the durations
             # make sure the first entry matches the start of the logging

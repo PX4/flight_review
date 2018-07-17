@@ -22,7 +22,7 @@ class SizeLimitError(Exception):
     pass
 
 
-class StreamedPart(object):
+class StreamedPart:
     """Represents a part of the multipart/form-data."""
 
     def __init__(self, streamer, headers):
@@ -213,7 +213,7 @@ class TemporaryFileStreamedPart(StreamedPart):
         return self.f_out.read(num_bytes)
 
 
-class MultiPartStreamer(object):
+class MultiPartStreamer:
     """Parse a stream of multpart/form-data.
 
     Useful for request handlers decorated with ``tornado.web.stream_request_body``.

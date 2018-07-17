@@ -17,7 +17,7 @@ from plotted_tables import (
     )
 
 #pylint: disable=cell-var-from-loop, undefined-loop-variable,
-#pylint: disable=consider-using-enumerate
+#pylint: disable=consider-using-enumerate,too-many-statements
 
 
 def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):

@@ -124,7 +124,7 @@ def get_generated_db_data_from_log(log_id, con, cur):
         db_data_gen.num_logged_errors = db_tuple[7]
         db_data_gen.num_logged_warnings = db_tuple[8]
         db_data_gen.flight_modes = \
-            set([int(x) for x in db_tuple[9].split(',') if len(x) > 0])
+            {int(x) for x in db_tuple[9].split(',') if len(x) > 0}
         db_data_gen.ver_sw_release = db_tuple[10]
         db_data_gen.vehicle_uuid = db_tuple[11]
         db_data_gen.flight_mode_durations = \
