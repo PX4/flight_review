@@ -49,31 +49,52 @@ this script</a> for automated download of public log files.
 
 $(document).ready(function() {
 	$('#logs_table').DataTable({
-		/* "order": [[0, 'desc']], */
-		"ordering": false, // ordering currently not implemented by server
-		"lengthMenu": [ 5, 10, 25, 50, 75, 100 ],
+{% if initial_search %}
+        "search": {
+            "search": {{ initial_search }}
+        },
+{% endif %}
+            /* "order": [[0, 'desc']], */
+            "ordering": false, // ordering currently not implemented by server
+            "lengthMenu": [10, 25, 50, 75, 100],
 
-		"columns": [
-			null,
-			null,
-			{ "width": "13%" }, /* description */
-			null,
-			null,
-			null,
-			null,
-			null,
-			{ "width": "13%" }, /* rating */
-			null,
-			{ "width": "11%" } /* flight modes */
-		],
+            "columns": [
+                null,
+                null,
+                { "width": "13%" }, /* description */
+                null,
+                null,
+                null,
+                null,
+                null,
+                { "width": "13%" }, /* rating */
+                null,
+                { "width": "11%" } /* flight modes */
+            ],
 
-		"language": {
-			"infoFiltered": "<br>(filtered from _MAX_ total entries)",
-		},
+            "language": {
+                "infoFiltered": "<br>(filtered from _MAX_ total entries)",
+            },
 
-		"serverSide": true,
-		"ajax": "browse_data_retrieval"
-	});
+            "serverSide": true,
+            "ajax": "browse_data_retrieval",
+    });
+    var table = $('#logs_table').DataTable();
+    table.on('xhr', function () {
+        try {
+            var table = $('#logs_table').DataTable();
+            var search_term = table.search();
+            var url = new URL(window.location.href);
+            if (search_term === '') {
+                url.searchParams.delete('search');
+            } else {
+                url.searchParams.set('search', table.search());
+            }
+            window.history.replaceState(null, null, url);
+        } catch (e) {
+        }
+    });
+
 } );
 
 </script>

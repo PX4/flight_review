@@ -41,6 +41,12 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
         cur.execute('SELECT Id, Date, Description, WindSpeed, Rating, VideoUrl '
                     'FROM Logs WHERE Public = 1 ORDER BY Date DESC')
 
+        class Columns(object):
+            columns, search_only_columns = None, None
+
+            def __init__(self, columns, search_only_columns):
+                self.columns = columns
+                self.search_only_columns = search_only_columns
 
         def get_columns_from_tuple(db_tuple, counter):
             """ load the columns (list of strings) from a db_tuple
@@ -89,7 +95,12 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
             # mess up the layout)
             description = html_long_word_force_break(db_data.description)
 
-            return [
+            search_only_columns = []
+
+            if db_data_gen.vehicle_uuid is not None:
+                search_only_columns.append(db_data_gen.vehicle_uuid)
+
+            return Columns([
                 counter,
                 '<a href="plot_app?log='+log_id+'">'+log_date+'</a>',
                 description,
@@ -101,7 +112,7 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
                 db_data.rating_str(),
                 db_data_gen.num_logged_errors,
                 flight_modes
-                ]
+            ], search_only_columns)
 
         # need to fetch all here, because we will do more SQL calls while
         # iterating (having multiple cursor's does not seem to work)
@@ -122,7 +133,7 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
                 if columns is None:
                     continue
 
-                json_output['data'].append(columns)
+                json_output['data'].append(columns.columns)
             filtered_counter = len(db_tuples)
         else:
             counter = len(db_tuples) + 1
@@ -133,9 +144,9 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
                 if columns is None:
                     continue
 
-                if any([search_str in str(column).lower() for column in columns]):
+                if any([search_str in str(column).lower() for column in (columns.columns, columns.search_only_columns)]):
                     if data_start <= filtered_counter < data_start + data_length:
-                        json_output['data'].append(columns)
+                        json_output['data'].append(columns.columns)
                     filtered_counter += 1
 
 
@@ -153,4 +164,11 @@ class BrowseHandler(tornado.web.RequestHandler):
 
     def get(self, *args, **kwargs):
         template = get_jinja_env().get_template(BROWSE_TEMPLATE)
-        self.write(template.render())
+
+        template_args = {}
+
+        search_str = self.get_argument('search', '').lower()
+        if len(search_str) > 0:
+            template_args['initial_search'] = json.dumps(search_str)
+
+        self.write(template.render(template_args))
