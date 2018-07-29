@@ -33,7 +33,13 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
     else: # old
         baro_alt_meter_topic = 'sensor_combined'
         magnetometer_ga_topic = 'sensor_combined'
-
+    for topic in data:
+        if topic.name == 'system_power':
+            # COMPATIBILITY: rename fields to new format
+            if 'voltage5V_v' in topic.data:     # old (prior to PX4/Firmware:213aa93)
+                topic.data['voltage5v_v'] = topic.data.pop('voltage5V_v')
+            if 'voltage3V3_v' in topic.data:    # old (prior to PX4/Firmware:213aa93)
+                topic.data['voltage3v3_v'] = topic.data.pop('voltage3V3_v')
 
     # initialize flight mode changes
     flight_mode_changes = get_flight_mode_changes(ulog)
@@ -573,12 +579,13 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
                          'Battery Current [A]', 'Discharged Amount [mAh / 100]',
                          'Battery remaining [0=empty, 10=full]'])
     data_plot.change_dataset('system_power')
-    if data_plot.dataset and 'voltage5V_v' in data_plot.dataset.data:
-        if np.amax(data_plot.dataset.data['voltage5V_v']) > 0.0001:
-            data_plot.add_graph(['voltage5V_v'], colors8[7:8], ['5 V'])
-    if data_plot.dataset and 'voltage3V3_v' in data_plot.dataset.data:
-        if np.amax(data_plot.dataset.data['voltage3V3_v']) > 0.0001:
-            data_plot.add_graph(['voltage3V3_v'], colors8[5:6], ['3.3 V'])
+    if data_plot.dataset:
+        if 'voltage5v_v' in data_plot.dataset.data and \
+                        np.amax(data_plot.dataset.data['voltage5v_v']) > 0.0001:
+            data_plot.add_graph(['voltage5v_v'], colors8[7:8], ['5 V'])
+        if 'voltage3v3_v' in data_plot.dataset.data and \
+                        np.amax(data_plot.dataset.data['voltage3v3_v']) > 0.0001:
+            data_plot.add_graph(['voltage3v3_v'], colors8[5:6], ['3.3 V'])
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
