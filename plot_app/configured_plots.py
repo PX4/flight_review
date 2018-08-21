@@ -600,7 +600,6 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
         plot_data = []
         plot_labels = []
         input_data = [
-            ('NaN Flags', estimator_status['nan_flags']),
             ('Health Flags (vel, pos, hgt)', estimator_status['health_flags']),
             ('Timeout Flags (vel, pos, hgt)', estimator_status['timeout_flags']),
             ('Velocity Check Bit', (estimator_status['innovation_check_flags'])&0x1),
