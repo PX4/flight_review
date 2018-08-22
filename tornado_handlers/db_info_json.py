@@ -63,8 +63,7 @@ class DBInfoHandler(tornado.web.RequestHandler):
 
             jsondict.update(db_data_gen.to_json_dict())
             # add vehicle name
-            jsondict['vehicle_name'] = vehicle_table[jsondict['vehicle_uuid']] \
-                if jsondict['vehicle_uuid'] in vehicle_table else ''
+            jsondict['vehicle_name'] = vehicle_table.get(jsondict['vehicle_uuid'], '')
             airframe_data = get_airframe_data(jsondict['sys_autostart_id'])
             jsondict['airframe_name'] = airframe_data.get('name', '')
             jsondict['airframe_type'] = airframe_data.get('type', jsondict['sys_autostart_id'])
