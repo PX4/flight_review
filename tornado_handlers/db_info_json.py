@@ -65,7 +65,8 @@ class DBInfoHandler(tornado.web.RequestHandler):
             # add vehicle name
             jsondict['vehicle_name'] = vehicle_table.get(jsondict['vehicle_uuid'], '')
             airframe_data = get_airframe_data(jsondict['sys_autostart_id'])
-            jsondict['airframe_name'] = airframe_data.get('name', '') if airframe_data is not None else ''
+            jsondict['airframe_name'] = airframe_data.get('name', '') \
+                if airframe_data is not None else ''
             jsondict['airframe_type'] = airframe_data.get('type', jsondict['sys_autostart_id']) \
                 if airframe_data is not None else jsondict['sys_autostart_id']
 
