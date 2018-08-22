@@ -42,6 +42,12 @@ def get_arguments():
                         help='Filter logs by rating. e.g. Good')
     parser.add_argument('--uuid', default=None, type=str,
                         help='Filter logs by a particular vehicle uuid. e.g. 0123456789')
+    parser.add_argument('--vehicle-name', default=None, type=str,
+                        help='Filter logs by a particular vehicle name.')
+    parser.add_argument('--airframe-name', default=None, type=str,
+                        help='Filter logs by a particular airframe name. e.g. Generic Quadrotor X')
+    parser.add_argument('--airframe-type', default=None, type=str,
+                        help='Filter logs by a particular airframe type. e.g. Quadrotor X')
     return parser.parse_args()
 
 
@@ -120,6 +126,21 @@ def main():
         if args.uuid is not None:
             db_entries_list = [
                 entry for entry in db_entries_list if entry['vehicle_uuid'] == args.uuid]
+
+        # filter for vehicle name
+        if args.vehicle_name is not None:
+            db_entries_list = [
+                entry for entry in db_entries_list if entry['vehicle_name'] == args.vehicle_name]
+
+        # filter for airframe name
+        if args.airframe_name is not None:
+            db_entries_list = [
+                entry for entry in db_entries_list if entry['airframe_name'] == args.airframe_name]
+
+        # filter for airframe type
+        if args.airframe_type is not None:
+            db_entries_list = [
+                entry for entry in db_entries_list if entry['airframe_type'] == args.airframe_type]
 
         # set number of files to download
         n_en = len(db_entries_list)

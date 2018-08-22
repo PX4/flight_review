@@ -12,6 +12,8 @@ import tornado.web
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../plot_app'))
 from config import get_db_filename
 from db_entry import DBData
+from helper import get_airframe_data
+
 
 #pylint: disable=relative-beyond-top-level
 from .common import get_generated_db_data_from_log
@@ -28,6 +30,12 @@ class DBInfoHandler(tornado.web.RequestHandler):
         # get the logs (but only the public ones)
         con = sqlite3.connect(get_db_filename(), detect_types=sqlite3.PARSE_DECLTYPES)
         cur = con.cursor()
+
+        # get vehicle name information from vehicle table
+        cur.execute('select UUID, Name from Vehicle')
+        db_tuples = cur.fetchall()
+        vehicle_table = {db_tuple[0]: db_tuple[1] for db_tuple in db_tuples}
+
         cur.execute('select Id, Date, Description, WindSpeed, Rating, VideoUrl, ErrorLabels '
                     'from Logs where Public = 1')
         # need to fetch all here, because we will do more SQL calls while
@@ -54,6 +62,13 @@ class DBInfoHandler(tornado.web.RequestHandler):
                 continue
 
             jsondict.update(db_data_gen.to_json_dict())
+            # add vehicle name
+            jsondict['vehicle_name'] = vehicle_table[jsondict['vehicle_uuid']] \
+                if jsondict['vehicle_uuid'] in vehicle_table else ''
+            airframe_data = get_airframe_data(jsondict['sys_autostart_id'])
+            jsondict['airframe_name'] = airframe_data.get('name', '')
+            jsondict['airframe_type'] = airframe_data.get('type', jsondict['sys_autostart_id'])
+
             jsonlist.append(jsondict)
 
         cur.close()
