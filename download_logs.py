@@ -6,6 +6,9 @@ import glob
 import argparse
 import json
 import datetime
+import sys
+import time
+
 import requests
 
 from plot_app.config_tables import *
@@ -40,8 +43,10 @@ def get_arguments():
                              'contain all labels. e.g. Vibration')
     parser.add_argument('--rating', default=None, type=str, nargs='+',
                         help='Filter logs by rating. e.g. Good')
-    parser.add_argument('--uuid', default=None, type=str,
+    parser.add_argument('--uuid', default=None, type=str, nargs='+',
                         help='Filter logs by a particular vehicle uuid. e.g. 0123456789')
+    parser.add_argument('--log-id', default=None, type=str, nargs='+',
+                        help='Filter logs by a particular log id')
     parser.add_argument('--vehicle-name', default=None, type=str,
                         help='Filter logs by a particular vehicle name.')
     parser.add_argument('--airframe-name', default=None, type=str,
@@ -125,7 +130,15 @@ def main():
         # filter for vehicle uuid
         if args.uuid is not None:
             db_entries_list = [
-                entry for entry in db_entries_list if entry['vehicle_uuid'] == args.uuid]
+                entry for entry in db_entries_list if entry['vehicle_uuid'] in args.uuid]
+
+
+        # filter log_id
+        if args.log_id is not None:
+            arg_log_ids_without_dashes = [log_id.replace("-", "") for log_id in args.log_id]
+            db_entries_list = [
+                entry for entry in db_entries_list
+                if entry['log_id'].replace("-", "") in arg_log_ids_without_dashes]
 
         # filter for vehicle name
         if args.vehicle_name is not None:
@@ -159,19 +172,31 @@ def main():
         for i in range(n_en):
             entry_id = db_entries_list[i]['log_id']
 
-            if args.overwrite or entry_id not in logids:
+            num_tries = 0
+            for num_tries in range(100):
+                try:
+                    if args.overwrite or entry_id not in logids:
 
-                file_path = os.path.join(args.download_folder, entry_id + ".ulg")
+                        file_path = os.path.join(args.download_folder, entry_id + ".ulg")
 
-                print('downloading {:}/{:} ({:})'.format(i + 1, n_en, entry_id))
-                request = requests.get(url=args.download_api + "?log=" + entry_id, stream=True)
-                with open(file_path, 'wb') as log_file:
-                    for chunk in request.iter_content(chunk_size=1024):
-                        if chunk:  # filter out keep-alive new chunks
-                            log_file.write(chunk)
-                n_downloaded += 1
-            else:
-                n_skipped += 1
+                        print('downloading {:}/{:} ({:})'.format(i + 1, n_en, entry_id))
+                        request = requests.get(url=args.download_api +
+                                               "?log=" + entry_id, stream=True)
+                        with open(file_path, 'wb') as log_file:
+                            for chunk in request.iter_content(chunk_size=1024):
+                                if chunk:  # filter out keep-alive new chunks
+                                    log_file.write(chunk)
+                        n_downloaded += 1
+                    else:
+                        n_skipped += 1
+                    break
+                except Exception as ex:
+                    print(ex)
+                    time.sleep(60)
+            if num_tries == 99:
+                print('Something is very wrong')
+                sys.exit(1)
+
 
         print('{:} logs downloaded to {:}, {:} logs skipped (already downloaded)'.format(
             n_downloaded, args.download_folder, n_skipped))
