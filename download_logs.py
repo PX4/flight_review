@@ -192,9 +192,10 @@ def main():
                     break
                 except Exception as ex:
                     print(ex)
-                    time.sleep(60)
+                    print('Waiting for 30 seconds to retry')
+                    time.sleep(30)
             if num_tries == 99:
-                print('Something is very wrong')
+                print('Retried', str(num_tries + 1), 'times without success, exiting.')
                 sys.exit(1)
 
 
