@@ -186,11 +186,16 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
                              plot_height='small', changed_params=changed_params,
                              x_range=x_range)
         data_plot.add_graph([lambda data: (axis, np.rad2deg(data[axis]))],
-                            colors2[0:1], [axis_name+' Estimated'], mark_nan=True)
+                            colors3[0:1], [axis_name+' Estimated'], mark_nan=True)
         data_plot.change_dataset('vehicle_attitude_setpoint')
         data_plot.add_graph([lambda data: (axis+'_d', np.rad2deg(data[axis+'_d']))],
-                            colors2[1:2], [axis_name+' Setpoint'],
+                            colors3[1:2], [axis_name+' Setpoint'],
                             mark_nan=True, use_step_lines=True)
+        if axis == 'yaw':
+            data_plot.add_graph(
+                [lambda data: ('yaw_sp_move_rate', np.rad2deg(data['yaw_sp_move_rate']))],
+                colors3[2:3], [axis_name+' FF Setpoint [deg/s]'],
+                use_step_lines=True)
         data_plot.change_dataset('vehicle_groundtruth')
         data_plot.add_graph([lambda data: (axis, np.rad2deg(data[axis]))],
                             [color_gray], [axis_name+' Groundtruth'])
