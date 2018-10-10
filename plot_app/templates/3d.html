@@ -121,11 +121,10 @@ var scene = viewer.scene;
 //Lighting based on sun/moon positions
 scene.globe.enableLighting = false; // generally a bit too dark when enabled
 
-//Use STK World Terrain
-viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
-    url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
-    requestWaterMask : true,
-    requestVertexNormals : true
+//Terrain
+viewer.terrainProvider = Cesium.createWorldTerrain({
+    requestWaterMask: true,
+    requestVertexNormals: true
 });
 
 //Enable depth testing so things behind the terrain disappear.
