@@ -28,6 +28,7 @@ __AIRFRAMES_URL = _conf.get('general', 'airframes_url')
 __PARAMETERS_URL = _conf.get('general', 'parameters_url')
 __GMAPS_API_KEY = _conf.get('general', 'google_maps_api_key')
 __BING_API_KEY = _conf.get('general', 'bing_maps_api_key')
+__CESIUM_API_KEY = _conf.get('general', 'cesium_api_key')
 __LOG_CACHE_SIZE = int(_conf.get('general', 'log_cache_size'))
 
 __STORAGE_PATH = _conf.get('general', 'storage_path')
@@ -119,6 +120,10 @@ def get_google_maps_api_key():
 def get_bing_maps_api_key():
     """ get Bing maps API key """
     return __BING_API_KEY
+
+def get_cesium_api_key():
+    """ get Cesium API key """
+    return __CESIUM_API_KEY
 
 def get_log_cache_size():
     """ get maximum number of cached logs in RAM """

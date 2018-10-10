@@ -110,6 +110,10 @@
 Cesium.BingMapsApi.defaultKey = "{{ bing_api_key }}";
 {% endif %}
 
+{% if cesium_api_key != '' %}
+Cesium.Ion.defaultAccessToken = "{{ cesium_api_key }}";
+{% endif %}
+
 var viewer = new Cesium.Viewer('cesiumContainer', {
     terrainProviderViewModels : [], //Disable terrain changing
     infoBox : false, //Disable InfoBox widget
