@@ -9,8 +9,9 @@ import os
 # load the config
 _conf = configparser.ConfigParser()
 _cur_dir = os.path.dirname(os.path.realpath(__file__))
-_conf.read_file(open(os.path.join(_cur_dir, '../config_default.ini')))
-_user_config_file = os.path.join(_cur_dir, '../config_user.ini')
+_default_config_path = os.path.normpath(os.path.join(_cur_dir, '../config_default.ini'))
+_conf.read_file(open(_default_config_path))
+_user_config_file = os.path.normpath(os.path.join(_cur_dir, '../config_user.ini'))
 if os.path.exists(_user_config_file):
     _conf.read_file(open(_user_config_file))
 
@@ -33,7 +34,7 @@ __LOG_CACHE_SIZE = int(_conf.get('general', 'log_cache_size'))
 
 __STORAGE_PATH = _conf.get('general', 'storage_path')
 if not os.path.isabs(__STORAGE_PATH):
-    __STORAGE_PATH = os.path.join(_cur_dir, '..', __STORAGE_PATH)
+    __STORAGE_PATH = os.path.normpath(os.path.join(_cur_dir, '..', __STORAGE_PATH))
 
 __LOG_FILE_PATH = os.path.join(__STORAGE_PATH, 'log_files')
 __DB_FILENAME = os.path.join(__STORAGE_PATH, 'logs.sqlite')
