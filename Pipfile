@@ -11,6 +11,8 @@ simplekml = "*"
 scipy = "*"
 cython = "*"
 pyfftw = "*"
+pylint = "*"
+requests = "*"
 
 [dev-packages]
 
