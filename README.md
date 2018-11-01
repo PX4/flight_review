@@ -19,19 +19,35 @@ Flight Review is deployed at https://review.px4.io.
 
 #### Installation and Setup ####
 
-- clone the repository
-- use python3
-- `sudo apt-get install sqlite3 fftw3 libfftw3-dev`
-- if you are using Ubuntu or Debian you might have to install ATLAS as well:
-  `sudo apt-get install libatlas3-base`.
-- `pip3 install bokeh jinja2 pyulog simplekml scipy pyfftw`
-  (at least version 0.12.11 of bokeh is required)
-- configure web server config (this can be skipped for a local installation):
-  create a file `config_user.ini` and copy and adjust the sections and values
-  from `config_default.ini` that should be overridden.
+This project is using [Pipenv](https://pipenv.readthedocs.io/en/latest/)
+to keep control of our dependencies, pipenv helps us lock down
+dependencies and ensure deterministic releases.
+
+Requirements
+- Python3 (3.6+ recommended)
+- [Pipenv](https://pipenv.readthedocs.io/en/latest/), helps us lock down
+dependencies and ensure deterministic releases.
+- SQlite3
+- [http://fftw.org/](http://fftw.org/)
+
+**Note:** Under some Ubuntu and Debian environments you might have to
+install ATLAS `sudo apt-get install libatlas3-base`.
+
+Installation
+- Install requirements (see above)
+- Clone the repository
+- Install dependencies `pipenv install`
+
+Setup
+- By default the app will load `config_default.ini`
+- You can override any setting from `config_default.ini` with a user config file
+  `config_user.ini` (untracked)
+- Any setting on `config_user.ini` has priority over
+  `config_default.ini`
 - `./setup_db.py` to initialize the database.
-  This script can also be used to upgrade the DB tables, for instance when new
-  entries are added (it automatically detects that).
+
+**Note:** `setup_db.py` can also be used to upgrade the database tables, for
+  instance when new entries are added (it automatically detects that).
 
 
 #### Usage ####
@@ -55,7 +71,7 @@ The plotting can also be used interative using a Jupyter Notebook. It
 requires python knowledge, but provides full control over what and how to plot
 with immediate feedback.
 
-- `pip3 install jupyter`
+- `pipenv install jupyter`
 - Start the notebook: `jupyter notebook`
 - open the `testing_notebook.ipynb` file
 
