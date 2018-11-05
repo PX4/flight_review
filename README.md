@@ -61,6 +61,7 @@ pipenv sync
 
 ### Setup
 
+- Activate pipenv shell env `pipenv shell`
 - By default the app will load `config_default.ini`
 - You can override any setting from `config_default.ini` with a user config file
   `config_user.ini` (untracked)
