@@ -44,7 +44,8 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
     # initialize flight mode changes
     flight_mode_changes = get_flight_mode_changes(ulog)
 
-    # VTOL state changes
+    # VTOL state changes & vehicle type
+    is_multicopter = False # this is False for VTOLs as well
     vtol_states = None
     try:
         cur_dataset = ulog.get_dataset('vehicle_status')
@@ -57,6 +58,8 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
                     idx = np.argmax(cur_dataset.data['timestamp'] >= t) + 1
                     vtol_states[i] = (t, 2 + cur_dataset.data['is_rotary_wing'][idx])
             vtol_states.append((ulog.last_timestamp, -1))
+        elif np.amax(cur_dataset.data['is_rotary_wing']) == 1:
+            is_multicopter = True
     except (KeyError, IndexError) as error:
         vtol_states = None
 
@@ -188,9 +191,10 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
         data_plot.add_graph([lambda data: (axis, np.rad2deg(data[axis]))],
                             colors3[0:1], [axis_name+' Estimated'], mark_nan=True)
         data_plot.change_dataset('vehicle_attitude_setpoint')
+        # in fixed-wing, the attitude setpoint is allowed to be NaN
         data_plot.add_graph([lambda data: (axis+'_d', np.rad2deg(data[axis+'_d']))],
                             colors3[1:2], [axis_name+' Setpoint'],
-                            mark_nan=True, use_step_lines=True)
+                            mark_nan=is_multicopter, use_step_lines=True)
         if axis == 'yaw':
             data_plot.add_graph(
                 [lambda data: ('yaw_sp_move_rate', np.rad2deg(data['yaw_sp_move_rate']))],
