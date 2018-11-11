@@ -19,14 +19,21 @@ Flight Review is deployed at https://review.px4.io.
 
 #### Installation and Setup ####
 
-- clone the repository
-- use python3
-- `sudo apt-get install sqlite3 fftw3 libfftw3-dev`
-- if you are using Ubuntu or Debian you might have to install ATLAS as well:
-  `sudo apt-get install libatlas3-base`.
-- `pip3 install bokeh jinja2 pyulog simplekml scipy pyfftw`
-  (at least version 0.12.11 of bokeh is required)
-- configure web server config (this can be skipped for a local installation):
+- Clone the repository
+- Use Python 3, preferably inside a [virtual environment](https://docs.python.org/3/library/venv.html) to isolate the dependencies:
+    - `python3 -m venv venv`
+    - `. venv/bin/activate`
+- Install the dependencies
+    - Linux:
+        - `sudo apt-get install sqlite3 fftw3 libfftw3-dev`
+        - if you are using Ubuntu or Debian you might have to install ATLAS as well:
+        `sudo apt-get install libatlas3-base`.
+    - macOS:
+        - Use [Homebrew](https://brew.sh/index_it)
+        - `brew install fftw`
+- Install Python dependencies:
+    `pip3 install "bokeh>=0.12.11" jinja2 pyulog simplekml scipy cython pyfftw`
+- Configure web server config (this can be skipped for a local installation):
   create a file `config_user.ini` and copy and adjust the sections and values
   from `config_default.ini` that should be overridden.
 - `./setup_db.py` to initialize the database.
