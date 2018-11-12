@@ -61,17 +61,23 @@ pipenv sync
 
 ### Setup
 
-- Activate pipenv shell env `pipenv shell`
-- By default the app will load `config_default.ini`
+- By default the app will load `config_default.ini` configuration file
 - You can override any setting from `config_default.ini` with a user config file
   `config_user.ini` (untracked)
 - Any setting on `config_user.ini` has priority over
   `config_default.ini`
-- `./setup_db.py` to initialize the database.
+- Run `setup_db.py` to initialize the database.
+
+```bash
+# you can run the utility directly from pipenv
+pipenv run python setup_db.py
+# you can also run it from within the virtualenv
+pipenv shell
+./setup_db.py
+```
 
 **Note:** `setup_db.py` can also be used to upgrade the database tables, for
   instance when new entries are added (it automatically detects that).
-
 
 ## Usage
 
@@ -79,7 +85,11 @@ For local usage, the server can be started directly with a log file name,
 without having to upload it first:
 
 ```bash
-./serve.py -f <file.ulg>
+# run directly from pipenv
+pipenv run python serve.py -f <file.ulg>
+# you can also enter pipenv virtualenv
+pipenv shell
+python serve.py -f <file.ulg>
 ```
 
 The `plot_app` directory contains a bokeh server application for plotting. It
@@ -95,10 +105,19 @@ The plotting can also be used interative using a Jupyter Notebook. It
 requires python knowledge, but provides full control over what and how to plot
 with immediate feedback.
 
-- `pipenv install jupyter`
-- Start the notebook: `jupyter notebook`
-- open the `testing_notebook.ipynb` file
+- Install the Jupyter python package
+- Start the notebook
+- Locate and open the test notebook file `testing_notebook.ipynb`.
 
+```bash
+# Install jupyter (not installed by default)
+pipenv install jupyter
+# Launch jupyter notebook
+pipenv run jupyter notebook testing_notebook.ipynb
+# you can alternatively run jupyter directly if you enter the virtualenv
+pipenv shell
+jupyter notebook testing_notebook.ipynb
+```
 
 # Implementation
 The web site is structured around a bokeh application in `plot_app`
