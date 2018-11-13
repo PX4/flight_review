@@ -8,5 +8,5 @@ before_install:
     - "sudo apt-get install -y sqlite3 fftw3 libfftw3-dev"
 install:
     - "pipenv sync"
-script: ./run_pylint.sh
+script: ./run_tests.sh
 

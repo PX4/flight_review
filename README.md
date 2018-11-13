@@ -59,6 +59,16 @@ pipenv --three
 pipenv sync
 ```
 
+**Note:** a `requirements.txt` file is kept up to date (enforced in CI)
+for advanced users wanting freedom from `Pipenv`, see below for
+updating the requirements file
+
+```bash
+# To update the requirements file
+# make sure to include changes as a single independent commit
+pipenv lock --requirements > requirements.txt
+```
+
 ### Setup
 
 - By default the app will load `config_default.ini` configuration file
@@ -98,7 +108,6 @@ bokeh serve --show main.py`, to start without the html template).
 
 The whole web application is run with the `serve.py` script. Run `./serve.py -h`
 for further details.
-
 
 ## Interactive Usage
 The plotting can also be used interative using a Jupyter Notebook. It
