@@ -27,10 +27,10 @@ dependencies and ensure deterministic releases.
 - Python3 (3.6+ recommended)
 - [Pipenv](https://pipenv.readthedocs.io/en/latest/), helps us lock down
   dependencies and ensure deterministic releases.
-- SQlite3
+- SQLite3
 - [http://fftw.org/](http://fftw.org/)
 
-**Ubuntu**
+#### Ubuntu
 
 ```bash
 sudo apt-get install sqlite3 fftw3 libfftw3-dev
@@ -41,6 +41,15 @@ install ATLAS
 
 ```bash
 sudo apt-get install libatlas3-base
+```
+
+#### macOS
+
+macOS already provides SQLite3.
+Use [Homebrew](https://brew.sh) to install fftw:
+
+```bash
+brew install fftw
 ```
 
 ### Installation
