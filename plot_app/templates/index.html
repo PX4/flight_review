@@ -3,6 +3,10 @@
 
 
 {% if not internal_error %}
+<div class="alert alert-primary"> <!-- alternatives: alert-info, alert-primary, alert-secondary -->
+  Do you need help with interpreting the plots?
+  See <a href="https://docs.px4.io/en/log/flight_review.html" target="_blank" class="alert-link">here</a>.
+</div>
 
 {{ title_html }}
 {{ hardfault_html }}
