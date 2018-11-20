@@ -27,6 +27,7 @@ __HTTP_PROTOCOL = _conf.get('general', 'http_protocol')
 __AIRFRAMES_URL = _conf.get('general', 'airframes_url')
 __PARAMETERS_URL = _conf.get('general', 'parameters_url')
 __GMAPS_API_KEY = _conf.get('general', 'google_maps_api_key')
+__MAPBOX_API_ACCESS_TOKEN = _conf.get('general', 'mapbox_api_access_token')
 __BING_API_KEY = _conf.get('general', 'bing_maps_api_key')
 __CESIUM_API_KEY = _conf.get('general', 'cesium_api_key')
 __LOG_CACHE_SIZE = int(_conf.get('general', 'log_cache_size'))
@@ -116,6 +117,10 @@ def get_parameters_url():
 def get_google_maps_api_key():
     """ get Google maps API key """
     return __GMAPS_API_KEY
+
+def get_mapbox_api_access_token():
+    """ get MapBox API Access Token """
+    return __MAPBOX_API_ACCESS_TOKEN
 
 def get_bing_maps_api_key():
     """ get Bing maps API key """

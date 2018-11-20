@@ -91,6 +91,8 @@ pre {
 	height: 500px;
 }
 
+#mapid { height: 380px; }
+
 .tooltip-inner {
     text-align: left;
 }
