@@ -188,11 +188,11 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
                              y_axis_label='[deg]', title=axis_name+' Angle',
                              plot_height='small', changed_params=changed_params,
                              x_range=x_range)
-        data_plot.add_graph([lambda data: (axis, np.rad2deg(np.unwrap(data[axis])))],
+        data_plot.add_graph([lambda data: (axis, np.rad2deg(data[axis]))],
                             colors3[0:1], [axis_name+' Estimated'], mark_nan=True)
         data_plot.change_dataset('vehicle_attitude_setpoint')
         # in fixed-wing, the attitude setpoint is allowed to be NaN
-        data_plot.add_graph([lambda data: (axis+'_d', np.rad2deg(np.unwrap(data[axis+'_d'])))],
+        data_plot.add_graph([lambda data: (axis+'_d', np.rad2deg(data[axis+'_d']))],
                             colors3[1:2], [axis_name+' Setpoint'],
                             mark_nan=is_multicopter, use_step_lines=True)
         if axis == 'yaw':
