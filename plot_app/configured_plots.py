@@ -156,6 +156,11 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
     x_range_offset = (ulog.last_timestamp - ulog.start_timestamp) * 0.05
     x_range = Range1d(ulog.start_timestamp - x_range_offset, ulog.last_timestamp + x_range_offset)
 
+    # Position focus
+    lat_focus = (data[0].data.get('lat').tolist())[0]
+    lon_focus = (data[0].data.get('lon').tolist())[0]
+    lat_lon_focus = {'lat':lat_focus, 'lon':lon_focus}
+    curdoc().template_variables['lat_lon_focus'] = lat_lon_focus
 
     # Altitude estimate
     data_plot = DataPlot(data, plot_config, 'vehicle_gps_position',
