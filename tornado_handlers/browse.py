@@ -106,6 +106,7 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
             return Columns([
                 counter,
                 '<a href="plot_app?log='+log_id+'">'+log_date+'</a>',
+                '<img src=data/img/'+log_id+'.png alt="not rendered yet" height=50/>',
                 description,
                 db_data_gen.mav_type,
                 airframe,

@@ -12,6 +12,9 @@ import errno
 from bokeh.application import Application
 from bokeh.server.server import Server
 from bokeh.application.handlers import DirectoryHandler
+
+from tornado.web import StaticFileHandler
+
 # this is needed for the following imports
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'plot_app'))
 from tornado.web import RedirectHandler
@@ -74,7 +77,7 @@ _fixup_deprecated_host_args(args)
 
 applications = {}
 main_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'plot_app')
-handler = DirectoryHandler(filename=main_path)
+handler =  DirectoryHandler(filename=main_path)
 applications['/plot_app'] = Application(handler)
 
 server_kwargs = {}
@@ -114,6 +117,7 @@ extra_patterns = [
     (r'/dbinfo', DBInfoHandler),
     (r'/error_label', UpdateErrorLabelHandler),
     (r"/stats", RedirectHandler, {"url": "/plot_app?stats=1"}),
+    (r'/data/img/(.*)', StaticFileHandler, {'path': 'data/img'}),
 ]
 
 server = None
