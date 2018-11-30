@@ -5,6 +5,9 @@ import sys
 import sqlite3
 import traceback
 import os
+
+from overview_generator import generate_overview_img
+
 from html import escape
 
 from bokeh.io import curdoc
@@ -193,6 +196,8 @@ else:
         link_to_3d_page = '3d?log='+log_id
 
         try:
+            generate_overview_img(ulog, log_id, 'data/img')
+
             plots = generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page)
 
             title = 'Flight Review - '+px4_ulog.get_mav_type()
