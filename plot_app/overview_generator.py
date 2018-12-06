@@ -2,22 +2,19 @@ import os
 
 import smopy
 from IPython.display import Image
-#import matplotlib
 
 import matplotlib.pyplot as plt
 
 def generate_overview_img(ulog, log_id, output_path):
-   ''' generování souboru co se zobrazí v browse 
+   ''' This map overview image is loaded by browse page
 
    '''
-   print('dělám hovno dělám hovno přepínám')
 
    output_filename=os.path.join(output_path,log_id+'.png')
 
    print(output_filename)
  
    if os.path.exists(output_filename):
-      print('náhled existuje')
       return
 
    cur_dataset = ulog.get_dataset('vehicle_gps_position')
@@ -43,11 +40,10 @@ def generate_overview_img(ulog, log_id, output_path):
       x, y = map.to_pixels(lat[i], lon[i])
       ax.plot(x, y,'.r');
 
-
-   fig.savefig(output_filename)
+   ax.set_axis_off()
+   plt.savefig(output_filename, bbox_inches='tight')
    plt.close(fig)
 
    print('Saving overview file '+ output_filename)
-  # map.save_png(output_filename)
 
 
