@@ -17,33 +17,39 @@ def generate_overview_img(ulog, log_id, output_path):
    if os.path.exists(output_filename):
       return
 
-   cur_dataset = ulog.get_dataset('vehicle_gps_position')
-   t = cur_dataset.data['timestamp']
-   indices = cur_dataset.data['fix_type'] > 2 # use only data with a fix
-   #t = t[indices]
-   lon = cur_dataset.data['lon'][indices] / 1e7 # degrees
-   lat = cur_dataset.data['lat'][indices] / 1e7
-   #altitude = cur_dataset.data['alt'][indices] / 1e3 # meters
+   try:
+      cur_dataset = ulog.get_dataset('vehicle_gps_position')
+      t = cur_dataset.data['timestamp']
+      indices = cur_dataset.data['fix_type'] > 2 # use only data with a fix
+      #t = t[indices]
+      lon = cur_dataset.data['lon'][indices] / 1e7 # degrees
+      lat = cur_dataset.data['lat'][indices] / 1e7
+      #altitude = cur_dataset.data['alt'][indices] / 1e3 # meters
 
-   min_lat=min(lat);
-   max_lat=max(lat);
+      min_lat=min(lat);
+      max_lat=max(lat);
 
-   min_lon=min(lon);
-   max_lon=max(lon);
-  
+      min_lon=min(lon);
+      max_lon=max(lon);
+     
 
-   map = smopy.Map((min_lat,min_lon,max_lat,max_lon))
-   fig, ax = plt.subplots( nrows=1, ncols=1 ) 
-   map.show_mpl(figsize=(8, 6), ax=ax)
+      map = smopy.Map((min_lat,min_lon,max_lat,max_lon))
+      fig, ax = plt.subplots( nrows=1, ncols=1 ) 
+      map.show_mpl(figsize=(8, 6), ax=ax)
 
-   for i in range(len(lat)):
-      x, y = map.to_pixels(lat[i], lon[i])
-      ax.plot(x, y,'.r');
+      for i in range(len(lat)):
+         x, y = map.to_pixels(lat[i], lon[i])
+         ax.plot(x, y,'.r');
 
-   ax.set_axis_off()
-   plt.savefig(output_filename, bbox_inches='tight')
-   plt.close(fig)
+      ax.set_axis_off()
+      plt.savefig(output_filename, bbox_inches='tight')
+      plt.close(fig)
 
-   print('Saving overview file '+ output_filename)
+      print('Saving overview file '+ output_filename)
+   except:
+      # Ignore. Eg. if topic not found
+      print('Error generating overview file: '+ output_filename+' - No GPS?')
+      pass
+
 
 
