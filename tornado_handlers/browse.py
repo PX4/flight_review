@@ -27,6 +27,8 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
 
     def get(self, *args, **kwargs):
         search_str = self.get_argument('search[value]', '').lower()
+        order_ind = int(self.get_argument('order[0][column]'))
+        order_dir =  self.get_argument('order[0][dir]', '').lower()
         data_start = int(self.get_argument('start'))
         data_length = int(self.get_argument('length'))
         draw_counter = int(self.get_argument('draw'))
@@ -39,8 +41,17 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
         con = sqlite3.connect(get_db_filename(), detect_types=sqlite3.PARSE_DECLTYPES)
         cur = con.cursor()
 
+        sql_order=' ORDER BY Date DESC'
+
+        ordering_col=['Id','Date','','Description','','','','','','','','']
+        if ordering_col[order_ind]!='':
+           sql_order=' ORDER BY ' + ordering_col[order_ind]
+           if order_dir=='desc':
+              sql_order+=' DESC'
+
         cur.execute('SELECT Id, Date, Description, WindSpeed, Rating, VideoUrl '
-                    'FROM Logs WHERE Public = 1 ORDER BY Date DESC')
+                    'FROM Logs WHERE Public = 1'
+                    +sql_order)
 
         # pylint: disable=invalid-name
         Columns = collections.namedtuple("Columns", "columns search_only_columns")
