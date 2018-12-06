@@ -55,6 +55,7 @@ class DBDataGenerated:
     """ information from the generated DB entry """
 
     def __init__(self):
+        self.start_time= 0
         self.duration_s = 0
         self.mav_type = ''
         self.estimator = ''
@@ -122,6 +123,21 @@ class DBDataGenerated:
 
         except (KeyError, IndexError) as error:
             obj.flight_modes = set()
+
+        # logging start time & date
+        try:
+           # get the first non-zero timestamp
+           gps_data = ulog.get_dataset('vehicle_gps_position')
+           indices = np.nonzero(gps_data.data['time_utc_usec'])
+           if len(indices[0]) > 0:
+              # we use the timestamp from the log and then convert it with JS to
+              # display with local timezone.
+              # In addition we add a tooltip to show the timezone from the log
+              obj.start_time = int(gps_data.data['time_utc_usec'][indices[0][0]] / 1000000)
+        except:
+            # Ignore. Eg. if topic not found
+            pass
+
 
         return obj
 

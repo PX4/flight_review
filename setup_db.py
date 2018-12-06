@@ -122,6 +122,9 @@ with con:
         if not 'FlightModeDurations' in column_names:
             print('Adding column FlightModeDurations')
             cur.execute("ALTER TABLE LogsGenerated ADD COLUMN FlightModeDurations TEXT DEFAULT ''")
+        if not 'StartTime' in column_names:
+            print('Adding column StartTime')
+            cur.execute("ALTER TABLE LogsGenerated ADD COLUMN StartTime INT DEFAULT 0")
 
 
     # Vehicle table (contains information about a vehicle)

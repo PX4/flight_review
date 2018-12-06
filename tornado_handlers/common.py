@@ -73,8 +73,8 @@ def generate_db_data_from_log_file(log_id, db_connection=None):
             'insert into LogsGenerated (Id, Duration, '
             'Mavtype, Estimator, AutostartId, Hardware, '
             'Software, NumLoggedErrors, NumLoggedWarnings, '
-            'FlightModes, SoftwareVersion, UUID, FlightModeDurations) values '
-            '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            'FlightModes, SoftwareVersion, UUID, FlightModeDurations, StartTime) values '
+            '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [log_id, db_data_gen.duration_s, db_data_gen.mav_type,
              db_data_gen.estimator, db_data_gen.sys_autostart_id,
              db_data_gen.sys_hw, db_data_gen.ver_sw,
@@ -82,7 +82,8 @@ def generate_db_data_from_log_file(log_id, db_connection=None):
              db_data_gen.num_logged_warnings,
              ','.join(map(str, db_data_gen.flight_modes)),
              db_data_gen.ver_sw_release, db_data_gen.vehicle_uuid,
-             db_data_gen.flight_mode_durations_str()])
+             db_data_gen.flight_mode_durations_str(),
+             db_data_gen.start_time])
         db_connection.commit()
     except sqlite3.IntegrityError:
         # someone else already inserted it (race). just ignore it

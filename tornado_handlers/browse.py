@@ -9,10 +9,12 @@ import json
 import sqlite3
 import tornado.web
 
+from datetime import datetime
+
 # this is needed for the following imports
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../plot_app'))
 from config import get_db_filename
-from db_entry import DBData
+from db_entry import DBData, DBDataGenerated
 from helper import flight_modes_table, get_airframe_data, html_long_word_force_break
 
 #pylint: disable=relative-beyond-top-level
@@ -43,14 +45,17 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
 
         sql_order=' ORDER BY Date DESC'
 
-        ordering_col=['Id','Date','','Description','','','','','','','','']
+        ordering_col=['Logs.Id','Logs.Date','Logs.Description','','','','','LogsGenerated.Duration','LogsGenerated.StartTime','','']
         if ordering_col[order_ind]!='':
            sql_order=' ORDER BY ' + ordering_col[order_ind]
            if order_dir=='desc':
               sql_order+=' DESC'
 
-        cur.execute('SELECT Id, Date, Description, WindSpeed, Rating, VideoUrl '
-                    'FROM Logs WHERE Public = 1'
+        cur.execute('SELECT Logs.Id, Logs.Date, Logs.Description, Logs.WindSpeed, Logs.Rating, Logs.VideoUrl, '
+                    '       LogsGenerated.* '
+                    'FROM Logs '
+                    '   LEFT JOIN LogsGenerated on Logs.Id=LogsGenerated.Id '
+                    'WHERE Logs.Public = 1 '
                     +sql_order)
 
         # pylint: disable=invalid-name
@@ -59,7 +64,8 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
         def get_columns_from_tuple(db_tuple, counter):
             """ load the columns (list of strings) from a db_tuple
             """
-            db_data = DBData()
+            
+            db_data = DBDataJoin()
             log_id = db_tuple[0]
             log_date = db_tuple[1].strftime('%Y-%m-%d')
             db_data.description = db_tuple[2]
@@ -68,36 +74,60 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
             db_data.wind_speed = db_tuple[3]
             db_data.rating = db_tuple[4]
             db_data.video_url = db_tuple[5]
-
-            db_data_gen = get_generated_db_data_from_log(log_id, con, cur)
-            if db_data_gen is None:
-                return None
+            generateddata_log_id =db_tuple[6]
+            if log_id!=generateddata_log_id:
+               print('Join failed, loading and updating data')
+               db_data_gen = get_generated_db_data_from_log(log_id, con, cur)
+               if db_data_gen is None:
+                   return None
+               db_data.add_generated_db_data_from_log(db_data_gen)
+            else:
+               db_data.duration_s = db_tuple[7]#7
+               db_data.mav_type = db_tuple[8]
+               db_data.estimator = db_tuple[9]
+               db_data.sys_autostart_id = db_tuple[10]
+               db_data.sys_hw = db_tuple[11]
+               db_data.ver_sw = db_tuple[12]
+               db_data.num_logged_errors = db_tuple[13]
+               db_data.num_logged_warnings = db_tuple[14]
+               db_data.flight_modes = \
+                   {int(x) for x in db_tuple[15].split(',') if len(x) > 0}
+               db_data.ver_sw_release = db_tuple[16]
+               db_data.vehicle_uuid = db_tuple[17]
+               db_data.flight_mode_durations = \
+                  [tuple(map(int, x.split(':'))) for x in db_tuple[18].split(',') if len(x) > 0]
+               db_data.start_time = db_tuple[19]
 
             # bring it into displayable form
-            ver_sw = db_data_gen.ver_sw
+            ver_sw = db_data.ver_sw
             if len(ver_sw) > 10:
                 ver_sw = ver_sw[:6]
-            if len(db_data_gen.ver_sw_release) > 0:
+            if len(db_data.ver_sw_release) > 0:
                 try:
-                    release_split = db_data_gen.ver_sw_release.split()
+                    release_split = db_data.ver_sw_release.split()
                     release_type = int(release_split[1])
                     if release_type == 255: # it's a release
                         ver_sw = release_split[0]
                 except:
                     pass
-            airframe_data = get_airframe_data(db_data_gen.sys_autostart_id)
+            airframe_data = get_airframe_data(db_data.sys_autostart_id)
             if airframe_data is None:
-                airframe = db_data_gen.sys_autostart_id
+                airframe = db_data.sys_autostart_id
             else:
                 airframe = airframe_data['name']
 
             flight_modes = ', '.join([flight_modes_table[x][0]
-                                      for x in db_data_gen.flight_modes if x in
+                                      for x in db_data.flight_modes if x in
                                       flight_modes_table])
 
-            m, s = divmod(db_data_gen.duration_s, 60)
+            m, s = divmod(db_data.duration_s, 60)
             h, m = divmod(m, 60)
             duration_str = '{:d}:{:02d}:{:02d}'.format(h, m, s)
+
+            start_time_str = 'N/A'
+            if db_data.start_time!=0:
+               start_time_str=datetime.fromtimestamp(db_data.start_time).strftime("%Y-%m-%d  %H:%M")
+            
 
             # make sure to break long descriptions w/o spaces (otherwise they
             # mess up the layout)
@@ -105,26 +135,27 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
 
             search_only_columns = []
 
-            if db_data_gen.ver_sw is not None:
-                search_only_columns.append(db_data_gen.ver_sw)
+            if db_data.ver_sw is not None:
+                search_only_columns.append(db_data.ver_sw)
 
-            if db_data_gen.ver_sw_release is not None:
-                search_only_columns.append(db_data_gen.ver_sw_release)
+            if db_data.ver_sw_release is not None:
+                search_only_columns.append(db_data.ver_sw_release)
 
-            if db_data_gen.vehicle_uuid is not None:
-                search_only_columns.append(db_data_gen.vehicle_uuid)
+            if db_data.vehicle_uuid is not None:
+                search_only_columns.append(db_data.vehicle_uuid)
 
             return Columns([
                 counter,
                 '<a href="plot_app?log='+log_id+'">'+log_date+'</a>',
                 description,
-                db_data_gen.mav_type,
+                db_data.mav_type,
                 airframe,
-                db_data_gen.sys_hw,
+                db_data.sys_hw,
                 ver_sw,
                 duration_str,
+                start_time_str,
                 db_data.rating_str(),
-                db_data_gen.num_logged_errors,
+                db_data.num_logged_errors,
                 flight_modes
             ], search_only_columns)
 
@@ -172,6 +203,16 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
 
         self.set_header('Content-Type', 'application/json')
         self.write(json.dumps(json_output))
+
+class DBDataJoin(DBData,DBDataGenerated):
+   """Class for joined Data"""
+
+   def __init__(self):
+      super(DBData,self).__init__()
+      super(DBDataGenerated,self).__init__()
+
+   def add_generated_db_data_from_log(self,source):
+      self.__dict__.update(source.__dict__)
 
 
 class BrowseHandler(tornado.web.RequestHandler):
