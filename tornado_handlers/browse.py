@@ -106,7 +106,8 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
             return Columns([
                 counter,
                 '<a href="plot_app?log='+log_id+'">'+log_date+'</a>',
-                '<img class="map_overview" src=data/img/'+log_id+'.png alt="Not rendered / No GPS" height=50/>',
+                '<img class="map_overview" src=data/img/'
+                +log_id+'.png alt="Not rendered / No GPS" height=50/>',
                 description,
                 db_data_gen.mav_type,
                 airframe,

@@ -6,8 +6,6 @@ import sqlite3
 import traceback
 import os
 
-from overview_generator import generate_overview_img
-
 from html import escape
 
 from bokeh.io import curdoc
@@ -20,6 +18,7 @@ from colors import HTML_color_to_RGB
 from db_entry import *
 from configured_plots import generate_plots
 from statistics_plots import StatisticsPlots
+from overview_generator import generate_overview_img
 
 #pylint: disable=invalid-name, redefined-outer-name
 

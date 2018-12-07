@@ -77,7 +77,7 @@ _fixup_deprecated_host_args(args)
 
 applications = {}
 main_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'plot_app')
-handler =  DirectoryHandler(filename=main_path)
+handler = DirectoryHandler(filename=main_path)
 applications['/plot_app'] = Application(handler)
 
 server_kwargs = {}
