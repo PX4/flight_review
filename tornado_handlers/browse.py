@@ -5,11 +5,10 @@ from __future__ import print_function
 import collections
 import sys
 import os
+from datetime import datetime
 import json
 import sqlite3
 import tornado.web
-
-from datetime import datetime
 
 # this is needed for the following imports
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../plot_app'))
@@ -30,7 +29,7 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
     def get(self, *args, **kwargs):
         search_str = self.get_argument('search[value]', '').lower()
         order_ind = int(self.get_argument('order[0][column]'))
-        order_dir =  self.get_argument('order[0][dir]', '').lower()
+        order_dir = self.get_argument('order[0][dir]', '').lower()
         data_start = int(self.get_argument('start'))
         data_length = int(self.get_argument('length'))
         draw_counter = int(self.get_argument('draw'))
@@ -43,13 +42,23 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
         con = sqlite3.connect(get_db_filename(), detect_types=sqlite3.PARSE_DECLTYPES)
         cur = con.cursor()
 
-        sql_order=' ORDER BY Date DESC'
+        sql_order = ' ORDER BY Date DESC'
 
-        ordering_col=['Logs.Id','Logs.Date','Logs.Description','','','','','LogsGenerated.Duration','LogsGenerated.StartTime','','']
-        if ordering_col[order_ind]!='':
-           sql_order=' ORDER BY ' + ordering_col[order_ind]
-           if order_dir=='desc':
-              sql_order+=' DESC'
+        ordering_col = ['Logs.Id',
+                        'Logs.Date',
+                        'Logs.Description',
+                        '',
+                        '',
+                        '',
+                        '',
+                        'LogsGenerated.Duration',
+                        'LogsGenerated.StartTime',
+                        '',
+                        '']
+        if ordering_col[order_ind] != '':
+            sql_order = ' ORDER BY ' + ordering_col[order_ind]
+            if order_dir == 'desc':
+                sql_order += ' DESC'
 
         cur.execute('SELECT Logs.Id, Logs.Date, Logs.Description, Logs.WindSpeed, Logs.Rating, Logs.VideoUrl, '
                     '       LogsGenerated.* '
@@ -64,7 +73,7 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
         def get_columns_from_tuple(db_tuple, counter):
             """ load the columns (list of strings) from a db_tuple
             """
-            
+
             db_data = DBDataJoin()
             log_id = db_tuple[0]
             log_date = db_tuple[1].strftime('%Y-%m-%d')
@@ -74,29 +83,29 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
             db_data.wind_speed = db_tuple[3]
             db_data.rating = db_tuple[4]
             db_data.video_url = db_tuple[5]
-            generateddata_log_id =db_tuple[6]
-            if log_id!=generateddata_log_id:
-               print('Join failed, loading and updating data')
-               db_data_gen = get_generated_db_data_from_log(log_id, con, cur)
-               if db_data_gen is None:
-                   return None
-               db_data.add_generated_db_data_from_log(db_data_gen)
+            generateddata_log_id = db_tuple[6]
+            if log_id != generateddata_log_id:
+                print('Join failed, loading and updating data')
+                db_data_gen = get_generated_db_data_from_log(log_id, con, cur)
+                if db_data_gen is None:
+                    return None
+                db_data.add_generated_db_data_from_log(db_data_gen)
             else:
-               db_data.duration_s = db_tuple[7]#7
-               db_data.mav_type = db_tuple[8]
-               db_data.estimator = db_tuple[9]
-               db_data.sys_autostart_id = db_tuple[10]
-               db_data.sys_hw = db_tuple[11]
-               db_data.ver_sw = db_tuple[12]
-               db_data.num_logged_errors = db_tuple[13]
-               db_data.num_logged_warnings = db_tuple[14]
-               db_data.flight_modes = \
-                   {int(x) for x in db_tuple[15].split(',') if len(x) > 0}
-               db_data.ver_sw_release = db_tuple[16]
-               db_data.vehicle_uuid = db_tuple[17]
-               db_data.flight_mode_durations = \
-                  [tuple(map(int, x.split(':'))) for x in db_tuple[18].split(',') if len(x) > 0]
-               db_data.start_time = db_tuple[19]
+                db_data.duration_s = db_tuple[7]#7
+                db_data.mav_type = db_tuple[8]
+                db_data.estimator = db_tuple[9]
+                db_data.sys_autostart_id = db_tuple[10]
+                db_data.sys_hw = db_tuple[11]
+                db_data.ver_sw = db_tuple[12]
+                db_data.num_logged_errors = db_tuple[13]
+                db_data.num_logged_warnings = db_tuple[14]
+                db_data.flight_modes = \
+                    {int(x) for x in db_tuple[15].split(',') if len(x) > 0}
+                db_data.ver_sw_release = db_tuple[16]
+                db_data.vehicle_uuid = db_tuple[17]
+                db_data.flight_mode_durations = \
+                   [tuple(map(int, x.split(':'))) for x in db_tuple[18].split(',') if len(x) > 0]
+                db_data.start_time = db_tuple[19]
 
             # bring it into displayable form
             ver_sw = db_data.ver_sw
@@ -125,9 +134,9 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
             duration_str = '{:d}:{:02d}:{:02d}'.format(h, m, s)
 
             start_time_str = 'N/A'
-            if db_data.start_time!=0:
-               start_time_str=datetime.fromtimestamp(db_data.start_time).strftime("%Y-%m-%d  %H:%M")
-            
+            if db_data.start_time != 0:
+                start_time_str = datetime.fromtimestamp(db_data.start_time).strftime("%Y-%m-%d  %H:%M")
+
 
             # make sure to break long descriptions w/o spaces (otherwise they
             # mess up the layout)
@@ -204,15 +213,16 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
         self.set_header('Content-Type', 'application/json')
         self.write(json.dumps(json_output))
 
-class DBDataJoin(DBData,DBDataGenerated):
-   """Class for joined Data"""
+class DBDataJoin(DBData, DBDataGenerated):
+    """Class for joined Data"""
 
-   def __init__(self):
-      super(DBData,self).__init__()
-      super(DBDataGenerated,self).__init__()
+    def __init__(self):
+        super(DBData, self).__init__()
+        super(DBDataGenerated, self).__init__()
 
-   def add_generated_db_data_from_log(self,source):
-      self.__dict__.update(source.__dict__)
+    def add_generated_db_data_from_log(self, source):
+        """Update joined data by parent data"""
+        self.__dict__.update(source.__dict__)
 
 
 class BrowseHandler(tornado.web.RequestHandler):
