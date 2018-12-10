@@ -185,8 +185,9 @@ SDLOG_UTC_OFFSET: {}'''.format(utctimestamp.strftime('%d-%m-%Y %H:%M'), utc_offs
 
     table_text_left.append(('', '')) # spacing
 
-    # vehicle UUID (and name if provided). SITL does not have a UUID
-    if 'sys_uuid' in ulog.msg_info_dict and sys_hardware != 'SITL':
+    # vehicle UUID (and name if provided). SITL does not have a (valid) UUID
+    if 'sys_uuid' in ulog.msg_info_dict and sys_hardware != 'SITL' and \
+            sys_hardware != 'PX4_SITL':
         sys_uuid = escape(ulog.msg_info_dict['sys_uuid'])
         if vehicle_data is not None and vehicle_data.name != '':
             sys_uuid = sys_uuid + ' (' + vehicle_data.name + ')'
