@@ -22,12 +22,14 @@ from config import get_db_filename, get_http_protocol, get_domain_name, \
     email_notifications_config
 from helper import get_total_flight_time, validate_url, get_log_filename, \
     load_ulog_file, get_airframe_name, ULogException
+from overview_generator import generate_overview_img_from_id
 
 #pylint: disable=relative-beyond-top-level
 from .common import get_jinja_env, CustomHTTPError, generate_db_data_from_log_file, \
     TornadoRequestHandlerBase
 from .send_email import send_notification_email, send_flightreport_email
 from .multipart_streamer import MultiPartStreamer
+
 
 UPLOAD_TEMPLATE = 'upload.html'
 
@@ -282,6 +284,9 @@ class UploadHandler(TornadoRequestHandlerBase):
                     # (we may have the log already loaded in 'ulog', however the
                     # lru cache will make it very quick to load it again)
                     generate_db_data_from_log_file(log_id, con)
+                    # also generate the preview image
+                    generate_overview_img_from_id(log_id)
+                    #IOLoop.add_callback(callback, *args, **kwargs)
 
                 con.commit()
                 cur.close()

@@ -18,7 +18,6 @@ from colors import HTML_color_to_RGB
 from db_entry import *
 from configured_plots import generate_plots
 from statistics_plots import StatisticsPlots
-from overview_generator import generate_overview_img
 
 #pylint: disable=invalid-name, redefined-outer-name
 
@@ -195,8 +194,6 @@ else:
         link_to_3d_page = '3d?log='+log_id
 
         try:
-            generate_overview_img(ulog, log_id, get_overview_img_filepath())
-
             plots = generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page)
 
             title = 'Flight Review - '+px4_ulog.get_mav_type()

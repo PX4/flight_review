@@ -6,6 +6,9 @@ import os
 import smopy
 import matplotlib.pyplot as plt
 
+from config import get_log_filepath, get_overview_img_filepath
+from helper import load_ulog_file
+
 MAXTILES = 16
 def get_zoom(input_box, z=18):
     """
@@ -18,12 +21,17 @@ def get_zoom(input_box, z=18):
         z = get_zoom(input_box, z - 1)
     return z
 
-def generate_overview_img(ulog, log_id, output_path):
-    ''' This map overview image is loaded by browse page
-
+def generate_overview_img_from_id(log_id):
+    ''' This function will load file and save overview from/into configured directories
         '''
+    ulog_file=os.path.join(get_log_filepath(), log_id+'.ulg')
+    ulog = load_ulog_file(ulog_file)
+    generate_overview_img(ulog,log_id)
 
-    output_filename = os.path.join(output_path, log_id+'.png')
+def generate_overview_img(ulog, log_id):
+    ''' This funciton will generate overwie for loaded ULog data
+        '''
+    output_filename = os.path.join(get_overview_img_filepath(), log_id+'.png')
 
     if os.path.exists(output_filename):
         return
