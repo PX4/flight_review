@@ -24,9 +24,9 @@ def get_zoom(input_box, z=18):
 def generate_overview_img_from_id(log_id):
     ''' This function will load file and save overview from/into configured directories
         '''
-    ulog_file=os.path.join(get_log_filepath(), log_id+'.ulg')
+    ulog_file = os.path.join(get_log_filepath(), log_id+'.ulg')
     ulog = load_ulog_file(ulog_file)
-    generate_overview_img(ulog,log_id)
+    generate_overview_img(ulog, log_id)
 
 def generate_overview_img(ulog, log_id):
     ''' This funciton will generate overwie for loaded ULog data
