@@ -11,6 +11,7 @@ import uuid
 import binascii
 import sqlite3
 import tornado.web
+from tornado.ioloop import IOLoop
 
 from pyulog import ULog
 from pyulog.px4 import PX4ULog
@@ -285,8 +286,7 @@ class UploadHandler(TornadoRequestHandlerBase):
                     # lru cache will make it very quick to load it again)
                     generate_db_data_from_log_file(log_id, con)
                     # also generate the preview image
-                    generate_overview_img_from_id(log_id)
-                    #IOLoop.add_callback(callback, *args, **kwargs)
+                    IOLoop.instance().add_callback(generate_overview_img_from_id, log_id)
 
                 con.commit()
                 cur.close()
