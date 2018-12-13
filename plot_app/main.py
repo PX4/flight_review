@@ -195,7 +195,7 @@ else:
         link_to_3d_page = '3d?log='+log_id
 
         try:
-            generate_overview_img(ulog, log_id, 'data/img')
+            generate_overview_img(ulog, log_id, get_overview_img_filepath())
 
             plots = generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page)
 

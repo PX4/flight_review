@@ -28,7 +28,7 @@ from tornado_handlers.radio_controller import RadioControllerHandler
 from tornado_handlers.error_labels import UpdateErrorLabelHandler
 
 from helper import set_log_id_is_filename, print_cache_info
-from config import debug_print_timing
+from config import debug_print_timing, get_overview_img_filepath
 
 #pylint: disable=invalid-name
 
@@ -117,7 +117,7 @@ extra_patterns = [
     (r'/dbinfo', DBInfoHandler),
     (r'/error_label', UpdateErrorLabelHandler),
     (r"/stats", RedirectHandler, {"url": "/plot_app?stats=1"}),
-    (r'/data/img/(.*)', StaticFileHandler, {'path': 'data/img'}),
+    (r'/overview_img/(.*)', StaticFileHandler, {'path': get_overview_img_filepath()}),
 ]
 
 server = None
