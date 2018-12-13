@@ -14,8 +14,6 @@ def generate_overview_img(ulog, log_id, output_path):
 
     output_filename = os.path.join(output_path, log_id+'.png')
 
-    print(output_filename)
-
     if os.path.exists(output_filename):
         return
 

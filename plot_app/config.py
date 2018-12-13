@@ -89,6 +89,10 @@ def get_kml_filepath():
     """ get configured KML files directory """
     return os.path.join(get_cache_filepath(), 'kml')
 
+def get_overview_img_filepath():
+    """ get configured overview image directory """
+    return os.path.join(get_cache_filepath(), 'img')
+
 def get_db_filename():
     """ get configured DB file name """
     return __DB_FILENAME
