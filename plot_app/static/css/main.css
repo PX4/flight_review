@@ -129,6 +129,11 @@ table.dataTable td {
 	text-align: left;
 }
 .map_overview {
+   display: block;
+   margin-left: auto;
+   margin-right: auto;
+   margin-top: auto;
+   margin-bottom: auto;
    transition: all 0.5s ease-in-out;
    border:10px;
 }
