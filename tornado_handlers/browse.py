@@ -46,17 +46,18 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
 
         ordering_col = ['Logs.Id',
                         'Logs.Date',
-                        '',
+                        '',#Overview - img
                         'Logs.Description',
-                        '',
-                        '',
-                        '',
-                        '',
+                        'LogsGenerated.MavType',
+                        '',#Airframe - not from DB
+                        'LogsGenerated.Hardware',
+                        'LogsGenerated.Software',
                         'LogsGenerated.Duration',
                         'LogsGenerated.StartTime',
-                        '',
-                        '',
-                        '']
+                        '',#Rating
+                        'LogsGenerated.NumLoggedErrors',
+                        '' #FlightModes
+                        ]
         if ordering_col[order_ind] != '':
             sql_order = ' ORDER BY ' + ordering_col[order_ind]
             if order_dir == 'desc':
