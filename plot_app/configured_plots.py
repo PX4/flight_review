@@ -201,7 +201,8 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
                             last_t = curr_t
                             while current_flight_mode_idx < len(flight_mode_changes) - 1 and \
                                     flight_mode_changes[current_flight_mode_idx][0] <= curr_t:
-                                current_flight_mode = flight_mode_changes[current_flight_mode_idx][1]
+                                current_flight_mode = \
+                                    flight_mode_changes[current_flight_mode_idx][1]
                                 current_flight_mode_idx += 1
                                 flight_modes.append([rgb_colors(current_flight_mode), i])
                     current_flight_mode = flight_mode_changes[current_flight_mode_idx][1]
