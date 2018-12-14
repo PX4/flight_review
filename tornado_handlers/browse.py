@@ -63,7 +63,9 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
             if order_dir == 'desc':
                 sql_order += ' DESC'
 
-        cur.execute('SELECT Logs.Id, Logs.Date, Logs.Description, Logs.WindSpeed, Logs.Rating, Logs.VideoUrl, '
+        cur.execute('SELECT Logs.Id, Logs.Date, '
+                    '       Logs.Description, Logs.WindSpeed, '
+                    '       Logs.Rating, Logs.VideoUrl, '
                     '       LogsGenerated.* '
                     'FROM Logs '
                     '   LEFT JOIN LogsGenerated on Logs.Id=LogsGenerated.Id '
@@ -138,8 +140,8 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
 
             start_time_str = 'N/A'
             if db_data.start_time != 0:
-                start_time_str = datetime.fromtimestamp(db_data.start_time).strftime("%Y-%m-%d  %H:%M")
-
+                start_datetime = datetime.fromtimestamp(db_data.start_time)
+                start_time_str = start_datetime.strftime("%Y-%m-%d  %H:%M")
 
             # make sure to break long descriptions w/o spaces (otherwise they
             # mess up the layout)
