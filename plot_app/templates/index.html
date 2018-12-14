@@ -16,6 +16,8 @@
 {{ info_table_html }}
 {{ error_labels_html }}
 
+{% if has_position_data %}
+
 <div id="mapid"></div>
 
 <script>
@@ -60,6 +62,8 @@ Array.prototype.push.apply(waypoint_bounds, waypoint_polyline);
 mymap.fitBounds(waypoint_bounds);
 
 </script>
+
+{% endif %}
 
 {% if is_plot_page %}
 

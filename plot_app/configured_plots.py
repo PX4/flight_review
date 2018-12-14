@@ -16,6 +16,8 @@ from plotted_tables import (
     get_hardfault_html
     )
 
+from colors import HTML_color_to_RGB
+
 #pylint: disable=cell-var-from-loop, undefined-loop-variable,
 #pylint: disable=consider-using-enumerate,too-many-statements
 
@@ -150,7 +152,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
                     color_str = flight_modes_table[flight_mode][1][1:] # color in form 'ff00aa'
 
                     # increase brightness to match colors with template
-                    rgb = [int(color_str[2*x:2*x+2], 16) for x in range(3)]
+                    rgb = HTML_color_to_RGB(color_str)
                     for i in range(3):
                         rgb[i] += 40
                         if rgb[i] > 255: rgb[i] = 255
@@ -161,19 +163,9 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
 
                 def ulog_to_polyline(ulog):
                     # get flight modes
-                    try:
-                        cur_dataset = ulog.get_dataset('vehicle_status')
-                        flight_mode_changes = cur_dataset.list_value_changes('nav_state')
-                        flight_mode_changes.append((ulog.last_timestamp, -1))
-                    except (KeyError, IndexError) as error:
-                        flight_mode_changes = []
-                    if flight_mode_changes is None:
-                        flight_mode_changes = []
+                    flight_mode_changes = get_flight_mode_changes(ulog)
                     topic_instance = 0
-                    position_topic_name = 'vehicle_global_position'
-                    for elem in data:
-                        if elem.name == position_topic_name and elem.multi_id == topic_instance:
-                            cur_data = elem
+                    cur_data = ulog.get_dataset('vehicle_gps_position')
 
                     pos_lon = cur_data.data['lon']
                     pos_lat = cur_data.data['lat']
@@ -216,8 +208,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
                 ulog_to_polyline(ulog)
             except:
                 pass
-            if not is_running_locally(): # Leaflet Map
-                curdoc().template_variables['has_position_data'] = True
+            curdoc().template_variables['has_position_data'] = True
 
     # initialize parameter changes
     changed_params = None
