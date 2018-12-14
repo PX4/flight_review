@@ -3,6 +3,9 @@ Module for generating overview map
 """
 
 import os
+#pylint: disable=ungrouped-imports
+import matplotlib
+matplotlib.use('Agg')
 import smopy
 import matplotlib.pyplot as plt
 
