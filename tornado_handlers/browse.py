@@ -11,7 +11,7 @@ import tornado.web
 
 # this is needed for the following imports
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../plot_app'))
-from config import get_db_filename
+from config import get_db_filename, get_overview_img_filepath
 from db_entry import DBData
 from helper import flight_modes_table, get_airframe_data, html_long_word_force_break
 
@@ -103,11 +103,16 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
             if db_data_gen.vehicle_uuid is not None:
                 search_only_columns.append(db_data_gen.vehicle_uuid)
 
+            image_col = '<div class="no_map_overview"> Not rendered / No GPS </div>'
+            image_filename = os.path.join(get_overview_img_filepath(), log_id+'.png')
+            if os.path.exists(image_filename):
+                image_col = '<img class="map_overview" src="/overview_img/'
+                image_col += log_id+'.png" alt="Overview Image Load Failed" height=50/>'
+
             return Columns([
                 counter,
                 '<a href="plot_app?log='+log_id+'">'+log_date+'</a>',
-                '<img class="map_overview" src="/overview_img/'
-                +log_id+'.png" alt="Not rendered / No GPS" height=50/>',
+                image_col,
                 description,
                 db_data_gen.mav_type,
                 airframe,
