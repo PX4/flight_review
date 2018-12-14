@@ -5,6 +5,7 @@ import sys
 import sqlite3
 import traceback
 import os
+
 from html import escape
 
 from bokeh.io import curdoc

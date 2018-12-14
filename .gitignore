@@ -10,3 +10,4 @@ __pycache__
 /config_user.ini
 
 /local-requirements.txt
+data/img/*

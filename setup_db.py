@@ -9,7 +9,7 @@ import os
 # this is needed for the following imports
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'plot_app'))
 from plot_app.config import get_db_filename, get_log_filepath, \
-    get_cache_filepath, get_kml_filepath
+    get_cache_filepath, get_kml_filepath, get_overview_img_filepath
 
 log_dir = get_log_filepath()
 if not os.path.exists(log_dir):
@@ -26,6 +26,10 @@ if not os.path.exists(cur_dir):
     print('creating kml directory '+cur_dir)
     os.makedirs(cur_dir)
 
+cur_dir = get_overview_img_filepath()
+if not os.path.exists(cur_dir):
+    print('creating overview image directory '+cur_dir)
+    os.makedirs(cur_dir)
 
 print('creating DB at '+get_db_filename())
 con = lite.connect(get_db_filename())
@@ -107,6 +111,7 @@ with con:
                 "SoftwareVersion TEXT, " # release version
                 "UUID TEXT, " # vehicle UUID (sys_uuid in log)
                 "FlightModeDurations TEXT, " # comma-separated list of <flight_mode_int>:<duration_sec>
+                "StartTime INT, " #UTC Timestap from GPS log (useful when uploading multiple logs)
                 "CONSTRAINT Id_PK PRIMARY KEY (Id))")
 
     else:
