@@ -86,7 +86,7 @@ Click <a href="{delete_url}">here</a> to confirm and delete the log {log_id}.
             os.unlink(kml_file_name)
 
         #preview image
-        preview_image_filename=os.path.join(get_overview_img_filepath(), log_id+'.png')
+        preview_image_filename = os.path.join(get_overview_img_filepath(), log_id+'.png')
         if os.path.exists(preview_image_filename):
             os.unlink(preview_image_filename)
 
