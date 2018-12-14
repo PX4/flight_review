@@ -16,42 +16,50 @@
 {{ info_table_html }}
 {{ error_labels_html }}
 
-{% if has_position_data %}
-<!-- Google Maps -->
-<div id="google-map"></div>
+<div id="mapid"></div>
+
 <script>
+var pos_polyline = {{ pos_polyline }};
+var cur_flight_mode = pos_polyline[0][2];
+var cur_flight_color = pos_polyline[0][3];
+var waypoint_polyline = [];
+var waypoint_bounds = [];
 
-var g_google_map = null;
+var mymap = L.map('mapid').setView([pos_polyline[0][0], pos_polyline[0][1]],15);
+L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+    id: 'mapbox.satellite',
+    accessToken: '{{ mapbox_api_access_token }}'
+}).addTo(mymap);
 
-function initMap() {
-
-	var map = new google.maps.Map(document.getElementById('google-map'), {
-		zoom: 15,
-		streetViewControl: false,
-		zoomControl: true,
-		panControl: true,
-		mapTypeId: google.maps.MapTypeId.HYBRID,
-	});
-	g_google_map = map;
-
-	if(window.location.hostname == 'localhost') {
-		console.log('KML files do not work locally!'); //<-- important to know
-	}
-
-	var ctaLayer = new google.maps.KmlLayer({
-		// add some random parameter so that Google does not cache it (I had a
-		// case where the map did not work because Google cached it)
-		url: window.location.protocol+'//'+window.location.host+'/download'+
-			location.search+'&type=2&randnotused='+Math.random().toString(36).substring(3),
-		map: map
-	});
+for(var i=0; i<pos_polyline.length ; i++)
+{
+  if(pos_polyline[i][2] == cur_flight_mode)
+  {
+    var new_waypoint = [pos_polyline[i][0], pos_polyline[i][1]];
+    waypoint_polyline.push(new_waypoint);
+  }
+  else
+  {
+    var polyline = L.polyline(waypoint_polyline, {color: cur_flight_color}).addTo(mymap);
+    Array.prototype.push.apply(waypoint_bounds, waypoint_polyline);
+    waypoint_polyline.length = 0;
+    if(i>0)
+    {
+      var old_waypoint = [pos_polyline[i-1][0], pos_polyline[i-1][1]];
+      waypoint_polyline.push(old_waypoint);
+    }    
+    cur_flight_mode = pos_polyline[i][2];
+    cur_flight_color = pos_polyline[i][3];
+  }
 }
-</script>
-<script async defer
-	 src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initMap">
-</script>
-{% endif %}
 
+var polyline = L.polyline(waypoint_polyline, {color: cur_flight_color}).addTo(mymap);
+Array.prototype.push.apply(waypoint_bounds, waypoint_polyline);
+
+mymap.fitBounds(waypoint_bounds);
+
+</script>
 
 {% if is_plot_page %}
 

@@ -116,13 +116,13 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
 #        plots.extend(gps_plots)
 
 
-    if is_running_locally():
+#    if is_running_locally():
         # show the google maps plot via Bokeh, since the one in the html
         # template does not work locally (we disable it further down)
-        map_plot = plot_map(ulog, plot_config, map_type='google', api_key=
-                            get_google_maps_api_key(), setpoints=False)
-        if map_plot is not None:
-            plots.append(map_plot)
+        #map_plot = plot_map(ulog, plot_config, map_type='google', api_key=
+        #                    get_google_maps_api_key(), setpoints=False)
+        #if map_plot is not None:
+        #    plots.append(map_plot)
 
 
     # Position plot
@@ -141,7 +141,82 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
                  bokeh_plot=data_plot.bokeh_plot)
         if data_plot.finalize() is not None:
             plots.append(data_plot.bokeh_plot)
-            if not is_running_locally(): # do not enable Google Map if running locally
+            # Position focus
+            try:
+                def rgb_colors(flight_mode):
+                    """ flight mode colors for KML file """
+                    if not flight_mode in flight_modes_table: flight_mode = 0
+
+                    color_str = flight_modes_table[flight_mode][1][1:] # color in form 'ff00aa'
+
+                    # increase brightness to match colors with template
+                    rgb = [int(color_str[2*x:2*x+2], 16) for x in range(3)]
+                    for i in range(3):
+                        rgb[i] += 40
+                        if rgb[i] > 255: rgb[i] = 255
+
+                    color_str = "".join(map(lambda x: format(x, '02x'), rgb))
+
+                    return '#'+color_str
+
+                def ulog_to_polyline(ulog):
+                    # get flight modes
+                    try:
+                        cur_dataset = ulog.get_dataset('vehicle_status')
+                        flight_mode_changes = cur_dataset.list_value_changes('nav_state')
+                        flight_mode_changes.append((ulog.last_timestamp, -1))
+                    except (KeyError, IndexError) as error:
+                        flight_mode_changes = []
+                    if flight_mode_changes is None:
+                        flight_mode_changes = []
+                    topic_instance = 0
+                    position_topic_name = 'vehicle_global_position'
+                    for elem in data:
+                        if elem.name == position_topic_name and elem.multi_id == topic_instance:
+                            cur_data = elem
+
+                    pos_lon = cur_data.data['lon']
+                    pos_lat = cur_data.data['lat']
+                    pos_alt = cur_data.data['alt']
+                    pos_t = cur_data.data['timestamp']
+
+                    if 'fix_type' in cur_data.data:
+                        indices = cur_data.data['fix_type'] > 2  # use only data with a fix
+                        pos_lon = pos_lon[indices]
+                        pos_lat = pos_lat[indices]
+                        pos_alt = pos_alt[indices]
+                        pos_t = pos_t[indices]
+
+                    # scale if it's an integer type
+                    lon_type = [f.type_str for f in cur_data.field_data if f.field_name == 'lon']
+                    if len(lon_type) > 0 and lon_type[0] == 'int32_t':
+                        pos_lon = pos_lon / 1e7  # to degrees
+                        pos_lat = pos_lat / 1e7
+                        pos_alt = pos_alt / 1e3  # to meters
+
+                    current_flight_mode = 0
+                    current_flight_mode_idx = 0
+                    if len(flight_mode_changes) > 0:
+                        current_flight_mode = flight_mode_changes[0][1]
+                    last_t = 0
+                    minimum_interval_s = 0.1
+                    pos_data = []
+                    for i in range(len(pos_lon)):
+                        cur_t = pos_t[i]
+                        if(cur_t - last_t) / 1e6 > minimum_interval_s:
+                            pos_data.append([pos_lat[i], pos_lon[i], current_flight_mode, \
+                                rgb_colors(current_flight_mode)])# assume timestamp is in [us]
+                            last_t = cur_t
+                            while current_flight_mode_idx < len(flight_mode_changes) - 1 and \
+                                    flight_mode_changes[current_flight_mode_idx + 1][0] <= cur_t:
+                                current_flight_mode_idx += 1
+                                current_flight_mode = flight_mode_changes[current_flight_mode_idx][1]
+                    curdoc().template_variables['pos_polyline'] = pos_data
+
+                ulog_to_polyline(ulog)
+            except:
+                pass
+            if not is_running_locally(): # Leaflet Map
                 curdoc().template_variables['has_position_data'] = True
 
     # initialize parameter changes
@@ -155,7 +230,6 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
 
     x_range_offset = (ulog.last_timestamp - ulog.start_timestamp) * 0.05
     x_range = Range1d(ulog.start_timestamp - x_range_offset, ulog.last_timestamp + x_range_offset)
-
 
     # Altitude estimate
     data_plot = DataPlot(data, plot_config, 'vehicle_gps_position',
