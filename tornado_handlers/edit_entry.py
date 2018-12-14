@@ -10,7 +10,7 @@ import tornado.web
 
 # this is needed for the following imports
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../plot_app'))
-from config import get_db_filename, get_kml_filepath
+from config import get_db_filename, get_kml_filepath, get_overview_img_filepath
 from helper import clear_ulog_cache, get_log_filename
 
 #pylint: disable=relative-beyond-top-level
@@ -84,6 +84,11 @@ Click <a href="{delete_url}">here</a> to confirm and delete the log {log_id}.
         kml_file_name = os.path.join(kml_path, log_id.replace('/', '.')+'.kml')
         if os.path.exists(kml_file_name):
             os.unlink(kml_file_name)
+
+        #preview image
+        preview_image_filename=os.path.join(get_overview_img_filepath(), log_id+'.png')
+        if os.path.exists(preview_image_filename):
+            os.unlink(preview_image_filename)
 
         log_file_name = get_log_filename(log_id)
         print('deleting log entry {} and file {}'.format(log_id, log_file_name))
