@@ -10,7 +10,7 @@ import datetime
 
 # this is needed for the following imports
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'plot_app'))
-from plot_app.config import get_db_filename
+from plot_app.config import get_db_filename, get_overview_img_filepath
 from plot_app.helper import get_log_filename
 
 
@@ -29,8 +29,6 @@ args = parser.parse_args()
 max_age = args.max_age
 source = args.source
 interactive = args.interactive
-
-
 
 con = sqlite3.connect(get_db_filename(), detect_types=sqlite3.PARSE_DECLTYPES)
 with con:
@@ -85,6 +83,10 @@ with con:
         # and the log file
         ulog_file_name = get_log_filename(log_id)
         os.unlink(ulog_file_name)
+        #and preview image if exist
+        preview_image_filename=os.path.join(get_overview_img_filepath(), log_id+'.png')
+        if os.path.exists(preview_image_filename):
+            os.unlink(preview_image_filename)
 
 con.close()
 
