@@ -165,7 +165,10 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
                     # get flight modes
                     flight_mode_changes = get_flight_mode_changes(ulog)
                     topic_instance = 0
-                    cur_data = ulog.get_dataset('vehicle_gps_position')
+                    position_topic_name = 'vehicle_global_position'
+                    for elem in data:
+                        if elem.name == position_topic_name and elem.multi_id == topic_instance:
+                            cur_data = elem
 
                     pos_lon = cur_data.data['lon']
                     pos_lat = cur_data.data['lat']
@@ -186,24 +189,25 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
                         pos_lat = pos_lat / 1e7
                         pos_alt = pos_alt / 1e3  # to meters
 
-                    current_flight_mode = 0
-                    current_flight_mode_idx = 0
-                    if len(flight_mode_changes) > 0:
-                        current_flight_mode = flight_mode_changes[0][1]
+                    pos_datas = []
+                    flight_modes = []
                     last_t = 0
                     minimum_interval_s = 0.1
-                    pos_data = []
+                    current_flight_mode_idx = 0
                     for i in range(len(pos_lon)):
-                        cur_t = pos_t[i]
-                        if(cur_t - last_t) / 1e6 > minimum_interval_s:
-                            pos_data.append([pos_lat[i], pos_lon[i], current_flight_mode, \
-                                rgb_colors(current_flight_mode)])# assume timestamp is in [us]
-                            last_t = cur_t
+                        curr_t = pos_t[i]
+                        if (curr_t - last_t) / 1e6 > minimum_interval_s:
+                            pos_datas.append([pos_lat[i], pos_lon[i]])
+                            last_t = curr_t
                             while current_flight_mode_idx < len(flight_mode_changes) - 1 and \
-                                    flight_mode_changes[current_flight_mode_idx + 1][0] <= cur_t:
-                                current_flight_mode_idx += 1
+                                    flight_mode_changes[current_flight_mode_idx][0] <= curr_t:
                                 current_flight_mode = flight_mode_changes[current_flight_mode_idx][1]
-                    curdoc().template_variables['pos_polyline'] = pos_data
+                                current_flight_mode_idx += 1
+                                flight_modes.append([rgb_colors(current_flight_mode), i])
+                    current_flight_mode = flight_mode_changes[current_flight_mode_idx][1]
+                    flight_modes.append([rgb_colors(current_flight_mode), len(pos_lon)])
+                    curdoc().template_variables['pos_datas'] = pos_datas
+                    curdoc().template_variables['pos_flight_modes'] = flight_modes
 
                 ulog_to_polyline(ulog)
             except:

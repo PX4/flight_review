@@ -21,45 +21,34 @@
 <div id="mapid"></div>
 
 <script>
-var pos_polyline = {{ pos_polyline }};
-var cur_flight_mode = pos_polyline[0][2];
-var cur_flight_color = pos_polyline[0][3];
+var pos_datas = {{ pos_datas }};
+var pos_flight_modes = {{ pos_flight_modes }};
 var waypoint_polyline = [];
 var waypoint_bounds = [];
 
-var mymap = L.map('mapid').setView([pos_polyline[0][0], pos_polyline[0][1]],15);
+var mymap = L.map('mapid').setView([pos_datas[0][0], pos_datas[0][1]],15);
 L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
     id: 'mapbox.satellite',
     accessToken: '{{ mapbox_api_access_token }}'
 }).addTo(mymap);
 
-for(var i=0; i<pos_polyline.length ; i++)
+for(var j=0; j<pos_flight_modes.length -1 ; j++)
 {
-  if(pos_polyline[i][2] == cur_flight_mode)
+  if(pos_flight_modes[j][1] != 0)
   {
-    var new_waypoint = [pos_polyline[i][0], pos_polyline[i][1]];
-    waypoint_polyline.push(new_waypoint);
+    var waypoint_polyline = pos_datas.slice(pos_flight_modes[j][1] - 1, pos_flight_modes[j+1][1]);
   }
   else
   {
-    var polyline = L.polyline(waypoint_polyline, {color: cur_flight_color}).addTo(mymap);
-    Array.prototype.push.apply(waypoint_bounds, waypoint_polyline);
-    waypoint_polyline.length = 0;
-    if(i>0)
-    {
-      var old_waypoint = [pos_polyline[i-1][0], pos_polyline[i-1][1]];
-      waypoint_polyline.push(old_waypoint);
-    }    
-    cur_flight_mode = pos_polyline[i][2];
-    cur_flight_color = pos_polyline[i][3];
-  }
+    var waypoint_polyline = pos_datas.slice(pos_flight_modes[j][1], pos_flight_modes[j+1][1]);
+  }  
+  var cur_flight_color = pos_flight_modes[j][0];
+  var polyline = L.polyline(waypoint_polyline, {color: cur_flight_color}).addTo(mymap);
+  Array.prototype.push.apply(waypoint_bounds, waypoint_polyline);
 }
 
-var polyline = L.polyline(waypoint_polyline, {color: cur_flight_color}).addTo(mymap);
-Array.prototype.push.apply(waypoint_bounds, waypoint_polyline);
-
-mymap.fitBounds(waypoint_bounds);
+mymap.fitBounds(pos_datas);
 
 </script>
 
