@@ -7,8 +7,9 @@ from bokeh.models import Range1d
 from bokeh.models.widgets import Div, Button
 from bokeh.io import curdoc
 
-from helper import *
 from config import *
+from helper import *
+from leaflet import ulog_to_polyline
 from plotting import *
 from plotted_tables import (
     get_logged_messages, get_changed_parameters,
@@ -80,51 +81,6 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
         curdoc().template_variables['hardfault_html'] = hardfault_html
 
 
-
-
-# FIXME: for now, we use Google maps directly without bokeh, because it's not working reliably
-    # GPS map
-#    gps_plots = []
-#    gps_titles = []
-#    plot = plot_map(ulog, plot_config, map_type='google', api_key =
-#            get_google_maps_api_key(), setpoints=False)
-#    if plot is not None:
-#        gps_plots.append(plot)
-#        gps_titles.append('GPS Map: Satellite')
-#
-#    plot = plot_map(ulog, plot_config, map_type='plain', setpoints=True)
-#    if plot is not None:
-#        gps_plots.append(plot)
-#        gps_titles.append('GPS Map: Plain')
-#
-#    data_plot = DataPlot2D(data, plot_config, 'vehicle_local_position',
-#        x_axis_label = '[m]', y_axis_label='[m]', plot_height='large')
-#    data_plot.add_graph('y', 'x', colors2[0], 'Estimated')
-#    data_plot.change_dataset('vehicle_local_position_setpoint')
-#    data_plot.add_graph('y', 'x', colors2[1], 'Setpoint')
-#    if data_plot.finalize() is not None:
-#        gps_plots.append(data_plot.bokeh_plot)
-#        gps_titles.append('Local Position')
-#
-#    if len(gps_plots) >= 2:
-#        tabs = []
-#        for i in range(len(gps_plots)):
-#            tabs.append(Panel(child=gps_plots[i], title=gps_titles[i]))
-#        gps_plot_height=plot_config['plot_height']['large'] + 30
-#        plots.append(Tabs(tabs=tabs, width=plot_width, height=gps_plot_height))
-#    elif len(gps_plots) == 1:
-#        plots.extend(gps_plots)
-
-
-    if is_running_locally():
-        # show the google maps plot via Bokeh, since the one in the html
-        # template does not work locally (we disable it further down)
-        map_plot = plot_map(ulog, plot_config, map_type='google', api_key=
-                            get_google_maps_api_key(), setpoints=False)
-        if map_plot is not None:
-            plots.append(map_plot)
-
-
     # Position plot
     data_plot = DataPlot2D(data, plot_config, 'vehicle_local_position',
                            x_axis_label='[m]', y_axis_label='[m]', plot_height='large')
@@ -141,8 +97,15 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
                  bokeh_plot=data_plot.bokeh_plot)
         if data_plot.finalize() is not None:
             plots.append(data_plot.bokeh_plot)
-            if not is_running_locally(): # do not enable Google Map if running locally
-                curdoc().template_variables['has_position_data'] = True
+
+            # Leaflet Map
+            try:
+                pos_datas, flight_modes = ulog_to_polyline(ulog, flight_mode_changes)
+                curdoc().template_variables['pos_datas'] = pos_datas
+                curdoc().template_variables['pos_flight_modes'] = flight_modes
+            except:
+                pass
+            curdoc().template_variables['has_position_data'] = True
 
     # initialize parameter changes
     changed_params = None
@@ -155,7 +118,6 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
 
     x_range_offset = (ulog.last_timestamp - ulog.start_timestamp) * 0.05
     x_range = Range1d(ulog.start_timestamp - x_range_offset, ulog.last_timestamp + x_range_offset)
-
 
     # Altitude estimate
     data_plot = DataPlot(data, plot_config, 'vehicle_gps_position',

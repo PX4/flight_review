@@ -169,7 +169,7 @@ else:
 
         # template variables
         curdoc().template_variables['cur_err_ids'] = db_data.error_labels
-        curdoc().template_variables['google_maps_api_key'] = get_google_maps_api_key()
+        curdoc().template_variables['mapbox_api_access_token'] = get_mapbox_api_access_token()
         curdoc().template_variables['is_plot_page'] = True
         curdoc().template_variables['log_id'] = log_id
         flight_modes = [

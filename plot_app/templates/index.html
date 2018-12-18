@@ -17,41 +17,37 @@
 {{ error_labels_html }}
 
 {% if has_position_data %}
-<!-- Google Maps -->
-<div id="google-map"></div>
+
+<!-- Leaflet map plot -->
+<div id="mapid"></div>
+
 <script>
+var pos_datas = {{ pos_datas }}; // list of [lat, lon] coordinates
+var pos_flight_modes = {{ pos_flight_modes }}; // list of [color, index of pos_datas]
+var waypoint_bounds = [];
 
-var g_google_map = null;
+var mymap = L.map('mapid').setView([pos_datas[0][0], pos_datas[0][1]],15);
+L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+    attribution: 'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+    id: 'mapbox.satellite',
+    accessToken: '{{ mapbox_api_access_token }}'
+}).addTo(mymap);
 
-function initMap() {
-
-	var map = new google.maps.Map(document.getElementById('google-map'), {
-		zoom: 15,
-		streetViewControl: false,
-		zoomControl: true,
-		panControl: true,
-		mapTypeId: google.maps.MapTypeId.HYBRID,
-	});
-	g_google_map = map;
-
-	if(window.location.hostname == 'localhost') {
-		console.log('KML files do not work locally!'); //<-- important to know
-	}
-
-	var ctaLayer = new google.maps.KmlLayer({
-		// add some random parameter so that Google does not cache it (I had a
-		// case where the map did not work because Google cached it)
-		url: window.location.protocol+'//'+window.location.host+'/download'+
-			location.search+'&type=2&randnotused='+Math.random().toString(36).substring(3),
-		map: map
-	});
+for(var j=0; j<pos_flight_modes.length - 1; j++) {
+  var offset = -1;
+  if(pos_flight_modes[j][1] == 0)
+    offset = 0;
+  var waypoint_polyline = pos_datas.slice(pos_flight_modes[j][1] + offset, pos_flight_modes[j+1][1]);
+  var cur_flight_color = pos_flight_modes[j][0];
+  var polyline = L.polyline(waypoint_polyline, {color: cur_flight_color}).addTo(mymap);
+  Array.prototype.push.apply(waypoint_bounds, waypoint_polyline);
 }
-</script>
-<script async defer
-	 src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initMap">
-</script>
-{% endif %}
 
+mymap.fitBounds(pos_datas);
+
+</script>
+
+{% endif %}
 
 {% if is_plot_page %}
 

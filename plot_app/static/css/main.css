@@ -87,9 +87,7 @@ pre {
 	border-radius: 4px;
 }
 
-#google-map {
-	height: 500px;
-}
+#mapid { height: 500px; }
 
 .tooltip-inner {
     text-align: left;
