@@ -198,7 +198,7 @@ class Trace:
 
     def stepcalc(self, time, duration):
         ### calculates frequency and resulting windowlength
-        tstep = (time[1]-time[0])
+        tstep = (time[-1]-time[0])/len(time)
         freq = 1./tstep
         arr_len = duration * freq
         return int(arr_len)
@@ -212,8 +212,8 @@ class Trace:
             for key in stackdict.keys():
                 stackdict[key].append(self.data[key][i * shift:i * shift + flen])
         for k in stackdict.keys():
-            #print 'key',k
-            #print stackdict[k]
+            #print('key',k)
+            #print(len(stackdict[k]))
             stackdict[k]=np.array(stackdict[k], dtype=np.float64)
         return stackdict
 
