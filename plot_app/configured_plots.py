@@ -6,10 +6,12 @@ from bokeh.layouts import widgetbox
 from bokeh.models import Range1d
 from bokeh.models.widgets import Div, Button
 from bokeh.io import curdoc
+from scipy.interpolate import interp1d
 
 from config import *
 from helper import *
 from leaflet import ulog_to_polyline
+from pid_analysis import Trace, plot_pid_response
 from plotting import *
 from plotted_tables import (
     get_logged_messages, get_changed_parameters,
@@ -20,8 +22,115 @@ from plotted_tables import (
 #pylint: disable=cell-var-from-loop, undefined-loop-variable,
 #pylint: disable=consider-using-enumerate,too-many-statements
 
+def get_pid_analysis_plots(ulog, px4_ulog, db_data, link_to_main_plots):
+    """
+    get all bokeh plots shown on the PID analysis page
+    :return: list of bokeh plots
+    """
+    def _resample(time_array, data, desired_time):
+        """ resample data at a given time to a vector of desired_time """
+        data_f = interp1d(time_array, data, fill_value='extrapolate')
+        return data_f(desired_time)
 
-def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
+    curdoc().template_variables['title_html'] = get_heading_html(
+        ulog, px4_ulog, db_data, None, [('Open Main Plots', link_to_main_plots)],
+        'PID Analysis')
+
+    plots = []
+    data = ulog.data_list
+    flight_mode_changes = get_flight_mode_changes(ulog)
+    x_range_offset = (ulog.last_timestamp - ulog.start_timestamp) * 0.05
+    x_range = Range1d(ulog.start_timestamp - x_range_offset, ulog.last_timestamp + x_range_offset)
+
+    # required PID response data
+    pid_analysis_error = False
+    try:
+        sensor_combined = ulog.get_dataset('sensor_combined')
+        sensor_time = sensor_combined.data['timestamp']
+        vehicle_rates_setpoint = ulog.get_dataset('vehicle_rates_setpoint')
+        actuator_controls_0 = ulog.get_dataset('actuator_controls_0')
+        throttle = _resample(actuator_controls_0.data['timestamp'],
+                             actuator_controls_0.data['control[3]'] * 100, sensor_time)
+        time_seconds = sensor_time / 1e6
+    except (KeyError, IndexError, ValueError) as error:
+        print(type(error), ":", error)
+        pid_analysis_error = True
+        div = Div(text="<p><b>Error</b>: missing topics or data for PID analysis "
+                  "(required topics: sensor_combined, vehicle_rates_setpoint and "
+                  "actuator_controls_0).</p>", width=int(plot_width*0.9))
+        plots.append(widgetbox(div, width=int(plot_width*0.9)))
+
+    for index, axis in enumerate(['roll', 'pitch', 'yaw']):
+        axis_name = axis.capitalize()
+        # rate
+        data_plot = DataPlot(data, plot_config, 'actuator_controls_0',
+                             y_axis_label='[deg/s]', title=axis_name+' Angular Rate',
+                             plot_height='small',
+                             x_range=x_range)
+
+        thrust_max = 200
+        actuator_controls = data_plot.dataset
+        time_controls = actuator_controls.data['timestamp']
+        thrust = actuator_controls.data['control[3]'] * thrust_max
+        # downsample if necessary
+        max_num_data_points = 4.0*plot_config['plot_width']
+        if len(time_controls) > max_num_data_points:
+            step_size = int(len(time_controls) / max_num_data_points)
+            time_controls = time_controls[::step_size]
+            thrust = thrust[::step_size]
+        if len(time_controls) > 0:
+            # make sure the polygon reaches down to 0
+            thrust = np.insert(thrust, [0, len(thrust)], [0, 0])
+            time_controls = np.insert(time_controls, [0, len(time_controls)],
+                                      [time_controls[0], time_controls[-1]])
+
+        p = data_plot.bokeh_plot
+        p.patch(time_controls, thrust, line_width=0, fill_color='#555555',
+                fill_alpha=0.4, alpha=0, legend='Thrust [0, {:}]'.format(thrust_max))
+
+        data_plot.change_dataset('vehicle_attitude')
+        data_plot.add_graph([lambda data: (axis+'speed', np.rad2deg(data[axis+'speed']))],
+                            colors3[0:1], [axis_name+' Rate Estimated'], mark_nan=True)
+        data_plot.change_dataset('vehicle_rates_setpoint')
+        data_plot.add_graph([lambda data: (axis, np.rad2deg(data[axis]))],
+                            colors3[1:2], [axis_name+' Rate Setpoint'],
+                            mark_nan=True, use_step_lines=True)
+        axis_letter = axis[0].upper()
+        rate_int_limit = '(*100)'
+        # this param is MC/VTOL only (it will not exist on FW)
+        rate_int_limit_param = 'MC_' + axis_letter + 'R_INT_LIM'
+        if rate_int_limit_param in ulog.initial_parameters:
+            rate_int_limit = '[-{0:.0f}, {0:.0f}]'.format(
+                ulog.initial_parameters[rate_int_limit_param]*100)
+        data_plot.change_dataset('rate_ctrl_status')
+        data_plot.add_graph([lambda data: (axis, data[axis+'speed_integ']*100)],
+                            colors3[2:3], [axis_name+' Rate Integral '+rate_int_limit])
+        plot_flight_modes_background(data_plot, flight_mode_changes)
+
+        if data_plot.finalize() is not None: plots.append(data_plot.bokeh_plot)
+
+        # PID response
+        if not pid_analysis_error:
+            try:
+                gyro_rate = np.rad2deg(sensor_combined.data['gyro_rad['+str(index)+']'])
+                setpoint = _resample(vehicle_rates_setpoint.data['timestamp'],
+                                     np.rad2deg(vehicle_rates_setpoint.data[axis]),
+                                     sensor_time)
+                trace = Trace(axis, time_seconds, gyro_rate, setpoint, throttle)
+                plots.append(plot_pid_response(trace, ulog.data_list, plot_config).bokeh_plot)
+            except Exception as e:
+                print(type(e), axis, ":", e)
+                div = Div(text="<p><b>Error</b>: PID analysis failed. Possible "
+                          "error causes are: logged data rate is too low, there "
+                          "is not enough motion for the analysis or simply a bug "
+                          "in the code.</p>", width=int(plot_width*0.9))
+                plots.insert(0, widgetbox(div, width=int(plot_width*0.9)))
+                pid_analysis_error = True
+    return plots
+
+
+def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
+                   link_to_pid_analysis_page):
     """ create a list of bokeh plots (and widgets) to show """
 
     plots = []
@@ -68,7 +177,8 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
 
     # Heading
     curdoc().template_variables['title_html'] = get_heading_html(
-        ulog, px4_ulog, db_data, link_to_3d_page)
+        ulog, px4_ulog, db_data, link_to_3d_page,
+        additional_links=[("Open PID Analysis", link_to_pid_analysis_page)])
 
     # info text on top (logging duration, max speed, ...)
     curdoc().template_variables['info_table_html'] = \

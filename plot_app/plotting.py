@@ -589,6 +589,9 @@ class DataPlot:
             print(type(error), "("+self._data_name+"):", error)
             self._had_error = True
 
+    def set_use_time_formatter(self, use_formatter):
+        """ configure whether the time formatter should be used """
+        self._use_time_formatter = use_formatter
 
     def finalize(self):
         """ Call this after all plots are done. Returns the bokeh plot, or None

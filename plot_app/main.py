@@ -16,7 +16,7 @@ from helper import *
 from config import *
 from colors import HTML_color_to_RGB
 from db_entry import *
-from configured_plots import generate_plots
+from configured_plots import generate_plots, get_pid_analysis_plots
 from statistics_plots import StatisticsPlots
 
 #pylint: disable=invalid-name, redefined-outer-name
@@ -166,43 +166,8 @@ else:
         except:
             print("DB access failed:", sys.exc_info()[0], sys.exc_info()[1])
 
-
-        # template variables
-        curdoc().template_variables['cur_err_ids'] = db_data.error_labels
-        curdoc().template_variables['mapbox_api_access_token'] = get_mapbox_api_access_token()
-        curdoc().template_variables['is_plot_page'] = True
-        curdoc().template_variables['log_id'] = log_id
-        flight_modes = [
-            {'name': 'Manual', 'color': HTML_color_to_RGB(flight_modes_table[0][1])},
-            {'name': 'Altitude Control', 'color': HTML_color_to_RGB(flight_modes_table[1][1])},
-            {'name': 'Position Control', 'color': HTML_color_to_RGB(flight_modes_table[2][1])},
-            {'name': 'Acro', 'color': HTML_color_to_RGB(flight_modes_table[10][1])},
-            {'name': 'Stabilized', 'color': HTML_color_to_RGB(flight_modes_table[15][1])},
-            {'name': 'Offboard', 'color': HTML_color_to_RGB(flight_modes_table[14][1])},
-            {'name': 'Rattitude', 'color': HTML_color_to_RGB(flight_modes_table[16][1])},
-            {'name': 'Auto (Mission, RTL, Follow, ...)',
-             'color': HTML_color_to_RGB(flight_modes_table[3][1])}
-            ]
-        curdoc().template_variables['flight_modes'] = flight_modes
-        vtol_modes = [
-            {'name': 'Transition', 'color': HTML_color_to_RGB(vtol_modes_table[1][1])},
-            {'name': 'Fixed-Wing', 'color': HTML_color_to_RGB(vtol_modes_table[2][1])},
-            {'name': 'Multicopter', 'color': HTML_color_to_RGB(vtol_modes_table[3][1])},
-            ]
-        curdoc().template_variables['vtol_modes'] = vtol_modes
-
-        link_to_3d_page = '3d?log='+log_id
-
-        try:
-            plots = generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page)
-
-            title = 'Flight Review - '+px4_ulog.get_mav_type()
-
-        except Exception as error:
-            # catch all errors to avoid showing a blank page. Note that if we
-            # get here, there's a bug somewhere that needs to be fixed!
-            traceback.print_exc()
-
+        def show_exception_page():
+            """ show an error page in case of an unknown/unhandled exception """
             title = 'Internal Error'
 
             error_message = ('<h3>Internal Server Error</h3>'
@@ -213,6 +178,69 @@ else:
             div = Div(text=error_message, width=int(plot_width*0.9))
             plots = [widgetbox(div, width=int(plot_width*0.9))]
             curdoc().template_variables['internal_error'] = True
+            return (title, error_message, plots)
+
+
+        # check which plots to show
+        plots_page = 'default'
+        if GET_arguments is not None and 'plots' in GET_arguments:
+            plots_args = GET_arguments['plots']
+            if len(plots_args) == 1:
+                plots_page = str(plots_args[0], 'utf-8')
+        if plots_page == 'pid_analysis':
+            try:
+                link_to_main_plots = '?log='+log_id
+                plots = get_pid_analysis_plots(ulog, px4_ulog, db_data,
+                                               link_to_main_plots)
+
+                title = 'Flight Review - '+px4_ulog.get_mav_type()
+
+            except Exception as error:
+                # catch all errors to avoid showing a blank page. Note that if we
+                # get here, there's a bug somewhere that needs to be fixed!
+                traceback.print_exc()
+                title, error_message, plots = show_exception_page()
+
+        else:
+            # template variables
+            curdoc().template_variables['cur_err_ids'] = db_data.error_labels
+            curdoc().template_variables['mapbox_api_access_token'] = get_mapbox_api_access_token()
+            curdoc().template_variables['is_plot_page'] = True
+            curdoc().template_variables['log_id'] = log_id
+            flight_modes = [
+                {'name': 'Manual', 'color': HTML_color_to_RGB(flight_modes_table[0][1])},
+                {'name': 'Altitude Control', 'color': HTML_color_to_RGB(flight_modes_table[1][1])},
+                {'name': 'Position Control', 'color': HTML_color_to_RGB(flight_modes_table[2][1])},
+                {'name': 'Acro', 'color': HTML_color_to_RGB(flight_modes_table[10][1])},
+                {'name': 'Stabilized', 'color': HTML_color_to_RGB(flight_modes_table[15][1])},
+                {'name': 'Offboard', 'color': HTML_color_to_RGB(flight_modes_table[14][1])},
+                {'name': 'Rattitude', 'color': HTML_color_to_RGB(flight_modes_table[16][1])},
+                {'name': 'Auto (Mission, RTL, Follow, ...)',
+                 'color': HTML_color_to_RGB(flight_modes_table[3][1])}
+                ]
+            curdoc().template_variables['flight_modes'] = flight_modes
+            vtol_modes = [
+                {'name': 'Transition', 'color': HTML_color_to_RGB(vtol_modes_table[1][1])},
+                {'name': 'Fixed-Wing', 'color': HTML_color_to_RGB(vtol_modes_table[2][1])},
+                {'name': 'Multicopter', 'color': HTML_color_to_RGB(vtol_modes_table[3][1])},
+                ]
+            curdoc().template_variables['vtol_modes'] = vtol_modes
+
+            link_to_3d_page = '3d?log='+log_id
+            link_to_pid_analysis_page = '?plots=pid_analysis&log='+log_id
+
+            try:
+                plots = generate_plots(ulog, px4_ulog, db_data, vehicle_data,
+                                       link_to_3d_page, link_to_pid_analysis_page)
+
+                title = 'Flight Review - '+px4_ulog.get_mav_type()
+
+            except Exception as error:
+                # catch all errors to avoid showing a blank page. Note that if we
+                # get here, there's a bug somewhere that needs to be fixed!
+                traceback.print_exc()
+
+                title, error_message, plots = show_exception_page()
 
     else:
 
