@@ -208,7 +208,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page):
         data_plot.add_graph([axis], colors2[0:1], [axis.upper()+' Estimated'], mark_nan=True)
         data_plot.change_dataset('vehicle_local_position_setpoint')
         data_plot.add_graph([axis], colors2[1:2], [axis.upper()+' Setpoint'],
-                            mark_nan=True, use_step_lines=True)
+                            use_step_lines=True)
         plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
 
         if data_plot.finalize() is not None: plots.append(data_plot)
