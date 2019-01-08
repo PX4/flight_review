@@ -96,7 +96,7 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
                     return None
                 db_data.add_generated_db_data_from_log(db_data_gen)
             else:
-                db_data.duration_s = db_tuple[7]#7
+                db_data.duration_s = db_tuple[7]
                 db_data.mav_type = db_tuple[8]
                 db_data.estimator = db_tuple[9]
                 db_data.sys_autostart_id = db_tuple[10]
@@ -110,7 +110,7 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
                 db_data.vehicle_uuid = db_tuple[17]
                 db_data.flight_mode_durations = \
                    [tuple(map(int, x.split(':'))) for x in db_tuple[18].split(',') if len(x) > 0]
-                db_data.start_time = db_tuple[19]
+                db_data.start_time_utc = db_tuple[19]
 
             # bring it into displayable form
             ver_sw = db_data.ver_sw
@@ -139,8 +139,8 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
             duration_str = '{:d}:{:02d}:{:02d}'.format(h, m, s)
 
             start_time_str = 'N/A'
-            if db_data.start_time != 0:
-                start_datetime = datetime.fromtimestamp(db_data.start_time)
+            if db_data.start_time_utc != 0:
+                start_datetime = datetime.fromtimestamp(db_data.start_time_utc)
                 start_time_str = start_datetime.strftime("%Y-%m-%d  %H:%M")
 
             # make sure to break long descriptions w/o spaces (otherwise they

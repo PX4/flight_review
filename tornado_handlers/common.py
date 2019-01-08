@@ -83,7 +83,7 @@ def generate_db_data_from_log_file(log_id, db_connection=None):
              ','.join(map(str, db_data_gen.flight_modes)),
              db_data_gen.ver_sw_release, db_data_gen.vehicle_uuid,
              db_data_gen.flight_mode_durations_str(),
-             db_data_gen.start_time])
+             db_data_gen.start_time_utc])
         db_connection.commit()
     except sqlite3.IntegrityError:
         # someone else already inserted it (race). just ignore it
