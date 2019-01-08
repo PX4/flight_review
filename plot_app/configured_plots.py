@@ -32,9 +32,29 @@ def get_pid_analysis_plots(ulog, px4_ulog, db_data, link_to_main_plots):
         data_f = interp1d(time_array, data, fill_value='extrapolate')
         return data_f(desired_time)
 
+    page_intro = """
+<p>
+This page shows step response plots for the PID controller. The step
+response is an objective measure to evaluate the performance of a PID
+controller, i.e. if the tuning gains are appropriate. In particular, the
+following metrics can be read from the plots: response time, overshoot and
+settling time.
+</p>
+<p>
+The step response plots are based on <a href="https://github.com/Plasmatree/PID-Analyzer">
+PID-Analyzer</a>, originally written for Betaflight by Florian Melsheimer.
+Documentation with some examples can be found <a
+href="https://github.com/Plasmatree/PID-Analyzer/wiki/Influence-of-parameters">here</a>.
+</p>
+<p>
+Note: this page is somewhat experimental and if you have interesting results or
+other inputs, please do not hesitate to contact
+<a href="mailto:beat@px4.io">beat@px4.io</a>.
+</p>
+    """
     curdoc().template_variables['title_html'] = get_heading_html(
         ulog, px4_ulog, db_data, None, [('Open Main Plots', link_to_main_plots)],
-        'PID Analysis')
+        'PID Analysis') + page_intro
 
     plots = []
     data = ulog.data_list
