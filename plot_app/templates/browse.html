@@ -56,12 +56,12 @@ $(document).ready(function() {
             "search": {{ initial_search }}
         },
 {% endif %}
-            /*"order": [[0, 'desc']], */
+            "order": [[1, 'desc']], 
             "ordering": true,
             "lengthMenu": [10, 25, 50, 75, 100],
 
             "columns": [
-                null,
+                {"orderable": false }, /* row number */
                 null,
                 { "orderable": false }, /* overview */
                 { "width": "13%" }, /* description */

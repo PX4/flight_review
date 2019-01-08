@@ -44,7 +44,7 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
 
         sql_order = ' ORDER BY Date DESC'
 
-        ordering_col = ['Logs.Id',
+        ordering_col = ['',#table row number
                         'Logs.Date',
                         '',#Overview - img
                         'Logs.Description',
@@ -191,9 +191,9 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
         filtered_counter = 0
         if search_str == '':
             # speed-up the request by iterating only over the requested items
-            counter = len(db_tuples) - data_start + 1
+            counter = data_start
             for i in range(data_start, min(data_start + data_length, len(db_tuples))):
-                counter -= 1
+                counter += 1
 
                 columns = get_columns_from_tuple(db_tuples[i], counter)
                 if columns is None:
@@ -202,9 +202,9 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
                 json_output['data'].append(columns.columns)
             filtered_counter = len(db_tuples)
         else:
-            counter = len(db_tuples) + 1
+            counter = 1
             for db_tuple in db_tuples:
-                counter -= 1
+                counter += 1
 
                 columns = get_columns_from_tuple(db_tuple, counter)
                 if columns is None:
