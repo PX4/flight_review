@@ -20,6 +20,7 @@ class DBData:
         self.rating = ''
         self.video_url = ''
         self.error_labels = []
+        super().__init__()
 
     def wind_speed_str(self):
         return self.wind_speed_str_static(self.wind_speed)
@@ -68,6 +69,7 @@ class DBDataGenerated:
         self.flight_modes = set()
         self.vehicle_uuid = ''
         self.flight_mode_durations = [] # list of tuples of (mode, duration sec)
+        super().__init__()
 
     def flight_mode_durations_str(self):
         ret = []

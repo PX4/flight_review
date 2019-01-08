@@ -228,10 +228,6 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
 class DBDataJoin(DBData, DBDataGenerated):
     """Class for joined Data"""
 
-    def __init__(self):
-        super(DBData, self).__init__()
-        super(DBDataGenerated, self).__init__()
-
     def add_generated_db_data_from_log(self, source):
         """Update joined data by parent data"""
         self.__dict__.update(source.__dict__)
