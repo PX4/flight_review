@@ -47,7 +47,10 @@ def get_pid_analysis_plots(ulog, px4_ulog, db_data, link_to_main_plots):
     try:
         sensor_combined = ulog.get_dataset('sensor_combined')
         sensor_time = sensor_combined.data['timestamp']
+        vehicle_attitude = ulog.get_dataset('vehicle_attitude')
+        attitude_time = vehicle_attitude.data['timestamp']
         vehicle_rates_setpoint = ulog.get_dataset('vehicle_rates_setpoint')
+        vehicle_attitude_setpoint = ulog.get_dataset('vehicle_attitude_setpoint')
         actuator_controls_0 = ulog.get_dataset('actuator_controls_0')
         throttle = _resample(actuator_controls_0.data['timestamp'],
                              actuator_controls_0.data['control[3]'] * 100, sensor_time)
@@ -56,7 +59,8 @@ def get_pid_analysis_plots(ulog, px4_ulog, db_data, link_to_main_plots):
         print(type(error), ":", error)
         pid_analysis_error = True
         div = Div(text="<p><b>Error</b>: missing topics or data for PID analysis "
-                  "(required topics: sensor_combined, vehicle_rates_setpoint and "
+                  "(required topics: sensor_combined, vehicle_rates_setpoint, "
+                  "vehicle_attitude, vehicle_attitude_setpoint and "
                   "actuator_controls_0).</p>", width=int(plot_width*0.9))
         plots.append(widgetbox(div, width=int(plot_width*0.9)))
 
@@ -126,6 +130,35 @@ def get_pid_analysis_plots(ulog, px4_ulog, db_data, link_to_main_plots):
                           "in the code.</p>", width=int(plot_width*0.9))
                 plots.insert(0, widgetbox(div, width=int(plot_width*0.9)))
                 pid_analysis_error = True
+
+    # attitude
+    if not pid_analysis_error:
+        throttle = _resample(actuator_controls_0.data['timestamp'],
+                             actuator_controls_0.data['control[3]'] * 100, attitude_time)
+        time_seconds = attitude_time / 1e6
+    # don't plot yaw, as yaw is mostly controlled directly by rate
+    for index, axis in enumerate(['roll', 'pitch']):
+        axis_name = axis.capitalize()
+
+        # PID response
+        if not pid_analysis_error:
+            try:
+                attitude_estimated = np.rad2deg(vehicle_attitude.data[axis])
+                setpoint = _resample(vehicle_attitude_setpoint.data['timestamp'],
+                                     np.rad2deg(vehicle_attitude_setpoint.data[axis+'_d']),
+                                     attitude_time)
+                trace = Trace(axis, time_seconds, attitude_estimated, setpoint, throttle)
+                plots.append(plot_pid_response(trace, ulog.data_list, plot_config,
+                                               'Angle').bokeh_plot)
+            except Exception as e:
+                print(type(e), axis, ":", e)
+                div = Div(text="<p><b>Error</b>: PID analysis failed. Possible "
+                          "error causes are: logged data rate is too low, there "
+                          "is not enough motion for the analysis or simply a bug "
+                          "in the code.</p>", width=int(plot_width*0.9))
+                plots.insert(0, widgetbox(div, width=int(plot_width*0.9)))
+                pid_analysis_error = True
+
     return plots
 
 

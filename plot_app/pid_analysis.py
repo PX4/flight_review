@@ -4,7 +4,7 @@ import colorsys
 
 import numpy as np
 
-from bokeh.models import Range1d, Span, LinearColorMapper, ColumnDataSource
+from bokeh.models import Range1d, Span, LinearColorMapper, ColumnDataSource, LabelSet
 from scipy.interpolate import interp1d
 from scipy.ndimage.filters import gaussian_filter1d
 
@@ -353,7 +353,7 @@ class Trace:
         return (average, np.sqrt(variance))
 
 
-def plot_pid_response(trace, data, plot_config):
+def plot_pid_response(trace, data, plot_config, label='Rate'):
     """Plot PID response for one axis
 
     :param trace: Trace object
@@ -383,7 +383,7 @@ def plot_pid_response(trace, data, plot_config):
 
     data_plot = DataPlot(data, plot_config, 'sensor_combined',
                          y_axis_label='strength', x_axis_label='[s]',
-                         title='Step Response for {:} Rate'.format(trace.name.capitalize()),
+                         title='Step Response for {:} {:}'.format(trace.name.capitalize(), label),
                          x_range=Range1d(0, trace.resplen),
                          y_range=Range1d(0, 2))
     p = data_plot.bokeh_plot
