@@ -123,7 +123,9 @@ class Trace:
 
     def to_mask(self, clipped):
         clipped-=clipped.min()
-        clipped/=clipped.max()
+        clipped_max = clipped.max()
+        if clipped_max > 1e-10: # avoid division by zero
+            clipped/=clipped_max
         return clipped
 
 
