@@ -375,8 +375,8 @@ def plot_pid_response(trace, data, plot_config, label='Rate'):
         delta_alpha = alpha_max / N
         alpha = 0
         for rgb in hsv_tuples:
-            rgb = map(lambda x: int(x*255), colorsys.hsv_to_rgb(*rgb))
-            colors.append('rgba({:.0f},{:.0f},{:.0f},{:.3f})'.format(*rgb, alpha))
+            rgb = list(map(lambda x: int(x*255), colorsys.hsv_to_rgb(*rgb)))
+            colors.append('rgba({:.0f},{:.0f},{:.0f},{:.3f})'.format(rgb[0], rgb[1], rgb[2], alpha))
             alpha += delta_alpha
         return colors
 
