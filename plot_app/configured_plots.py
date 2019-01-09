@@ -65,21 +65,21 @@ other inputs, please do not hesitate to contact
     # required PID response data
     pid_analysis_error = False
     try:
-        sensor_combined = ulog.get_dataset('sensor_combined')
-        sensor_time = sensor_combined.data['timestamp']
+        rate_ctrl_status = ulog.get_dataset('rate_ctrl_status')
+        gyro_time = rate_ctrl_status.data['timestamp']
         vehicle_attitude = ulog.get_dataset('vehicle_attitude')
         attitude_time = vehicle_attitude.data['timestamp']
         vehicle_rates_setpoint = ulog.get_dataset('vehicle_rates_setpoint')
         vehicle_attitude_setpoint = ulog.get_dataset('vehicle_attitude_setpoint')
         actuator_controls_0 = ulog.get_dataset('actuator_controls_0')
         throttle = _resample(actuator_controls_0.data['timestamp'],
-                             actuator_controls_0.data['control[3]'] * 100, sensor_time)
-        time_seconds = sensor_time / 1e6
+                             actuator_controls_0.data['control[3]'] * 100, gyro_time)
+        time_seconds = gyro_time / 1e6
     except (KeyError, IndexError, ValueError) as error:
         print(type(error), ":", error)
         pid_analysis_error = True
         div = Div(text="<p><b>Error</b>: missing topics or data for PID analysis "
-                  "(required topics: sensor_combined, vehicle_rates_setpoint, "
+                  "(required topics: rate_ctrl_status, vehicle_rates_setpoint, "
                   "vehicle_attitude, vehicle_attitude_setpoint and "
                   "actuator_controls_0).</p>", width=int(plot_width*0.9))
         plots.append(widgetbox(div, width=int(plot_width*0.9)))
@@ -136,10 +136,10 @@ other inputs, please do not hesitate to contact
         # PID response
         if not pid_analysis_error:
             try:
-                gyro_rate = np.rad2deg(sensor_combined.data['gyro_rad['+str(index)+']'])
+                gyro_rate = np.rad2deg(rate_ctrl_status.data[axis+'speed'])
                 setpoint = _resample(vehicle_rates_setpoint.data['timestamp'],
                                      np.rad2deg(vehicle_rates_setpoint.data[axis]),
-                                     sensor_time)
+                                     gyro_time)
                 trace = Trace(axis, time_seconds, gyro_rate, setpoint, throttle)
                 plots.append(plot_pid_response(trace, ulog.data_list, plot_config).bokeh_plot)
             except Exception as e:
