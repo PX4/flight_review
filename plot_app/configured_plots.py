@@ -51,6 +51,9 @@ Note: this page is somewhat experimental and if you have interesting results or
 other inputs, please do not hesitate to contact
 <a href="mailto:beat@px4.io">beat@px4.io</a>.
 </p>
+<p>
+The analysis may take a while...
+</p>
     """
     curdoc().template_variables['title_html'] = get_heading_html(
         ulog, px4_ulog, db_data, None, [('Open Main Plots', link_to_main_plots)],
