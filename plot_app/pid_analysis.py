@@ -209,7 +209,7 @@ class Trace:
         ### makes stack of windows for deconvolution
         tlen = len(self.time)
         shift = int(flen/superpos)
-        wins = int(tlen/shift)-superpos
+        wins = int((tlen-flen)/shift)
         for i in np.arange(wins):
             for key in stackdict.keys():
                 stackdict[key].append(self.data[key][i * shift:i * shift + flen])
