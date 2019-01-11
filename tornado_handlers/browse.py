@@ -16,7 +16,7 @@ from config import get_db_filename, get_overview_img_filepath
 from db_entry import DBData, DBDataGenerated
 from helper import flight_modes_table, get_airframe_data, html_long_word_force_break
 
-#pylint: disable=relative-beyond-top-level
+#pylint: disable=relative-beyond-top-level,too-many-statements
 from .common import get_jinja_env, get_generated_db_data_from_log
 
 BROWSE_TEMPLATE = 'browse.html'
