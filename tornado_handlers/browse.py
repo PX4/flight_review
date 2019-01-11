@@ -114,7 +114,7 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
                 db_data.flight_mode_durations = \
                    [tuple(map(int, x.split(':'))) for x in db_tuple[18].split(',') if len(x) > 0]
                 db_data.start_time_utc = db_tuple[19]
-            db_data.row_number = db_tuple[20]
+            db_data.row_number=db_tuple[20]
 
             # bring it into displayable form
             ver_sw = db_data.ver_sw
@@ -228,8 +228,7 @@ class DBDataJoin(DBData, DBDataGenerated):
     """Class for joined Data"""
 
     def __init__(self):
-        self.row_number = 0
-        super().__init__()
+        row_number=0
 
     def add_generated_db_data_from_log(self, source):
         """Update joined data by parent data"""
