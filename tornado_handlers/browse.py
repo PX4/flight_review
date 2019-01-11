@@ -42,20 +42,20 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
         con = sqlite3.connect(get_db_filename(), detect_types=sqlite3.PARSE_DECLTYPES)
         cur = con.cursor()
 
-        sql_order = ' ORDER BY L.Date DESC'
+        sql_order = ' ORDER BY Date DESC'
 
-        ordering_col = ['RowNumber',#log row number
-                        'L.Date',
+        ordering_col = ['',#table row number
+                        'Logs.Date',
                         '',#Overview - img
-                        'L.Description',
-                        'LG.MavType',
+                        'Logs.Description',
+                        'LogsGenerated.MavType',
                         '',#Airframe - not from DB
-                        'LG.Hardware',
-                        'LG.Software',
-                        'LG.Duration',
-                        'LG.StartTime',
+                        'LogsGenerated.Hardware',
+                        'LogsGenerated.Software',
+                        'LogsGenerated.Duration',
+                        'LogsGenerated.StartTime',
                         '',#Rating
-                        'LG.NumLoggedErrors',
+                        'LogsGenerated.NumLoggedErrors',
                         '' #FlightModes
                         ]
         if ordering_col[order_ind] != '':
@@ -63,22 +63,19 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
             if order_dir == 'desc':
                 sql_order += ' DESC'
 
-        cur.execute('SELECT L.Id, L.Date, '
-                    '       L.Description, L.WindSpeed, '
-                    '       L.Rating, L.VideoUrl, '
-                    '       LG.*, '
-                    '       COUNT(LC.Id) as RowNumber '
-                    'FROM Logs L '
-                    '   JOIN Logs LC'
-                    '   LEFT JOIN LogsGenerated LG on L.Id=LG.Id '
-                    'WHERE L.Public = 1 AND LC.Date<L.Date '
-                    'GROUP BY L.Id '
+        cur.execute('SELECT Logs.Id, Logs.Date, '
+                    '       Logs.Description, Logs.WindSpeed, '
+                    '       Logs.Rating, Logs.VideoUrl, '
+                    '       LogsGenerated.* '
+                    'FROM Logs '
+                    '   LEFT JOIN LogsGenerated on Logs.Id=LogsGenerated.Id '
+                    'WHERE Logs.Public = 1 '
                     +sql_order)
 
         # pylint: disable=invalid-name
         Columns = collections.namedtuple("Columns", "columns search_only_columns")
 
-        def get_columns_from_tuple(db_tuple):
+        def get_columns_from_tuple(db_tuple, counter):
             """ load the columns (list of strings) from a db_tuple
             """
 
@@ -114,7 +111,6 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
                 db_data.flight_mode_durations = \
                    [tuple(map(int, x.split(':'))) for x in db_tuple[18].split(',') if len(x) > 0]
                 db_data.start_time_utc = db_tuple[19]
-            db_data.row_number=db_tuple[20]
 
             # bring it into displayable form
             ver_sw = db_data.ver_sw
@@ -169,7 +165,7 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
                 image_col += log_id+'.png" alt="Overview Image Load Failed" height=50/>'
 
             return Columns([
-                db_data.row_number,
+                counter,
                 '<a href="plot_app?log='+log_id+'">'+log_date+'</a>',
                 image_col,
                 description,
@@ -195,17 +191,22 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
         filtered_counter = 0
         if search_str == '':
             # speed-up the request by iterating only over the requested items
+            counter = data_start
             for i in range(data_start, min(data_start + data_length, len(db_tuples))):
-                columns = get_columns_from_tuple(db_tuples[i])
+                counter += 1
+
+                columns = get_columns_from_tuple(db_tuples[i], counter)
                 if columns is None:
                     continue
 
                 json_output['data'].append(columns.columns)
             filtered_counter = len(db_tuples)
         else:
+            counter = 1
             for db_tuple in db_tuples:
+                counter += 1
 
-                columns = get_columns_from_tuple(db_tuple)
+                columns = get_columns_from_tuple(db_tuple, counter)
                 if columns is None:
                     continue
 
@@ -226,9 +227,6 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
 
 class DBDataJoin(DBData, DBDataGenerated):
     """Class for joined Data"""
-
-    def __init__(self):
-        row_number=0
 
     def add_generated_db_data_from_log(self, source):
         """Update joined data by parent data"""
