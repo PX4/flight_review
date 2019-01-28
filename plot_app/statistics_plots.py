@@ -306,10 +306,10 @@ class StatisticsPlots:
 
         # show the release versions as text markers
         release_dict = dict(dates=[], tags=[], y=[], y_offset=[])
-        max_logs_dates = self._private_logs_dates # defines range limits of the plot
+        max_logs_dates = self._public_logs_dates # defines range limits of the plot
         if len(max_logs_dates) > 0:
             first_date = max_logs_dates[0]
-            y_max = len(max_logs_dates)
+            y_max = max(len(max_logs_dates), len(self._private_logs_dates))
             y_pos = -y_max*0.08
 
             releases = get_sw_releases()
