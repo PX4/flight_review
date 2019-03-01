@@ -69,7 +69,7 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
                     '       LogsGenerated.* '
                     'FROM Logs '
                     '   LEFT JOIN LogsGenerated on Logs.Id=LogsGenerated.Id '
-                    'WHERE Logs.Public = 1 '
+                    'WHERE Logs.Public = 1 AND NOT Logs.Source = "CI" '
                     +sql_order)
 
         # pylint: disable=invalid-name
