@@ -269,7 +269,7 @@ class UploadHandler(TornadoRequestHandlerBase):
                         info['software'] = ver_sw + branch_info
 
 
-                if upload_type == 'flightreport' and is_public:
+                if upload_type == 'flightreport' and is_public and source != 'CI':
                     destinations = set(email_notifications_config['public_flightreport'])
                     if rating in ['unsatisfactory', 'crash_sw_hw', 'crash_pilot']:
                         destinations = destinations | \
