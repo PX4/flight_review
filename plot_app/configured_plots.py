@@ -885,9 +885,15 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
     plots.append(get_logged_messages(ulog.logged_messages, plot_width))
 
 
-    # perf & top output
+    # console messages, perf & top output
     top_data = ''
     perf_data = ''
+    console_messages = ''
+    if 'boot_console_output' in ulog.msg_info_multiple_dict:
+        console_output = ulog.msg_info_multiple_dict['boot_console_output'][0]
+        console_output = escape(''.join(console_output))
+        console_messages = '<p><pre>'+console_output+'</pre></p>'
+
     for state in ['pre', 'post']:
         if 'perf_top_'+state+'flight' in ulog.msg_info_multiple_dict:
             current_top_data = ulog.msg_info_multiple_dict['perf_top_'+state+'flight'][0]
@@ -899,6 +905,8 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
             perf_data += '<p>'+state.capitalize()+' Flight:<br/><pre>'+flight_data+'</pre></p>'
 
     additional_data_html = ''
+    if len(console_messages) > 0:
+        additional_data_html += '<h5>Console Output</h5>'+console_messages
     if len(top_data) > 0:
         additional_data_html += '<h5>Processes</h5>'+top_data
     if len(perf_data) > 0:
