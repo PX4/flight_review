@@ -50,8 +50,17 @@ class ThreeDHandler(TornadoRequestHandlerBase):
 
         # manual control setpoint is optional
         manual_control_setpoint = None
+        vehicle_local_position = None
+        vehicle_local_position_setpoint = None
         try:
             manual_control_setpoint = ulog.get_dataset('manual_control_setpoint').data
+            vehicle_local_position = ulog.get_dataset('vehicle_local_position').data
+            vehicle_local_position_setpoint = ulog.get_dataset('vehicle_local_position_setpoint').data
+            vehicle_attitude_setpoint = ulog.get_dataset('vehicle_attitude_setpoint').data
+            vehicle_rates_setpoint = ulog.get_dataset('vehicle_rates_setpoint').data
+            actuator_outputs = ulog.get_dataset('actuator_outputs').data
+            sensor_combined = ulog.get_dataset('sensor_combined').data
+            actuator_controls_0 = ulog.get_dataset('actuator_controls_0').data
         except (KeyError, IndexError, ValueError) as error:
             pass
 
@@ -141,13 +150,136 @@ class ThreeDHandler(TornadoRequestHandlerBase):
             att_qx = attitude['q[1]'][i]
             att_qy = attitude['q[2]'][i]
             att_qz = attitude['q[3]'][i]
+            rollSpeed = attitude['rollspeed'][i]
+            pitchSpeed = attitude['pitchspeed'][i]
+            yawSpeed = attitude['yawspeed'][i]
             t = attitude['timestamp'][i] + utc_offset
             utctimestamp = datetime.datetime.utcfromtimestamp(t/1.e6).replace(
                 tzinfo=datetime.timezone.utc)
             # Cesium uses (x, y, z, w)
-            attitude_data += '["{:}", {:.6f}, {:.6f}, {:.6f}, {:.6f}], ' \
-                .format(utctimestamp.isoformat(), att_qx, att_qy, att_qz, att_qw)
+            attitude_data += '["{:}", {:.6f}, {:.6f}, {:.6f}, {:.6f}, {:.6f}, {:.6f}, {:.6f}], ' \
+                .format(utctimestamp.isoformat(), att_qx, att_qy, att_qz, att_qw, rollSpeed, pitchSpeed, yawSpeed)
         attitude_data += ' ]'
+
+        # Attitude setpoint data
+        vehicle_rates_setpoint_data = '[ '
+        for i in range(len(vehicle_rates_setpoint['timestamp'])):
+            rollRateSP = vehicle_rates_setpoint['roll'][i]
+            pitchRateSP = vehicle_rates_setpoint['pitch'][i]
+            yawRateSp = vehicle_rates_setpoint['yaw'][i]
+            t = vehicle_rates_setpoint['timestamp'][i] + utc_offset
+            utctimestamp = datetime.datetime.utcfromtimestamp(t/1.e6).replace(
+                tzinfo=datetime.timezone.utc)
+            vehicle_rates_setpoint_data += '["{:}", {:.6f}, {:.6f}, {:.6f}], ' \
+                .format(utctimestamp.isoformat(), rollRateSP, pitchRateSP, yawRateSp)
+        vehicle_rates_setpoint_data += ' ]'        
+
+        # Sensor combined data. Includes things like raw gyro, raw accelleration.
+        sensor_combined_data = '[ '
+        for i in range(len(sensor_combined['timestamp'])):
+            rawRoll = sensor_combined['gyro_rad[0]'][i]
+            rawPitch = sensor_combined['gyro_rad[1]'][i]
+            rawYaw = sensor_combined['gyro_rad[2]'][i]
+            rawXAcc = sensor_combined['accelerometer_m_s2[0]'][i]
+            rawYAcc = sensor_combined['accelerometer_m_s2[1]'][i]
+            rawZAcc = sensor_combined['accelerometer_m_s2[2]'][i]            
+            t = sensor_combined['timestamp'][i] + utc_offset
+            utctimestamp = datetime.datetime.utcfromtimestamp(t/1.e6).replace(
+                tzinfo=datetime.timezone.utc)
+            sensor_combined_data += '["{:}", {:.6f}, {:.6f}, {:.6f}, {:.6f}, {:.6f}, {:.6f}], ' \
+                .format(utctimestamp.isoformat(), rawRoll, rawPitch, rawYaw, rawXAcc, rawYAcc, rawZAcc)
+        sensor_combined_data += ' ]'         
+
+        # Attitude setpoint
+        vehicle_attitude_setpoint_data = '[ '
+        for i in range(len(vehicle_attitude_setpoint['timestamp'])):
+            rollSP = vehicle_attitude_setpoint['roll_body'][i]
+            pitchSP = vehicle_attitude_setpoint['pitch_body'][i]
+            yawSP = vehicle_attitude_setpoint['yaw_body'][i]
+
+            t = vehicle_attitude_setpoint['timestamp'][i] + utc_offset
+            utctimestamp = datetime.datetime.utcfromtimestamp(t/1.e6).replace(
+                tzinfo=datetime.timezone.utc)
+            vehicle_attitude_setpoint_data += '["{:}", {:.6f}, {:.6f}, {:.6f}], ' \
+                .format(utctimestamp.isoformat(), rollSP, pitchSP, yawSP)
+        vehicle_attitude_setpoint_data += ' ]'    
+
+        # Local Position
+        vehicle_local_position_data = '[ '
+        for i in range(len(vehicle_local_position['timestamp'])):
+            xPos = vehicle_local_position['x'][i]
+            yPos = vehicle_local_position['y'][i]
+            zPos = vehicle_local_position['z'][i]
+            xVel = vehicle_local_position['vx'][i]
+            yVel = vehicle_local_position['vy'][i]
+            zVel = vehicle_local_position['vz'][i]            
+
+            t = vehicle_local_position['timestamp'][i] + utc_offset
+            utctimestamp = datetime.datetime.utcfromtimestamp(t/1.e6).replace(
+                tzinfo=datetime.timezone.utc)
+            vehicle_local_position_data += '["{:}", {:.6f}, {:.6f}, {:.6f}, {:.6f}, {:.6f}, {:.6f}], ' \
+                .format(utctimestamp.isoformat(), xPos, yPos, zPos, xVel, yVel, zVel)
+        vehicle_local_position_data += ' ]'   
+
+        # Local Position Setpoint
+        vehicle_local_position_setpoint_data = '[ '
+        for i in range(len(vehicle_local_position_setpoint['timestamp'])):
+            xPosSP = vehicle_local_position_setpoint['x'][i]
+            yPosSP = vehicle_local_position_setpoint['y'][i]
+            zPosSP = vehicle_local_position_setpoint['z'][i]
+            xVelSP = vehicle_local_position_setpoint['vx'][i]
+            yVelSP = vehicle_local_position_setpoint['vy'][i]
+            zVelSP = vehicle_local_position_setpoint['vz'][i]
+
+            t = vehicle_local_position_setpoint['timestamp'][i] + utc_offset
+            utctimestamp = datetime.datetime.utcfromtimestamp(t/1.e6).replace(
+                tzinfo=datetime.timezone.utc)
+            vehicle_local_position_setpoint_data += '["{:}", {:.6f}, {:.6f}, {:.6f}, {:.6f}, {:.6f}, {:.6f}], ' \
+                .format(utctimestamp.isoformat(), xPosSP, yPosSP, zPosSP, xVelSP, yVelSP, zVelSP)
+        vehicle_local_position_setpoint_data += ' ]'       
+
+        # Actuator Outputs. This can handle airframes up to 8 actuation outputs (i.e. motors).
+        # Tons of formatting things ...
+        num_actuator_outputs = 8
+        max_outputs = np.amax(actuator_outputs['noutputs'])
+        if max_outputs < num_actuator_outputs: num_actuator_outputs = max_outputs
+
+        actuator_outputs_data = '[ '
+        for i in range(len(actuator_outputs['timestamp'])):
+
+            t = actuator_outputs['timestamp'][i] + utc_offset
+            utctimestamp = datetime.datetime.utcfromtimestamp(t/1.e6).replace(
+                tzinfo=datetime.timezone.utc)            
+
+            actuatorList = []
+            actuatorList.append(utctimestamp.isoformat())
+            actuatorDictionary={}
+            formatStringLoop = ''
+            for x in range(max_outputs):
+                actuatorDictionary["actuator_outputs_{0}".format(x)]=actuator_outputs['output['+str(x)+']'][i]
+                formatStringLoop += ', {:.6f}'
+                actuatorList.append(actuatorDictionary["actuator_outputs_{0}".format(x)])
+            formatStringLoop += '], '   
+            formatString = '["{:}"' + formatStringLoop
+
+            actuator_outputs_data += formatString.format(*actuatorList)
+
+        actuator_outputs_data += ' ]'          
+
+        # Actuator controls
+        actuator_controls_0_data = '[ '
+        for i in range(len(actuator_controls_0['timestamp'])):
+            cont0 = actuator_controls_0['control[0]'][i]
+            cont1 = actuator_controls_0['control[1]'][i]
+            cont2 = actuator_controls_0['control[2]'][i]
+            cont3 = actuator_controls_0['control[3]'][i]
+
+            t = actuator_controls_0['timestamp'][i] + utc_offset
+            utctimestamp = datetime.datetime.utcfromtimestamp(t/1.e6).replace(
+                tzinfo=datetime.timezone.utc)
+            actuator_controls_0_data += '["{:}", {:.6f}, {:.6f}, {:.6f}, {:.6f}], ' \
+                .format(utctimestamp.isoformat(), cont0, cont1, cont2, cont3)
+        actuator_controls_0_data += ' ]'     
 
         # handle different vehicle types
         # the model_scale_factor should scale the different models to make them
@@ -179,6 +311,13 @@ class ThreeDHandler(TornadoRequestHandlerBase):
             boot_timestamp=boot_timestamp_str,
             end_timestamp=end_timestamp_str,
             attitude_data=attitude_data,
+            vehicle_attitude_setpoint_data = vehicle_attitude_setpoint_data,
+            vehicle_local_position_data = vehicle_local_position_data,
+            vehicle_local_position_setpoint_data = vehicle_local_position_setpoint_data,
+            actuator_outputs_data = actuator_outputs_data,
+            vehicle_rates_setpoint_data = vehicle_rates_setpoint_data,
+            sensor_combined_data = sensor_combined_data,
+            actuator_controls_0_data = actuator_controls_0_data,
             model_scale_factor=model_scale_factor,
             model_uri=model_uri,
             log_id=log_id,
