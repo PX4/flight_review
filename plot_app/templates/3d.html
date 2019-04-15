@@ -244,6 +244,9 @@ var attitude_data = {{ attitude_data }};
 var vehicle_attitude_setpoint_data = {{vehicle_attitude_setpoint_data}};
 var vehicle_local_position_data = {{vehicle_local_position_data}};
 var vehicle_local_position_setpoint_data = {{vehicle_local_position_setpoint_data}};
+
+console.log(vehicle_local_position_setpoint_data)
+
 var actuator_outputs_data = {{actuator_outputs_data}};
 var vehicle_rates_setpoint_data = {{vehicle_rates_setpoint_data}};
 var sensor_combined_data = {{sensor_combined_data}};
@@ -677,83 +680,182 @@ function ColumnGrabber(matrix_IN, columnIndex_IN)
 // Collect data to be charted
 var totalTimeInSec = (stop.secondsOfDay-start.secondsOfDay)/60.0;
 
-// Collect attitude data
-var attitude_RPY = ComputeRollPitchYaw(attitude_data);
+// Collect start time of each data stream first.
+var initialTimeArray = [];
 
-// Collect attitude rate data
-var rollRate = ColumnGrabber(attitude_data,5);
-var pitchRate = ColumnGrabber(attitude_data,6);
-var yawRate = ColumnGrabber(attitude_data,7);
+// Initialize time arrays to be plotted on x-axis
+var positionTime = [];
+var positionSPTime = [];
+var attitudeTime = [];
+var setPointTime = [];
+var actuatorOutputTime = [];
+var attitudeRateSPTime =[];
+var sensorCombinedTime = [];
+var contTime = [];
+var rcTime = [];
+
+// Collect attitude data
+var attitude_RPY = [];
+var rollRate = [];
+var pitchRate = [];
+var yawRate = [];
+if(attitude_data.length != 0)
+{
+	attitude_RPY = ComputeRollPitchYaw(attitude_data);
+
+	// Collect attitude rate data
+	rollRate = ColumnGrabber(attitude_data,5);
+	pitchRate = ColumnGrabber(attitude_data,6);
+	yawRate = ColumnGrabber(attitude_data,7);
+
+	attitudeTime = ColumnGrabber(attitude_data,0);
+	initialTimeArray.push(Cesium.JulianDate.fromIso8601(attitudeTime[0]).secondsOfDay/60.0);	
+}
 
 // Collect attitude rate setpoint data
-var rollRateSP = ColumnGrabber(vehicle_rates_setpoint_data,1);
-var pitchRateSP = ColumnGrabber(vehicle_rates_setpoint_data,2);
-var yawRateSP = ColumnGrabber(vehicle_rates_setpoint_data,3);
+var rollRateSP = [];
+var pitchRateSP = [];
+var yawRateSP = [];
+if(vehicle_rates_setpoint_data.length != 0)
+{
+	rollRateSP = ColumnGrabber(vehicle_rates_setpoint_data,1);
+	pitchRateSP = ColumnGrabber(vehicle_rates_setpoint_data,2);
+	yawRateSP = ColumnGrabber(vehicle_rates_setpoint_data,3);
 
-// Collect Position data
-var positionLocalX = ColumnGrabber(vehicle_local_position_data,1);
-var positionLocalY = ColumnGrabber(vehicle_local_position_data,2);
-var positionLocalZ = ColumnGrabber(vehicle_local_position_data,3);
+	attitudeRateSPTime = ColumnGrabber(vehicle_rates_setpoint_data,0);
+	initialTimeArray.push(Cesium.JulianDate.fromIso8601(attitudeRateSPTime[0]).secondsOfDay/60.0);	
+}
+
+
+var positionLocalX = [];
+var positionLocalY = [];
+var positionLocalZ = [];
+var positionLocalvX = [];
+var positionLocalvY = [];
+var positionLocalvZ = [];
+if(vehicle_local_position_data.length != 0)
+{
+	// Collect Position data
+	positionLocalX = ColumnGrabber(vehicle_local_position_data,1);
+	positionLocalY = ColumnGrabber(vehicle_local_position_data,2);
+	positionLocalZ = ColumnGrabber(vehicle_local_position_data,3);
+
+	// Collect Velocity Data
+	positionLocalvX = ColumnGrabber(vehicle_local_position_data,4);
+	positionLocalvY = ColumnGrabber(vehicle_local_position_data,5);
+	positionLocalvZ = ColumnGrabber(vehicle_local_position_data,6);	
+
+	positionTime = ColumnGrabber(vehicle_local_position_data,0);
+	initialTimeArray.push(Cesium.JulianDate.fromIso8601(positionTime[0]).secondsOfDay/60.0);	
+}
 
 // Collect Position setpoint data
-var positionLocalXSP = ColumnGrabber(vehicle_local_position_setpoint_data,1);
-var positionLocalYSP = ColumnGrabber(vehicle_local_position_setpoint_data,2);
-var positionLocalZSP = ColumnGrabber(vehicle_local_position_setpoint_data,3);
-
-// Collect Velocity Data
-var positionLocalvX = ColumnGrabber(vehicle_local_position_data,4);
-var positionLocalvY = ColumnGrabber(vehicle_local_position_data,5);
-var positionLocalvZ = ColumnGrabber(vehicle_local_position_data,6);
+var positionLocalXSP = [];
+var positionLocalYSP = [];
+var positionLocalZSP = [];
+if(vehicle_local_position_setpoint_data.length != 0)
+{
+	positionLocalXSP = ColumnGrabber(vehicle_local_position_setpoint_data,1);
+	positionLocalYSP = ColumnGrabber(vehicle_local_position_setpoint_data,2);
+	positionLocalZSP = ColumnGrabber(vehicle_local_position_setpoint_data,3);
+}
 
 // Collect Velocity Setpoint Data
-var positionLocalvXSP = ColumnGrabber(vehicle_local_position_setpoint_data,4);
-var positionLocalvYSP = ColumnGrabber(vehicle_local_position_setpoint_data,5);
-var positionLocalvZSP = ColumnGrabber(vehicle_local_position_setpoint_data,6);
+var positionLocalvXSP = [];
+var positionLocalvYSP = [];
+var positionLocalvZSP = [];
+if(vehicle_local_position_setpoint_data.length != 0)
+{
+	positionLocalvXSP = ColumnGrabber(vehicle_local_position_setpoint_data,4);
+	positionLocalvYSP = ColumnGrabber(vehicle_local_position_setpoint_data,5);
+	positionLocalvZSP = ColumnGrabber(vehicle_local_position_setpoint_data,6);
+
+	positionSPTime = ColumnGrabber(vehicle_local_position_setpoint_data,0);
+	initialTimeArray.push(Cesium.JulianDate.fromIso8601(positionSPTime[0]).secondsOfDay/60.0);	
+}
 
 // Collect actuator outputs data
-var num_actuator_outputs = actuator_outputs_data[0].length - 1; // This only holds true because data is structured in a specific way.
 var actuatorOutputs = [];
-for(var i = 1; i <= num_actuator_outputs; i++) {
-    actuatorOutputs[i-1] = ColumnGrabber(actuator_outputs_data,i);
+var num_actuator_outputs = 0;
+if(actuator_outputs_data.length != 0)
+{
+	num_actuator_outputs = actuator_outputs_data[0].length - 1; // This only holds true because data is structured in a specific way.
+	for(var i = 1; i <= num_actuator_outputs; i++) 
+	{
+	    actuatorOutputs[i-1] = ColumnGrabber(actuator_outputs_data,i);
+	}
+
+	actuatorOutputTime = ColumnGrabber(actuator_outputs_data,0);
+	initialTimeArray.push(Cesium.JulianDate.fromIso8601(actuatorOutputTime[0]).secondsOfDay/60.0);	
 }
 
 // Collect attitude setpoint data
-var rollSP = ColumnGrabber(vehicle_attitude_setpoint_data,1);
-var pitchSP = ColumnGrabber(vehicle_attitude_setpoint_data,2);
-var yawSP = ColumnGrabber(vehicle_attitude_setpoint_data,3);
+var rollSP = [];
+var pitchSP = [];
+var yawSP = [];
+if(vehicle_attitude_setpoint_data.length != 0)
+{
+	rollSP = ColumnGrabber(vehicle_attitude_setpoint_data,1);
+	pitchSP = ColumnGrabber(vehicle_attitude_setpoint_data,2);
+	yawSP = ColumnGrabber(vehicle_attitude_setpoint_data,3);
 
-// Collect Raw Gyro
-var rollGyro = ColumnGrabber(sensor_combined_data,1);
-var pitchGyro = ColumnGrabber(sensor_combined_data,2);
-var yawGyro = ColumnGrabber(sensor_combined_data,3);
+	setPointTime = ColumnGrabber(vehicle_attitude_setpoint_data,0);
+	initialTimeArray.push(Cesium.JulianDate.fromIso8601(setPointTime[0]).secondsOfDay/60.0);	
+}
 
-// Collect Raw Accel
-var xAccel = ColumnGrabber(sensor_combined_data,4);
-var yAccel = ColumnGrabber(sensor_combined_data,5);
-var zAccel = ColumnGrabber(sensor_combined_data,6);
+var rollGyro = [];
+var pitchGyro = [];
+var yawGyro = [];
+var xAccel = [];
+var yAccel = [];
+var zAccel = [];
+if(sensor_combined_data.length != 0)
+{
+	// Collect Raw Gyro	
+	rollGyro = ColumnGrabber(sensor_combined_data,1);
+	pitchGyro = ColumnGrabber(sensor_combined_data,2);
+	yawGyro = ColumnGrabber(sensor_combined_data,3);
+
+	// Collect Raw Accel
+	xAccel = ColumnGrabber(sensor_combined_data,4);
+	yAccel = ColumnGrabber(sensor_combined_data,5);
+	zAccel = ColumnGrabber(sensor_combined_data,6);	
+
+	sensorCombinedTime = ColumnGrabber(sensor_combined_data,0);
+	initialTimeArray.push(Cesium.JulianDate.fromIso8601(sensorCombinedTime[0]).secondsOfDay/60.0);	
+}
 
 // Collect actuator controls
-var contRoll = ColumnGrabber(actuator_controls_0_data,1);
-var contPitch = ColumnGrabber(actuator_controls_0_data,2);
-var contYaw = ColumnGrabber(actuator_controls_0_data,3);
-var contThrust = ColumnGrabber(actuator_controls_0_data,4);
+var contRoll = [];
+var contPitch = [];
+var contYaw = [];
+var contThrust = [];
+if(actuator_controls_0_data.length != 0)
+{
+	contRoll = ColumnGrabber(actuator_controls_0_data,1);
+	contPitch = ColumnGrabber(actuator_controls_0_data,2);
+	contYaw = ColumnGrabber(actuator_controls_0_data,3);
+	contThrust = ColumnGrabber(actuator_controls_0_data,4);
+
+	contTime = ColumnGrabber(actuator_controls_0_data,0);
+	initialTimeArray.push(Cesium.JulianDate.fromIso8601(contTime[0]).secondsOfDay/60.0);	
+}
 
 // Collect Manual control
-var rcRoll = ColumnGrabber(manual_control_setpoints,1);
-var rcPitch = ColumnGrabber(manual_control_setpoints,2);
-var rcThrust = ColumnGrabber(manual_control_setpoints,3);
-var rcYaw = ColumnGrabber(manual_control_setpoints,4);
+var rcRoll = [];
+var rcPitch = [];
+var rcThrust = [];
+var rcYaw = [];
+if(manual_control_setpoints.length != 0)
+{
+	rcRoll = ColumnGrabber(manual_control_setpoints,1);
+	rcPitch = ColumnGrabber(manual_control_setpoints,2);
+	rcThrust = ColumnGrabber(manual_control_setpoints,3);
+	rcYaw = ColumnGrabber(manual_control_setpoints,4);
 
-// Collect start time of each data stream first.
-var positionTime = ColumnGrabber(vehicle_local_position_data,0);
-var positionSPTime = ColumnGrabber(vehicle_local_position_setpoint_data,0);
-var attitudeTime = ColumnGrabber(attitude_data,0);
-var setPointTime = ColumnGrabber(vehicle_attitude_setpoint_data,0);
-var actuatorOutputTime = ColumnGrabber(actuator_outputs_data,0);
-var attitudeRateSPTime = ColumnGrabber(vehicle_rates_setpoint_data,0);
-var sensorCombinedTime = ColumnGrabber(sensor_combined_data,0);
-var contTime = ColumnGrabber(actuator_controls_0_data,0);
-var rcTime = ColumnGrabber(manual_control_setpoints,0);
+	rcTime = ColumnGrabber(manual_control_setpoints,0);
+	initialTimeArray.push(Cesium.JulianDate.fromIso8601(rcTime[0]).secondsOfDay/60.0);	
+}
 
 // Data collection is finished. Empty the unused arrays.
 attitude_data = [];
@@ -785,7 +887,7 @@ yawGyro = Rad2Deg(yawGyro);
 
 // Time Axis Building \\
 // Find the earliest data start time
-var initialTime = Math.min(Cesium.JulianDate.fromIso8601(setPointTime[0]).secondsOfDay/60.0, Cesium.JulianDate.fromIso8601(attitudeTime[0]).secondsOfDay/60.0,Cesium.JulianDate.fromIso8601(positionTime[0]).secondsOfDay/60.0,Cesium.JulianDate.fromIso8601(positionSPTime[0]).secondsOfDay/60.0,Cesium.JulianDate.fromIso8601(actuatorOutputTime[0]).secondsOfDay/60.0, Cesium.JulianDate.fromIso8601(attitudeRateSPTime[0]).secondsOfDay/60.0, Cesium.JulianDate.fromIso8601(sensorCombinedTime[0]).secondsOfDay/60.0, Cesium.JulianDate.fromIso8601(contTime[0]).secondsOfDay/60.0, Cesium.JulianDate.fromIso8601(rcTime[0]).secondsOfDay/60.0);
+var initialTime = Math.min(...initialTimeArray);
 
 // Create x-axis array for attitude
 var attitudeXData = TimeAxisArrayBuilder(attitudeTime, initialTime);
