@@ -362,6 +362,8 @@ def plot_map(ulog, config, map_type='plain', api_key=None, setpoints=False,
         print(type(error), "(vehicle_gps_position):", error)
         return None
     p.toolbar.logo = None
+    # make it possible to hide graphs by clicking on the label
+    p.legend.click_policy = "hide"
     return p
 
 
