@@ -25,6 +25,7 @@ flight_modes_table = {
     18: ('Land', '#6600cc'), # purple
     19: ('Follow Target', '#6600cc'), # purple
     20: ('Precision Land', '#6600cc'), # purple
+    21: ('Orbit', '#6600cc'), # purple
     }
 
 vtol_modes_table = {
