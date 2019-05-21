@@ -97,6 +97,8 @@ The analysis may take a while...
 
         thrust_max = 200
         actuator_controls = data_plot.dataset
+        if actuator_controls is None: # do not show the rate plot if actuator_controls is missing
+            continue
         time_controls = actuator_controls.data['timestamp']
         thrust = actuator_controls.data['control[3]'] * thrust_max
         # downsample if necessary
