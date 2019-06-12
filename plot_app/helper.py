@@ -307,7 +307,7 @@ def load_ulog_file(file_name):
                   'rate_ctrl_status', 'vehicle_air_data',
                   'vehicle_magnetometer', 'system_power']
     try:
-        ulog = ULog(file_name, msg_filter)
+        ulog = ULog(file_name, msg_filter, disable_str_exceptions=False)
     except FileNotFoundError:
         print("Error: file %s not found" % file_name)
         raise
