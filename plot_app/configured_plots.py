@@ -16,7 +16,7 @@ from plotting import *
 from plotted_tables import (
     get_logged_messages, get_changed_parameters,
     get_info_table_html, get_heading_html, get_error_labels_html,
-    get_hardfault_html
+    get_hardfault_html, get_corrupt_log_html
     )
 
 #pylint: disable=cell-var-from-loop, undefined-loop-variable,
@@ -248,6 +248,9 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
     if hardfault_html is not None:
         curdoc().template_variables['hardfault_html'] = hardfault_html
 
+    corrupt_log_html = get_corrupt_log_html(ulog)
+    if corrupt_log_html:
+        curdoc().template_variables['corrupt_log_html'] = corrupt_log_html
 
     # Position plot
     data_plot = DataPlot2D(data, plot_config, 'vehicle_local_position',

@@ -378,6 +378,30 @@ def get_error_labels_html():
 
     return error_label_select
 
+def get_corrupt_log_html(ulog):
+    """
+    Get the html (as string) for corrupt logs,
+    if the log is corrupt, otherwise returns None
+    """
+    if ulog.file_corruption:
+        corrupt_log_html = """
+<div class="card text-white bg-danger mb-3">
+  <div class="card-header">Warning</div>
+  <div class="card-body">
+    <h4 class="card-title">Corrupt Log File</h4>
+    <p class="card-text">
+        This log contains corrupt data. Some of the shown data might be wrong
+        and some data might be missing.
+        <br />
+        A possible cause is a corrupt file system and exchanging or reformatting
+        the SD card fixes the problem.
+        </p>
+  </div>
+</div>
+"""
+        return corrupt_log_html
+    return None
+
 def get_hardfault_html(ulog):
     """
     Get the html (as string) for hardfault information,
