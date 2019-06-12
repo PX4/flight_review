@@ -175,7 +175,7 @@ class StatisticsPlots:
                     continue
 
                 try:
-                    if int(log.sw_version[1:].split('.')[0]) > 10:
+                    if int(log.sw_version[1:].split('.')[0]) > 2:
                         print('Warning: %s with large version %s' % (log.log_id, log.sw_version))
                         continue
                 except:
