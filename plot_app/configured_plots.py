@@ -221,15 +221,16 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
             # find mode after transitions (states: 1=transition, 2=FW, 3=MC)
             if 'vehicle_type' in cur_dataset.data:
                 vehicle_type_field = 'vehicle_type'
-                vtol_state_mapping = { 2: 2, 1: 3 }
+                vtol_state_mapping = {2: 2, 1: 3}
             else: # COMPATIBILITY: old logs (https://github.com/PX4/Firmware/pull/11918)
                 vehicle_type_field = 'is_rotary_wing'
-                vtol_state_mapping = { 0: 2, 1: 3 }
+                vtol_state_mapping = {0: 2, 1: 3}
             for i in range(len(vtol_states)):
                 if vtol_states[i][1] == 0:
                     t = vtol_states[i][0]
                     idx = np.argmax(cur_dataset.data['timestamp'] >= t) + 1
-                    vtol_states[i] = (t, vtol_state_mapping[cur_dataset.data[vehicle_type_field][idx]])
+                    vtol_states[i] = (t, vtol_state_mapping[
+                        cur_dataset.data[vehicle_type_field][idx]])
             vtol_states.append((ulog.last_timestamp, -1))
     except (KeyError, IndexError) as error:
         vtol_states = None
