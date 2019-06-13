@@ -922,14 +922,13 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
     if len(additional_data_html) > 0:
         # hide by default & use a button to expand
         additional_data_html = '''
-<button class="btn btn-secondary" data-toggle="collapse" style="min-width:0;"
+<button id="show-additional-data-btn" class="btn btn-secondary" data-toggle="collapse" style="min-width:0;"
  data-target="#show-additional-data">Show additional Data</button>
 <div id="show-additional-data" class="collapse">
 {:}
 </div>
 '''.format(additional_data_html)
-        additional_data_div = Div(text=additional_data_html, width=int(plot_width*0.9))
-        plots.append(widgetbox(additional_data_div, width=int(plot_width*0.9)))
+        curdoc().template_variables['additional_info'] = additional_data_html
 
 
     curdoc().template_variables['plots'] = jinja_plot_data

@@ -128,6 +128,12 @@ function setupPlots() {
 
 	$('#loading-plots').hide();
 
+	$('#show-additional-data-btn').click(function(){
+		$(this).text(function(i,old){
+			return old.includes('Show') ?  'Hide additional Data' : 'Show additional Data';
+		});
+	});
+
 	// because bokeh dynamically loads the content after startup, jumping to
 	// fragments does not work on page load, so we do it manually
 	var cur_frag = window.location.hash.substr(1);
