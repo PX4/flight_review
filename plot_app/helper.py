@@ -228,7 +228,7 @@ def map_projection(lat, lon, anchor_lat, anchor_lon):
     arg[arg > 1] = 1
     arg[arg < -1] = -1
 
-    np.set_printoptions(threshold=np.nan)
+    np.set_printoptions(threshold=sys.maxsize)
     c = np.arccos(arg)
     k = np.copy(lat)
     for i in range(len(lat)):
