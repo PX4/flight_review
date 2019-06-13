@@ -250,7 +250,7 @@ else:
         plots = [widgetbox(div, width=int(plot_width*0.9))]
 
     # layout
-    layout = column(plots, sizing_mode='scale_width')
+    layout = column(plots)
     curdoc().add_root(layout)
     curdoc().title = title
 
