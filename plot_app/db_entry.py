@@ -113,7 +113,7 @@ class DBDataGenerated:
         try:
             cur_dataset = ulog.get_dataset('vehicle_status')
             flight_mode_changes = cur_dataset.list_value_changes('nav_state')
-            obj.flight_modes = {x[1] for x in flight_mode_changes}
+            obj.flight_modes = {int(x[1]) for x in flight_mode_changes}
 
             # get the durations
             # make sure the first entry matches the start of the logging
@@ -145,10 +145,10 @@ class DBDataGenerated:
 
     def to_json_dict(self):
         jsondict = dict()
-        jsondict['duration_s'] = self.duration_s
+        jsondict['duration_s'] = int(self.duration_s)
         jsondict['mav_type'] = self.mav_type
         jsondict['estimator'] = self.estimator
-        jsondict['sys_autostart_id'] = self.sys_autostart_id
+        jsondict['sys_autostart_id'] = int(self.sys_autostart_id)
         jsondict['sys_hw'] = self.sys_hw
         jsondict['ver_sw'] = self.ver_sw
         jsondict['ver_sw_release'] = self.ver_sw_release
