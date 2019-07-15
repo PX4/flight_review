@@ -214,9 +214,11 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
 
     # VTOL state changes & vehicle type
     vtol_states = None
+    is_vtol = False
     try:
         cur_dataset = ulog.get_dataset('vehicle_status')
         if np.amax(cur_dataset.data['is_vtol']) == 1:
+            is_vtol = True
             vtol_states = cur_dataset.list_value_changes('in_transition_mode')
             # find mode after transitions (states: 1=transition, 2=FW, 3=MC)
             if 'vehicle_type' in cur_dataset.data:
@@ -474,19 +476,20 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
         if data_plot.finalize() is not None: plots.append(data_plot)
 
 
-    # Airspeed vs Ground speed: but only if there's valid airspeed data
+    # Airspeed vs Ground speed: but only if there's valid airspeed data or a VTOL
     try:
-        cur_dataset = ulog.get_dataset('airspeed')
-        if np.amax(cur_dataset.data['indicated_airspeed_m_s']) > 0.1:
+        if is_vtol or ulog.get_dataset('airspeed') is not None:
             data_plot = DataPlot(data, plot_config, 'vehicle_global_position',
                                  y_axis_label='[m/s]', title='Airspeed',
                                  plot_height='small',
                                  changed_params=changed_params, x_range=x_range)
             data_plot.add_graph([lambda data: ('groundspeed_estimated',
                                                np.sqrt(data['vel_n']**2 + data['vel_e']**2))],
-                                colors3[2:3], ['Ground Speed Estimated'])
+                                colors3[0:1], ['Ground Speed Estimated'])
             data_plot.change_dataset('airspeed')
-            data_plot.add_graph(['indicated_airspeed_m_s'], colors2[0:1], ['Airspeed Indicated'])
+            data_plot.add_graph(['indicated_airspeed_m_s'], colors3[1:2], ['Airspeed Indicated'])
+            data_plot.change_dataset('vehicle_gps_position')
+            data_plot.add_graph(['vel_m_s'], colors3[2:3], ['Ground Speed (from GPS)'])
 
             plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
 
