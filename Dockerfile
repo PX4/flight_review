@@ -23,17 +23,18 @@ RUN git clone https://github.com/PX4/flight_review.git
 
 WORKDIR "flight_review"
 
-## update caesium and mabox keys
-RUN sed -i "/cesium_api_key =/ s/=.*/=$CESIUM_API_KEY/" config_default.ini
-RUN sed -i "/mapbox_api_access_token =/ s/=.*/=$MAPBOX_API_ACCESS_TOKEN/" config_default.ini
+## set cesium and mabox keys
+RUN echo "[general]" >> config_user.ini
+RUN echo "cesium_api_key = $CESIUM_API_KEY" >> config_user.ini
+RUN echo "mapbox_api_access_token = $MAPBOX_API_ACCESS_TOKEN" >> config_user.ini
 
 ## required for pipenv to run
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 
-RUN pipenv --three
-RUN pipenv sync
-RUN pipenv lock --requirements > requirements.txt
+#RUN pipenv --three
+#RUN pipenv sync
+#RUN pipenv lock --requirements > requirements.txt
 
 ## app setup
 RUN pipenv run python setup_db.py
@@ -49,7 +50,10 @@ RUN pip3 install smopy
 RUN pip3 install scipy
 RUN pip3 install pyfftw
 
+EXPOSE 5006
+CMD ["python3", "serve.py"]
+
 ## USAGE
 ## ## ## ## ## ## ## ## ## ## ## ## 
 ## BUILD# docker build --build-arg CESIUM_API_KEY=[cesium-key] --build-arg MAPBOX_API_ACCESS_TOKEN=[mapbox_key]  -t px4flightreview .
-## RUN# docker run -it -p 80:5006 px4flightreview python3 serve.py
+## RUN# docker run -d -p 80:5006 px4flightreview
