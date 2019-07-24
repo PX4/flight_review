@@ -42,5 +42,5 @@ CMD ["pipenv", "run", "python3", "serve.py"]
 
 ## USAGE
 ## ## ## ## ## ## ## ## ## ## ## ## 
-## BUILD# docker build --build-arg CESIUM_API_KEY=[cesium-key] --build-arg MAPBOX_API_ACCESS_TOKEN=[mapbox_key] -t px4flightreview .
-## RUN# docker run -d -p 80:5006 px4flightreview
+## BUILD  docker build --build-arg CESIUM_API_KEY=[cesium-key] --build-arg MAPBOX_API_ACCESS_TOKEN=[mapbox_key] -t px4flightreview .
+## RUN    docker run -d -p 5006:5006 px4flightreview
