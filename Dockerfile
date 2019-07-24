@@ -2,7 +2,6 @@ FROM ubuntu:18.04
 ARG CESIUM_API_KEY
 ARG MAPBOX_API_ACCESS_TOKEN
 
-
 RUN apt-get update
 RUN apt-get install -y apt-utils
 RUN apt-get install -y python3
@@ -32,28 +31,16 @@ RUN echo "mapbox_api_access_token = $MAPBOX_API_ACCESS_TOKEN" >> config_user.ini
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 
-#RUN pipenv --three
-#RUN pipenv sync
-#RUN pipenv lock --requirements > requirements.txt
+RUN pipenv --three
+RUN pipenv sync
 
 ## app setup
 RUN pipenv run python setup_db.py
 
-## install bokeh webserver
-RUN pip3 install bokeh
-
-## application required libs
-RUN pip3 install pyulog
-RUN pip3 install simplekml
-RUN pip3 install matplotlib
-RUN pip3 install smopy
-RUN pip3 install scipy
-RUN pip3 install pyfftw
-
 EXPOSE 5006
-CMD ["python3", "serve.py"]
+CMD ["pipenv", "run", "python3", "serve.py"]
 
 ## USAGE
 ## ## ## ## ## ## ## ## ## ## ## ## 
-## BUILD# docker build --build-arg CESIUM_API_KEY=[cesium-key] --build-arg MAPBOX_API_ACCESS_TOKEN=[mapbox_key]  -t px4flightreview .
+## BUILD# docker build --build-arg CESIUM_API_KEY=[cesium-key] --build-arg MAPBOX_API_ACCESS_TOKEN=[mapbox_key] -t px4flightreview .
 ## RUN# docker run -d -p 80:5006 px4flightreview
