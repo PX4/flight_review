@@ -18,9 +18,9 @@ RUN pip3 install --system pipenv
 RUN echo PATH="$HOME/.local/bin:$PATH" >> ~/.bashrc
 RUN /bin/bash -c "source ~/.bashrc"
 
-RUN git clone https://github.com/PX4/flight_review.git
-
-WORKDIR "flight_review"
+## use local project source
+COPY . flight_review
+WORKDIR flight_review
 
 ## set cesium and mabox keys
 RUN echo "[general]" >> config_user.ini
