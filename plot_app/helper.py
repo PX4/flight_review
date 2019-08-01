@@ -299,7 +299,7 @@ def load_ulog_file(file_name):
                   'vehicle_local_position_setpoint',
                   'vehicle_global_position', 'actuator_controls_0',
                   'actuator_controls_1', 'actuator_outputs',
-                  'vehicle_attitude', 'vehicle_attitude_setpoint',
+                  'vehicle_angular_velocity', 'vehicle_attitude', 'vehicle_attitude_setpoint',
                   'vehicle_rates_setpoint', 'rc_channels', 'input_rc',
                   'position_setpoint_triplet', 'vehicle_attitude_groundtruth',
                   'vehicle_local_position_groundtruth', 'vehicle_visual_odometry',
