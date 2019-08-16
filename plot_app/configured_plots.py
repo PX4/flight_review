@@ -65,17 +65,19 @@ The analysis may take a while...
     x_range_offset = (ulog.last_timestamp - ulog.start_timestamp) * 0.05
     x_range = Range1d(ulog.start_timestamp - x_range_offset, ulog.last_timestamp + x_range_offset)
 
+    # COMPATIBILITY support for old logs
+    if any(elem.name == 'vehicle_angular_velocity' for elem in data):
+        rate_topic_name = 'vehicle_angular_velocity'
+        rate_field_names = ['xyz[0]', 'xyz[1]', 'xyz[2]']
+    else: # old
+        rate_topic_name = 'rate_ctrl_status'
+        rate_field_names = ['rollspeed', 'pitchspeed', 'yawspeed']
+
     # required PID response data
     pid_analysis_error = False
     try:
-        rate_ctrl_status = ulog.get_dataset('rate_ctrl_status')
-
-        # COMPATIBILITY support for old logs
-        if any(elem.name == 'vehicle_angular_velocity' for elem in data):
-            vehicle_angular_velocity = ulog.get_dataset('vehicle_angular_velocity')
-            gyro_time = vehicle_angular_velocity.data['timestamp']
-        else:
-            gyro_time = rate_ctrl_status.data['timestamp']
+        rate_data = ulog.get_dataset(rate_topic_name)
+        gyro_time = rate_data.data['timestamp']
 
         vehicle_attitude = ulog.get_dataset('vehicle_attitude')
         attitude_time = vehicle_attitude.data['timestamp']
@@ -89,27 +91,13 @@ The analysis may take a while...
         print(type(error), ":", error)
         pid_analysis_error = True
         div = Div(text="<p><b>Error</b>: missing topics or data for PID analysis "
-                  "(required topics: vehicle_angular_velocity, rate_ctrl_status, vehicle_rates_setpoint, "
+                  "(required topics: vehicle_angular_velocity, vehicle_rates_setpoint, "
                   "vehicle_attitude, vehicle_attitude_setpoint and "
                   "actuator_controls_0).</p>", width=int(plot_width*0.9))
         plots.append(widgetbox(div, width=int(plot_width*0.9)))
 
     for index, axis in enumerate(['roll', 'pitch', 'yaw']):
         axis_name = axis.capitalize()
-
-        # COMPATIBILITY support for old logs
-        if any(elem.name == 'vehicle_angular_velocity' for elem in data):
-            rate_estimated_topic_name = 'vehicle_angular_velocity'
-            rate_estimated_data = [lambda data: (index, np.rad2deg(data['xyz[' + str(index) + ']']))]
-
-            gyro_rate = np.rad2deg(vehicle_angular_velocity.data['xyz[' + str(index) + ']'])
-        else:
-            rate_estimated_topic_name = 'vehicle_attitude'
-            rate_estimated_data = [lambda data: (axis+'speed', np.rad2deg(data[axis+'speed']))]
-
-            gyro_rate = np.rad2deg(rate_ctrl_status.data[axis+'speed'])
-
-
         # rate
         data_plot = DataPlot(data, plot_config, 'actuator_controls_0',
                              y_axis_label='[deg/s]', title=axis_name+' Angular Rate',
@@ -138,8 +126,10 @@ The analysis may take a while...
         p.patch(time_controls, thrust, line_width=0, fill_color='#555555',
                 fill_alpha=0.4, alpha=0, legend='Thrust [0, {:}]'.format(thrust_max))
 
-        data_plot.change_dataset(rate_estimated_topic_name)
-        data_plot.add_graph(rate_estimated_data, colors3[0:1], [axis_name+' Rate Estimated'], mark_nan=True)
+        data_plot.change_dataset(rate_topic_name)
+        data_plot.add_graph([lambda data: ("rate"+str(index),
+                                           np.rad2deg(data[rate_field_names[index]]))],
+                            colors3[0:1], [axis_name+' Rate Estimated'], mark_nan=True)
         data_plot.change_dataset('vehicle_rates_setpoint')
         data_plot.add_graph([lambda data: (axis, np.rad2deg(data[axis]))],
                             colors3[1:2], [axis_name+' Rate Setpoint'],
@@ -161,6 +151,7 @@ The analysis may take a while...
         # PID response
         if not pid_analysis_error:
             try:
+                gyro_rate = np.rad2deg(rate_data.data[rate_field_names[index]])
                 setpoint = _resample(vehicle_rates_setpoint.data['timestamp'],
                                      np.rad2deg(vehicle_rates_setpoint.data[axis]),
                                      gyro_time)
@@ -230,24 +221,12 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
 
     if any(elem.name == 'vehicle_angular_velocity' for elem in data):
         rate_estimated_topic_name = 'vehicle_angular_velocity'
-        rate_estimated_data = [lambda data: (axis+'speed', np.rad2deg(data['xyz[' + str(index) +']']))]
-
         rate_groundtruth_topic_name = 'vehicle_angular_velocity_groundtruth'
-        rate_groundtruth_data = [lambda data: (axis+'speed', np.rad2deg(data['xyz[' + str(index) +']']))]
-
-        rate_groundtruth_x = 'xyz[0]'
-        rate_groundtruth_y = 'xyz[1]'
-        rate_groundtruth_z = 'xyz[2]'
-    else:
+        rate_field_names = ['xyz[0]', 'xyz[1]', 'xyz[2]']
+    else: # old
         rate_estimated_topic_name = 'vehicle_attitude'
-        rate_estimated_data = [lambda data: (axis+'speed', np.rad2deg(data[axis+'speed']))]
-
         rate_groundtruth_topic_name = 'vehicle_attitude_groundtruth'
-        rate_groundtruth_data = [lambda data: (axis+'speed', np.rad2deg(data[axis+'speed']))]
-
-        rate_groundtruth_x = 'rollspeed'
-        rate_groundtruth_y = 'pitchspeed'
-        rate_groundtruth_z = 'yawspeed'
+        rate_field_names = ['rollspeed', 'pitchspeed', 'yawspeed']
 
     # initialize flight mode changes
     flight_mode_changes = get_flight_mode_changes(ulog)
@@ -390,7 +369,9 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
                              y_axis_label='[deg/s]', title=axis_name+' Angular Rate',
                              plot_height='small', changed_params=changed_params,
                              x_range=x_range)
-        data_plot.add_graph(rate_estimated_data, colors3[0:1], [axis_name+' Rate Estimated'], mark_nan=True)
+        data_plot.add_graph([lambda data: (axis+'speed',
+                                           np.rad2deg(data[rate_field_names[index]]))],
+                            colors3[0:1], [axis_name+' Rate Estimated'], mark_nan=True)
         data_plot.change_dataset('vehicle_rates_setpoint')
         data_plot.add_graph([lambda data: (axis, np.rad2deg(data[axis]))],
                             colors3[1:2], [axis_name+' Rate Setpoint'],
@@ -406,7 +387,9 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
         data_plot.add_graph([lambda data: (axis, data[axis+'speed_integ']*100)],
                             colors3[2:3], [axis_name+' Rate Integral '+rate_int_limit])
         data_plot.change_dataset(rate_groundtruth_topic_name)
-        data_plot.add_graph(rate_groundtruth_data, [color_gray], [axis_name+' Rate Groundtruth'])
+        data_plot.add_graph([lambda data: (axis+'speed',
+                                           np.rad2deg(data[rate_field_names[index]]))],
+                            [color_gray], [axis_name+' Rate Groundtruth'])
         plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
 
         if data_plot.finalize() is not None: plots.append(data_plot)
@@ -504,9 +487,9 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
         plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
 
         data_plot.change_dataset(rate_groundtruth_topic_name)
-        data_plot.add_graph([lambda data: ('rollspeed', np.rad2deg(data[rate_groundtruth_x])),
-                             lambda data: ('pitchspeed', np.rad2deg(data[rate_groundtruth_y])),
-                             lambda data: ('yawspeed', np.rad2deg(data[rate_groundtruth_z]))],
+        data_plot.add_graph([lambda data: ('rollspeed', np.rad2deg(data[rate_field_names[0]])),
+                             lambda data: ('pitchspeed', np.rad2deg(data[rate_field_names[1]])),
+                             lambda data: ('yawspeed', np.rad2deg(data[rate_field_names[2]]))],
                             colors8[2:5],
                             ['Roll Rate Groundtruth', 'Pitch Rate Groundtruth',
                              'Yaw Rate Groundtruth'])
