@@ -27,6 +27,7 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
     """ Ajax data retrieval handler """
 
     def get(self, *args, **kwargs):
+        """ GET request """
         search_str = self.get_argument('search[value]', '').lower()
         order_ind = int(self.get_argument('order[0][column]'))
         order_dir = self.get_argument('order[0][dir]', '').lower()
@@ -237,6 +238,7 @@ class BrowseHandler(tornado.web.RequestHandler):
     """ Browse public log file Tornado request handler """
 
     def get(self, *args, **kwargs):
+        """ GET request """
         template = get_jinja_env().get_template(BROWSE_TEMPLATE)
 
         template_args = {}

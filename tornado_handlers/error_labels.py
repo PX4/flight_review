@@ -18,6 +18,7 @@ class UpdateErrorLabelHandler(tornado.web.RequestHandler):
     """ Update the error label of a flight log."""
 
     def post(self, *args, **kwargs):
+        """ POST request """
 
         data = tornado.escape.json_decode(self.request.body)
 

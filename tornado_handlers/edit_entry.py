@@ -25,6 +25,7 @@ class EditEntryHandler(tornado.web.RequestHandler):
     """ Edit a log entry, with confirmation (currently only delete) """
 
     def get(self, *args, **kwargs):
+        """ GET request """
         log_id = escape(self.get_argument('log'))
         action = self.get_argument('action')
         confirmed = self.get_argument('confirm', default='0')

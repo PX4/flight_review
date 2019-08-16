@@ -16,6 +16,7 @@ class RadioControllerHandler(tornado.web.RequestHandler):
         only) """
 
     def get(self, *args, **kwargs):
+        """ GET request """
 
         template = get_jinja_env().get_template(RADIO_CONTROLLER_TEMPLATE)
         self.write(template.render())

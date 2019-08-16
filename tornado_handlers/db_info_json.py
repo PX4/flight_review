@@ -24,6 +24,7 @@ class DBInfoHandler(tornado.web.RequestHandler):
     """ Get database info (JSON list of public logs) Tornado request handler """
 
     def get(self, *args, **kwargs):
+        """ GET request """
 
         jsonlist = list()
 
