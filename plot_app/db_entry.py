@@ -121,7 +121,7 @@ class DBDataGenerated:
                 flight_mode_changes[0] = (ulog.start_timestamp, flight_mode_changes[0][1])
             flight_mode_changes.append((ulog.last_timestamp, -1))
             for i in range(len(flight_mode_changes)-1):
-                flight_mode = flight_mode_changes[i][1]
+                flight_mode = int(flight_mode_changes[i][1])
                 flight_mode_duration = int((flight_mode_changes[i+1][0] -
                                             flight_mode_changes[i][0]) / 1e6)
                 obj.flight_mode_durations.append((flight_mode, flight_mode_duration))
