@@ -720,10 +720,14 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
         [lambda data: ('len_mag', np.sqrt(data['magnetometer_ga[0]']**2 +
                                           data['magnetometer_ga[1]']**2 +
                                           data['magnetometer_ga[2]']**2))],
-        colors2[0:1], ['Norm of Magnetic Field'])
+        colors3[0:1], ['Norm of Magnetic Field'])
     data_plot.change_dataset('actuator_controls_0')
     data_plot.add_graph([lambda data: ('thrust', data['control[3]'])],
-                        colors2[1:2], ['Thrust'])
+                        colors3[1:2], ['Thrust'])
+    if is_vtol:
+        data_plot.change_dataset('actuator_controls_1')
+        data_plot.add_graph([lambda data: ('thrust', data['control[3]'])],
+                            colors3[2:3], ['Thrust (Fixed-wing)'])
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
