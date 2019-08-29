@@ -518,6 +518,15 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
     except (KeyError, IndexError) as error:
         pass
 
+    # TECS (fixed-wing or VTOLs)
+    data_plot = DataPlot(data, plot_config, 'tecs_status', y_start=0, title='TECS',
+                         y_axis_label='[m/s]', plot_height='small',
+                         changed_params=changed_params, x_range=x_range)
+    data_plot.add_graph(['height_rate', 'height_rate_setpoint'],
+                        colors2, ['Height Rate', 'Height Rate Setpoint'],
+                        mark_nan=True)
+    plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
+    if data_plot.finalize() is not None: plots.append(data_plot)
 
 
     # manual control inputs
