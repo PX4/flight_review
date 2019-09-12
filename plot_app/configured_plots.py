@@ -512,7 +512,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
             data_plot.change_dataset('vehicle_gps_position')
             data_plot.add_graph(['vel_m_s'], colors3[2:3], ['Ground Speed (from GPS)'])
             data_plot.change_dataset('tecs_status')
-            data_plot.add_graph(['airspeed_sp'], colors3[3:4], ['airspeed setpoint'])
+            data_plot.add_graph(['airspeed_sp'], colors3[2:5], ['Airspeed Setpoint'])
             
             plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
 
