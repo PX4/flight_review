@@ -3,6 +3,9 @@ python:
   - "3.5"
   - "3.6"
   - "3.7"
+matrix:
+  allow_failures:
+    - python: "3.5"
 before_install:
     - "pip install pipenv"
     - "sudo apt-get install -y sqlite3 fftw3 libfftw3-dev"
