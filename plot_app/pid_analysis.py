@@ -7,6 +7,7 @@ import numpy as np
 from bokeh.models import Range1d, Span, LinearColorMapper, ColumnDataSource, LabelSet
 from scipy.interpolate import interp1d
 from scipy.ndimage.filters import gaussian_filter1d
+from scipy.optimize import minimize
 
 from config import colors3
 from plotting import DataPlot
