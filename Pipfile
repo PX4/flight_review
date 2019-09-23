@@ -13,7 +13,7 @@ cython = "*"
 pyfftw = "*"
 pylint = "*"
 requests = "*"
-matplotlib >= "3.0.3"
+matplotlib = "*"
 smopy = "*"
 
 [dev-packages]
