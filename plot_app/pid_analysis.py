@@ -7,7 +7,6 @@ import numpy as np
 from bokeh.models import Range1d, Span, LinearColorMapper, ColumnDataSource, LabelSet
 from scipy.interpolate import interp1d
 from scipy.ndimage.filters import gaussian_filter1d
-from scipy.optimize import minimize
 
 from config import colors3
 from plotting import DataPlot
@@ -135,15 +134,6 @@ class Trace:
         expoin = (np.exp((rcin - inmax) / rate) - np.exp((-rcin - inmax) / rate)) * outmax
         return expoin
 
-
-    def calc_delay(self, time, trace1, trace2):
-        ### minimizes trace1-trace2 by shifting trace1
-        tf1 = interp1d(time[2000:-2000], trace1[2000:-2000], fill_value=0., bounds_error=False)
-        tf2 = interp1d(time[2000:-2000], trace2[2000:-2000], fill_value=0., bounds_error=False)
-        fun = lambda x: ((tf1(time - x*0.5) - tf2(time+ x*0.5)) ** 2).mean()
-        shift = minimize(fun, np.array([0.01])).x[0]
-        steps = np.round(shift / (time[1] - time[0]))
-        return {'time':shift, 'steps':int(steps)}
 
     def tukeywin(self, len, alpha=0.5):
         ### makes tukey widow for envelopig
