@@ -3,10 +3,6 @@ python:
   - "3.5"
   - "3.6"
   - "3.7"
-before_install:
-  - "pip install pipenv"
-  - "sudo apt-get install -y sqlite3 fftw3 libfftw3-dev"
-install:
-  - "pipenv lock"
-  - "pipenv sync"
+before_install: sudo apt-get install -y sqlite3 fftw3 libfftw3-dev
+install: pip install -r requirements.txt
 script: ./run_tests.sh
