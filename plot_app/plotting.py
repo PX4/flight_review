@@ -589,6 +589,19 @@ class DataPlot:
             print(type(error), "("+self._data_name+"):", error)
             self._had_error = True
 
+    def add_horizontal_background_boxes(self, colors, limits):
+        """ Add horizontal background boxes filled with a color
+            :param colors: list of N colors (in increasing y direction)
+            :param limits: list of N-1 y-axis values
+        """
+        bottom = None
+        limits.append(None)
+        for color, limit in zip(colors, limits):
+            self._p.add_layout(BoxAnnotation(
+                bottom=bottom, top=limit, fill_alpha=0.09, line_alpha=1,
+                fill_color=color, line_width=0))
+            bottom = limit
+
     def set_use_time_formatter(self, use_formatter):
         """ configure whether the time formatter should be used """
         self._use_time_formatter = use_formatter
