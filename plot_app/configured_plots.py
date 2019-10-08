@@ -662,7 +662,24 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
                          'accelerometer_m_s2[2]'], colors3, ['X', 'Y', 'Z'])
     if data_plot.finalize() is not None: plots.append(data_plot)
 
+    # Vibration Metrics
+    data_plot = DataPlot(data, plot_config, 'estimator_status',
+                         title='Vibration Metrics',
+                         plot_height='small', changed_params=changed_params,
+                         x_range=x_range, y_start=0)
+    data_plot.add_graph(['vibe[2]'], colors3[2:3], ['Delta Velocity Vibration Level [m/s]'])
+    data_plot.add_horizontal_background_boxes(
+        ['green', 'orange', 'red'], [0.02, 0.04])
 
+    if data_plot.finalize() is not None: plots.append(data_plot)
+
+    # Acceleration Spectrogram
+    data_plot = DataPlotSpec(data, plot_config, 'sensor_combined',
+                             y_axis_label='[Hz]', title='Acceleration Power Spectral Density',
+                             plot_height='small', x_range=x_range)
+    data_plot.add_graph(['accelerometer_m_s2[0]', 'accelerometer_m_s2[1]', 'accelerometer_m_s2[2]'],
+                        ['X', 'Y', 'Z'])
+    if data_plot.finalize() is not None: plots.append(data_plot)
 
     # raw angular speed
     data_plot = DataPlot(data, plot_config, 'sensor_combined',
@@ -675,7 +692,6 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
         lambda data: ('gyro_rad[2]', np.rad2deg(data['gyro_rad[2]']))],
                         colors3, ['X', 'Y', 'Z'])
     if data_plot.finalize() is not None: plots.append(data_plot)
-
 
 
     # magnetic field strength
@@ -742,13 +758,6 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
-    # Acceleration Spectrogram
-    data_plot = DataPlotSpec(data, plot_config, 'sensor_combined',
-                             y_axis_label='[Hz]', title='Acceleration Power Spectral Density',
-                             plot_height='small', x_range=x_range)
-    data_plot.add_graph(['accelerometer_m_s2[0]', 'accelerometer_m_s2[1]', 'accelerometer_m_s2[2]'],
-                        ['X', 'Y', 'Z'])
-    if data_plot.finalize() is not None: plots.append(data_plot)
 
     # power
     data_plot = DataPlot(data, plot_config, 'battery_status',

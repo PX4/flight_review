@@ -92,7 +92,6 @@ def plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states=Non
     if vtol_states is not None:
         added_box_annotation_args['bottom'] = vtol_state_height
         added_box_annotation_args['bottom_units'] = 'screen'
-    annotations = []
     labels_y_pos = []
     labels_x_pos = []
     labels_text = []
@@ -111,7 +110,6 @@ def plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states=Non
                                        fill_alpha=0.09, line_color=None,
                                        fill_color=color,
                                        **added_box_annotation_args)
-            annotations.append(annotation)
             p.add_layout(annotation)
 
             if flight_mode_changes[i+1][0] - t_start > 1e6: # filter fast
@@ -590,6 +588,19 @@ class DataPlot:
         except (KeyError, IndexError, ValueError) as error:
             print(type(error), "("+self._data_name+"):", error)
             self._had_error = True
+
+    def add_horizontal_background_boxes(self, colors, limits):
+        """ Add horizontal background boxes filled with a color
+            :param colors: list of N colors (in increasing y direction)
+            :param limits: list of N-1 y-axis values
+        """
+        bottom = None
+        limits.append(None)
+        for color, limit in zip(colors, limits):
+            self._p.add_layout(BoxAnnotation(
+                bottom=bottom, top=limit, fill_alpha=0.09, line_alpha=1,
+                fill_color=color, line_width=0))
+            bottom = limit
 
     def set_use_time_formatter(self, use_formatter):
         """ configure whether the time formatter should be used """
