@@ -1,5 +1,14 @@
 #! /bin/bash
-PYTHONPATH=plot_app pipenv run pylint serve.py \
-  download_logs.py \
-  tornado_handlers/*.py \
-  plot_app/*.py
+# execute pylint on the source
+
+pylint_exec=$(which pylint 2>/dev/null)
+
+[[ $? != 0 ]] && { echo >&2 "pylint not found. Aborting."; exit 1; }
+
+set -e
+
+export PYTHONPATH=plot_app
+python $pylint_exec tornado_handlers/*.py serve.py \
+	plot_app/*.py download_logs.py
+
+exit 0

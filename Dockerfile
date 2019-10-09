@@ -13,8 +13,6 @@ RUN apt-get install -y libfftw3-dev
 RUN apt-get install -y git
 RUN apt-get -y upgrade
 
-RUN pip3 install --system pipenv
-
 RUN echo PATH="$HOME/.local/bin:$PATH" >> ~/.bashrc
 RUN /bin/bash -c "source ~/.bashrc"
 
@@ -27,18 +25,13 @@ RUN echo "[general]" >> config_user.ini
 RUN echo "cesium_api_key = $CESIUM_API_KEY" >> config_user.ini
 RUN echo "mapbox_api_access_token = $MAPBOX_API_ACCESS_TOKEN" >> config_user.ini
 
-## required for pipenv to run
-ENV LC_ALL=C.UTF-8
-ENV LANG=C.UTF-8
-
-RUN pipenv --three
-RUN pipenv sync
+RUN pip3 install -r requirements.txt
 
 ## app setup
-RUN pipenv run python setup_db.py
+RUN python3 setup_db.py
 
 EXPOSE 5006
-CMD ["pipenv", "run", "python3", "serve.py"]
+CMD ["python3", "serve.py"]
 
 ## USAGE
 ## ## ## ## ## ## ## ## ## ## ## ## 

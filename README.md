@@ -18,15 +18,9 @@ Flight Review is deployed at https://review.px4.io.
 
 ## Installation and Setup
 
-This project is using [Pipenv](https://pipenv.readthedocs.io/en/latest/)
-to keep control of our dependencies, pipenv helps us lock down
-dependencies and ensure deterministic releases.
-
 ### Requirements
 
 - Python3 (3.6+ recommended)
-- [Pipenv](https://pipenv.readthedocs.io/en/latest/), helps us lock down
-  dependencies and ensure deterministic releases.
 - SQLite3
 - [http://fftw.org/](http://fftw.org/)
 
@@ -54,28 +48,12 @@ brew install fftw
 
 ### Installation
 
-- Install requirements (see above)
-- Clone the repository
-- Install dependencies
-
 ```bash
 # After git clone, enter the directory
 git clone https://github.com/PX4/flight_review.git
 cd flight_review
-# Ensure python 3+
-pipenv --three
-# Install deps from lock file
-pipenv sync
-```
-
-**Note:** a `requirements.txt` file is kept up to date (enforced in CI)
-for advanced users wanting freedom from `Pipenv`, see below for
-updating the requirements file
-
-```bash
-# To update the requirements file
-# make sure to include changes as a single independent commit
-pipenv lock --requirements > requirements.txt
+pip install -r requirements.txt
+# Note: preferably use a virtualenv
 ```
 
 ### Setup
@@ -87,14 +65,6 @@ pipenv lock --requirements > requirements.txt
   `config_default.ini`
 - Run `setup_db.py` to initialize the database.
 
-```bash
-# you can run the utility directly from pipenv
-pipenv run python setup_db.py
-# you can also run it from within the virtualenv
-pipenv shell
-./setup_db.py
-```
-
 **Note:** `setup_db.py` can also be used to upgrade the database tables, for
   instance when new entries are added (it automatically detects that).
 
@@ -104,11 +74,12 @@ For local usage, the server can be started directly with a log file name,
 without having to upload it first:
 
 ```bash
-# run directly from pipenv
-pipenv run python serve.py -f <file.ulg>
-# you can also enter pipenv virtualenv
-pipenv shell
-python serve.py -f <file.ulg>
+./serve.py -f <file.ulg>
+```
+
+To start the whole web application:
+```bash
+./serve.py --show
 ```
 
 The `plot_app` directory contains a bokeh server application for plotting. It
@@ -123,17 +94,11 @@ The plotting can also be used interative using a Jupyter Notebook. It
 requires python knowledge, but provides full control over what and how to plot
 with immediate feedback.
 
-- Install the Jupyter python package
 - Start the notebook
 - Locate and open the test notebook file `testing_notebook.ipynb`.
 
 ```bash
-# Install jupyter (not installed by default)
-pipenv install jupyter
 # Launch jupyter notebook
-pipenv run jupyter notebook testing_notebook.ipynb
-# you can alternatively run jupyter directly if you enter the virtualenv
-pipenv shell
 jupyter notebook testing_notebook.ipynb
 ```
 
