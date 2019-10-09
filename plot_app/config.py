@@ -30,6 +30,7 @@ __MAPBOX_API_ACCESS_TOKEN = _conf.get('general', 'mapbox_api_access_token')
 __BING_API_KEY = _conf.get('general', 'bing_maps_api_key')
 __CESIUM_API_KEY = _conf.get('general', 'cesium_api_key')
 __LOG_CACHE_SIZE = int(_conf.get('general', 'log_cache_size'))
+__DB_FILENAME_CUSTOM = _conf.get('general', 'db_filename')
 
 __STORAGE_PATH = _conf.get('general', 'storage_path')
 if not os.path.isabs(__STORAGE_PATH):
@@ -95,6 +96,8 @@ def get_overview_img_filepath():
 
 def get_db_filename():
     """ get configured DB file name """
+    if __DB_FILENAME_CUSTOM != "":
+        return __DB_FILENAME_CUSTOM
     return __DB_FILENAME
 
 def get_airframes_filename():
