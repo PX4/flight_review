@@ -357,7 +357,8 @@ class MultiPartStreamer:
                         self._begin_part(self.headers)
                         self.headers = []
                         break
-                    elif header:
+
+                    if header:
                         self.headers.append(self._parse_header(header))
                     else:
                         # Header is None, not enough data yet
