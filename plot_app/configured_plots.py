@@ -787,13 +787,13 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
                          plot_height='small', changed_params=changed_params,
                          x_range=x_range)
     data_plot.add_graph(['temperature'], colors8[0:1],
-                    ['Baro temperature'])
+                        ['Baro temperature'])
     data_plot.change_dataset('sensor_accel')
     data_plot.add_graph(['temperature'], colors8[2:3],
-                    ['Accel temperature'])
+                        ['Accel temperature'])
     data_plot.change_dataset('airspeed')
     data_plot.add_graph(['air_temperature_celsius'], colors8[4:5],
-                    ['Airspeed temperature'])
+                        ['Airspeed temperature'])
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
