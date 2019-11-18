@@ -176,7 +176,7 @@ class StatisticsPlots:
 
                 try:
                     ver_major = int(log.sw_version[1:].split('.')[0])
-                    if ver_major > 2 or ver_major == 0:
+                    if ver_major >= 2 or ver_major == 0:
                         print('Warning: %s with large/small version %s' %
                               (log.log_id, log.sw_version))
                         continue
