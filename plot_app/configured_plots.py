@@ -496,7 +496,6 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
 
         if data_plot.finalize() is not None: plots.append(data_plot)
 
-
     # Airspeed vs Ground speed: but only if there's valid airspeed data or a VTOL
     try:
         if is_vtol or ulog.get_dataset('airspeed') is not None:
@@ -781,6 +780,21 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
             data_plot.add_graph(['voltage3v3_v'], colors8[5:6], ['3.3 V'])
     if data_plot.finalize() is not None: plots.append(data_plot)
 
+
+    #Temperature
+    data_plot = DataPlot(data, plot_config, 'sensor_baro',
+                         y_start=0, y_axis_label='[C]', title='Temperature',
+                         plot_height='small', changed_params=changed_params,
+                         x_range=x_range)
+    data_plot.add_graph(['temperature'], colors8[0:1],
+                        ['Baro temperature'])
+    data_plot.change_dataset('sensor_accel')
+    data_plot.add_graph(['temperature'], colors8[2:3],
+                        ['Accel temperature'])
+    data_plot.change_dataset('airspeed')
+    data_plot.add_graph(['air_temperature_celsius'], colors8[4:5],
+                        ['Airspeed temperature'])
+    if data_plot.finalize() is not None: plots.append(data_plot)
 
 
     # estimator watchdog
