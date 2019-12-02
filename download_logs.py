@@ -53,6 +53,9 @@ def get_arguments():
                         help='Filter logs by a particular airframe name. e.g. Generic Quadrotor X')
     parser.add_argument('--airframe-type', default=None, type=str,
                         help='Filter logs by a particular airframe type. e.g. Quadrotor X')
+    parser.add_argument('--latest-per-vehicle', action='store_true', dest="latest_per_vehicle",
+                        help='Download only the latest log (by date) for each ' \
+                        'unique vehicle (uuid).')
     return parser.parse_args()
 
 
@@ -155,10 +158,29 @@ def main():
             db_entries_list = [
                 entry for entry in db_entries_list if entry['airframe_type'] == args.airframe_type]
 
-        # set number of files to download
-        n_en = len(db_entries_list)
-        if args.max_num > 0:
-            n_en = min(n_en, args.max_num)
+        if args.latest_per_vehicle:
+            # find latest log_date for all different vehicles
+            uuids = {}
+            for entry in db_entries_list:
+                if 'vehicle_uuid' in entry:
+                    uuid = entry['vehicle_uuid']
+                    date = datetime.datetime.strptime(entry['log_date'], '%Y-%m-%d')
+                    if uuid in uuids:
+                        if date > uuids[uuid]:
+                            uuids[uuid] = date
+                    else:
+                        uuids[uuid] = date
+            # filter: use the latest log for each vehicle
+            db_entries_list_filtered = []
+            added_uuids = set()
+            for entry in db_entries_list:
+                if 'vehicle_uuid' in entry:
+                    date = datetime.datetime.strptime(entry['log_date'], '%Y-%m-%d')
+                    uuid = entry['vehicle_uuid']
+                    if date == uuids[entry['vehicle_uuid']] and not uuid in added_uuids:
+                        db_entries_list_filtered.append(entry)
+                        added_uuids.add(uuid)
+            db_entries_list = db_entries_list_filtered
 
         # sort list order to first download the newest log files
         db_entries_list = sorted(
@@ -166,6 +188,10 @@ def main():
             key=lambda x: datetime.datetime.strptime(x['log_date'], '%Y-%m-%d'),
             reverse=True)
 
+        # set number of files to download
+        n_en = len(db_entries_list)
+        if args.max_num > 0:
+            n_en = min(n_en, args.max_num)
         n_downloaded = 0
         n_skipped = 0
 
