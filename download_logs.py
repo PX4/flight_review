@@ -56,6 +56,10 @@ def get_arguments():
     parser.add_argument('--latest-per-vehicle', action='store_true', dest="latest_per_vehicle",
                         help='Download only the latest log (by date) for each ' \
                         'unique vehicle (uuid).')
+    parser.add_argument('--source', default=None, type=str,
+                        help='The source of the log upload. e.g. ["webui", "CI"]')
+    parser.add_argument('--git-hash', default=None, type=str,
+                        help='The git hash of the PX4 Firmware version.')
     return parser.parse_args()
 
 
@@ -181,6 +185,15 @@ def main():
                         db_entries_list_filtered.append(entry)
                         added_uuids.add(uuid)
             db_entries_list = db_entries_list_filtered
+
+        if args.source is not None:
+            db_entries_list = [
+                entry for entry in db_entries_list
+                if 'source' in entry and entry['source'] == args.source]
+
+        if args.git_hash is not None:
+            db_entries_list = [
+                entry for entry in db_entries_list if entry['ver_sw'] == args.git_hash]
 
         # sort list order to first download the newest log files
         db_entries_list = sorted(
