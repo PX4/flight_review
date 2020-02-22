@@ -47,11 +47,6 @@ Documentation with some examples can be found <a
 href="https://github.com/Plasmatree/PID-Analyzer/wiki/Influence-of-parameters">here</a>.
 </p>
 <p>
-Note: this page is somewhat experimental and if you have interesting results or
-other inputs, please do not hesitate to contact
-<a href="mailto:beat@px4.io">beat@px4.io</a>.
-</p>
-<p>
 The analysis may take a while...
 </p>
     """
