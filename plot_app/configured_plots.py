@@ -71,13 +71,11 @@ The analysis may take a while...
     # required PID response data
     pid_analysis_error = False
     try:
+        # Rate
         rate_data = ulog.get_dataset(rate_topic_name)
         gyro_time = rate_data.data['timestamp']
 
-        vehicle_attitude = ulog.get_dataset('vehicle_attitude')
-        attitude_time = vehicle_attitude.data['timestamp']
         vehicle_rates_setpoint = ulog.get_dataset('vehicle_rates_setpoint')
-        vehicle_attitude_setpoint = ulog.get_dataset('vehicle_attitude_setpoint')
         actuator_controls_0 = ulog.get_dataset('actuator_controls_0')
         throttle = _resample(actuator_controls_0.data['timestamp'],
                              actuator_controls_0.data['control[3]'] * 100, gyro_time)
@@ -90,6 +88,16 @@ The analysis may take a while...
                   "vehicle_attitude, vehicle_attitude_setpoint and "
                   "actuator_controls_0).</p>", width=int(plot_width*0.9))
         plots.append(widgetbox(div, width=int(plot_width*0.9)))
+
+    has_attitude = True
+    try:
+        # Attitude (optional)
+        vehicle_attitude = ulog.get_dataset('vehicle_attitude')
+        attitude_time = vehicle_attitude.data['timestamp']
+        vehicle_attitude_setpoint = ulog.get_dataset('vehicle_attitude_setpoint')
+    except (KeyError, IndexError, ValueError) as error:
+        print(type(error), ":", error)
+        has_attitude = False
 
     for index, axis in enumerate(['roll', 'pitch', 'yaw']):
         axis_name = axis.capitalize()
@@ -162,7 +170,7 @@ The analysis may take a while...
                 pid_analysis_error = True
 
     # attitude
-    if not pid_analysis_error:
+    if not pid_analysis_error and has_attitude:
         throttle = _resample(actuator_controls_0.data['timestamp'],
                              actuator_controls_0.data['control[3]'] * 100, attitude_time)
         time_seconds = attitude_time / 1e6
@@ -171,7 +179,7 @@ The analysis may take a while...
         axis_name = axis.capitalize()
 
         # PID response
-        if not pid_analysis_error:
+        if not pid_analysis_error and has_attitude:
             try:
                 attitude_estimated = np.rad2deg(vehicle_attitude.data[axis])
                 setpoint = _resample(vehicle_attitude_setpoint.data['timestamp'],
