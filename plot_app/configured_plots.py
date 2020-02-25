@@ -695,6 +695,59 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
                         colors3, ['X', 'Y', 'Z'])
     if data_plot.finalize() is not None: plots.append(data_plot)
 
+    # FIFO accel
+    if add_virtual_fifo_topic_data(ulog, 'sensor_accel_fifo'):
+        # Raw data
+        data_plot = DataPlot(data, plot_config, 'sensor_accel_fifo_virtual',
+                             y_axis_label='[m/s^2]', title='Raw Acceleration (FIFO)',
+                             plot_height='small', changed_params=changed_params,
+                             x_range=x_range)
+        data_plot.add_graph(['x', 'y', 'z'], colors3, ['X', 'Y', 'Z'])
+        if data_plot.finalize() is not None: plots.append(data_plot)
+
+        # power spectral density
+        data_plot = DataPlotSpec(data, plot_config, 'sensor_accel_fifo_virtual',
+                                 y_axis_label='[Hz]',
+                                 title='Acceleration Power Spectral Density (FIFO)',
+                                 plot_height='normal', x_range=x_range)
+        data_plot.add_graph(['x', 'y', 'z'], ['X', 'Y', 'Z'])
+        if data_plot.finalize() is not None: plots.append(data_plot)
+
+        # sampling regularity
+        data_plot = DataPlot(data, plot_config, 'sensor_accel_fifo', y_range=Range1d(0, 25e3),
+                             y_axis_label='[us]',
+                             title='Sampling Regularity of Sensor Data (FIFO)', plot_height='small',
+                             changed_params=changed_params, x_range=x_range)
+        sensor_accel_fifo = ulog.get_dataset('sensor_accel_fifo').data
+        sampling_diff = np.diff(sensor_accel_fifo['timestamp'])
+        min_sampling_diff = np.amin(sampling_diff)
+        plot_dropouts(data_plot.bokeh_plot, ulog.dropouts, min_sampling_diff)
+        data_plot.add_graph([lambda data: ('timediff', np.append(sampling_diff, 0))],
+                            [colors3[2]], ['delta t (between 2 logged samples)'])
+        if data_plot.finalize() is not None: plots.append(data_plot)
+
+    # FIFO gyro
+    if add_virtual_fifo_topic_data(ulog, 'sensor_gyro_fifo'):
+        # Raw data
+        data_plot = DataPlot(data, plot_config, 'sensor_gyro_fifo_virtual',
+                             y_axis_label='[m/s^2]', title='Raw Gyro (FIFO)',
+                             plot_height='small', changed_params=changed_params,
+                             x_range=x_range)
+        data_plot.add_graph(['x', 'y', 'z'], colors3, ['X', 'Y', 'Z'])
+        data_plot.add_graph([
+            lambda data: ('x', np.rad2deg(data['x'])),
+            lambda data: ('y', np.rad2deg(data['y'])),
+            lambda data: ('z', np.rad2deg(data['z']))],
+                            colors3, ['X', 'Y', 'Z'])
+        if data_plot.finalize() is not None: plots.append(data_plot)
+
+        # power spectral density
+        data_plot = DataPlotSpec(data, plot_config, 'sensor_gyro_fifo_virtual',
+                                 y_axis_label='[Hz]', title='Gyro Power Spectral Density (FIFO)',
+                                 plot_height='normal', x_range=x_range)
+        data_plot.add_graph(['x', 'y', 'z'], ['X', 'Y', 'Z'])
+        if data_plot.finalize() is not None: plots.append(data_plot)
+
 
     # magnetic field strength
     data_plot = DataPlot(data, plot_config, magnetometer_ga_topic,
