@@ -16,7 +16,8 @@ from helper import *
 from config import *
 from colors import HTML_color_to_RGB
 from db_entry import *
-from configured_plots import generate_plots, get_pid_analysis_plots
+from configured_plots import generate_plots
+from pid_analysis_plots import get_pid_analysis_plots
 from statistics_plots import StatisticsPlots
 
 #pylint: disable=invalid-name, redefined-outer-name

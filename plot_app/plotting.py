@@ -1,4 +1,6 @@
 """ methods an classes used for plotting (wrappers around bokeh plots) """
+import copy
+
 from bokeh.plotting import figure
 #pylint: disable=line-too-long, arguments-differ, unused-import
 from bokeh.models import (
@@ -52,6 +54,44 @@ def plot_dropouts(p, dropouts, min_value, show_hover_tooltips=False):
     if show_hover_tooltips:
         p.add_tools(HoverTool(tooltips=[('dropout', '@duration ms')],
                               renderers=[quad]))
+
+def add_virtual_fifo_topic_data(ulog, topic_name):
+    """ adds a virtual topic by expanding the FIFO samples array into individual
+        samples, so it can be used for normal plotting.
+        new topic name: topic_name+'_virtual'
+        :return: True if topic data was added
+    """
+    try:
+        cur_dataset = copy.deepcopy(ulog.get_dataset(topic_name))
+        cur_dataset.name = topic_name+'_virtual'
+        t = cur_dataset.data['timestamp_sample']
+        dt = cur_dataset.data['dt']
+        samples = cur_dataset.data['samples']
+        scale = cur_dataset.data['scale']
+        total_samples = 0
+        for i in range(len(t)):
+            total_samples += samples[i]
+        t_new = np.zeros(total_samples, t.dtype)
+        xyz_new = [np.zeros(total_samples, np.float64) for i in range(3)]
+        sample = 0
+        # TODO: this could be faster...
+        for i, _ in enumerate(t):
+            for s in range(samples[i]):
+                t_new[sample+s] = t[i]-(samples[i]-s-1)*dt[i]
+                for j, axis in enumerate(['x', 'y', 'z']):
+                    data_point = cur_dataset.data[axis+'['+str(s)+']'][i] * scale[i]
+                    xyz_new[j][sample+s] = data_point
+            sample += samples[i]
+        cur_dataset.data['timestamp'] = t_new
+        cur_dataset.data['x'] = xyz_new[0]
+        cur_dataset.data['y'] = xyz_new[1]
+        cur_dataset.data['z'] = xyz_new[2]
+        ulog.data_list.append(cur_dataset)
+        return True
+    except (KeyError, IndexError, ValueError) as error:
+        # log does not contain the value we are looking for
+        print(type(error), "(fifo data):", error)
+        return False
 
 
 def plot_parameter_changes(p, plots_height, changed_parameters):
