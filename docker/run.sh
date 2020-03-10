@@ -11,7 +11,7 @@ if [ -z "$(ls -A ${DATA_PATH})" ]; then
 	python3 ${WORK_PATH}/setup_db.py
 fi
 
-if ! [ -z "${USE_PROXY}" ]; then
+if [ -n "${USE_PROXY}" ]; then
 	python3 ${WORK_PATH}/serve.py \
 		--port=${PORT_VALUE} \
 		--address=0.0.0.0 \
