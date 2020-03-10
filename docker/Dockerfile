@@ -10,12 +10,6 @@ RUN apt-get	update && \
 	apt-get -y autoremove && \
 	rm -rf /var/lib/apt/lists/*
 
-
-## set cesium and mabox keys
-# RUN echo "[general]" >> config_user.ini
-# RUN echo "cesium_api_key = $CESIUM_API_KEY" >> config_user.ini
-# RUN echo "mapbox_api_access_token = $MAPBOX_API_ACCESS_TOKEN" >> config_user.ini
-
 RUN mkdir -p /opt/service/data
 COPY [".", "/opt/service/"]
 
@@ -25,5 +19,5 @@ CMD ["/opt/service/docker/run.sh"]
 
 ## USAGE
 ## ## ## ## ## ## ## ## ## ## ## ## 
-## BUILD  docker build --build-arg CESIUM_API_KEY=[cesium-key] --build-arg MAPBOX_API_ACCESS_TOKEN=[mapbox_key] -t px4flightreview .
-## RUN    docker run -d -p 5006:5006 px4flightreview
+## BUILD  docker build -t px4flightreview -f docker/Dockerfile .
+## RUN    docker run -d -p 5006:5006 -v /<full_path>/config_user.ini:/opt/service/config_user.ini px4flightreview
