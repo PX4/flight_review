@@ -303,7 +303,7 @@ def load_ulog_file(file_name):
                   'vehicle_rates_setpoint', 'rc_channels', 'input_rc',
                   'position_setpoint_triplet', 'vehicle_attitude_groundtruth',
                   'vehicle_local_position_groundtruth', 'vehicle_visual_odometry',
-                  'vehicle_status', 'airspeed', 'manual_control_setpoint',
+                  'vehicle_status', 'airspeed', 'airspeed_validated', 'manual_control_setpoint',
                   'rate_ctrl_status', 'vehicle_air_data',
                   'vehicle_magnetometer', 'system_power', 'tecs_status',
                   'sensor_baro', 'sensor_accel', 'sensor_accel_fifo',

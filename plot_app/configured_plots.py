@@ -331,8 +331,19 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
             data_plot.add_graph([lambda data: ('groundspeed_estimated',
                                                np.sqrt(data['vel_n']**2 + data['vel_e']**2))],
                                 colors8[0:1], ['Ground Speed Estimated'])
-            data_plot.change_dataset('airspeed')
-            data_plot.add_graph(['indicated_airspeed_m_s'], colors8[1:2], ['Airspeed Indicated'])
+            if ulog.get_dataset('airspeed_validated') is not None:
+                airspeed_validated = ulog.get_dataset('airspeed_validated')
+                data_plot.change_dataset('airspeed_validated')
+                if np.amax(airspeed_validated.data['airspeed_sensor_measurement_valid']) == 1:
+                    data_plot.add_graph(['equivalent_airspeed_m_s'], colors8[1:2],
+                                        ['Equivalent Airspeed'])
+                else:
+                    data_plot.add_graph(['equivalent_ground_minus_wind_m_s'], colors8[1:2],
+                                        ['Ground Minus Wind'])
+            else:
+                data_plot.change_dataset('airspeed')
+                data_plot.add_graph(['indicated_airspeed_m_s'], colors8[1:2],
+                                    ['Indicated Airspeed'])
             data_plot.change_dataset('vehicle_gps_position')
             data_plot.add_graph(['vel_m_s'], colors8[2:3], ['Ground Speed (from GPS)'])
             data_plot.change_dataset('tecs_status')
