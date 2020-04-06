@@ -424,10 +424,14 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
     data_plot.add_graph(['control[0]', 'control[1]', 'control[2]'],
                         colors3, ['Roll', 'Pitch', 'Yaw'])
     if not data_plot.had_error:
-        if 'MC_DTERM_CUTOFF' in ulog.initial_parameters:
+        if 'MC_DTERM_CUTOFF' in ulog.initial_parameters: # COMPATIBILITY
             data_plot.mark_frequency(
                 ulog.initial_parameters['MC_DTERM_CUTOFF'],
                 'MC_DTERM_CUTOFF')
+        if 'IMU_DGYRO_CUTOFF' in ulog.initial_parameters:
+            data_plot.mark_frequency(
+                ulog.initial_parameters['IMU_DGYRO_CUTOFF'],
+                'IMU_DGYRO_CUTOFF')
         if 'IMU_GYRO_CUTOFF' in ulog.initial_parameters:
             data_plot.mark_frequency(
                 ulog.initial_parameters['IMU_GYRO_CUTOFF'],
