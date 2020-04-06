@@ -862,6 +862,10 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
             current_perf_data = ulog.msg_info_multiple_dict['perf_counter_'+state+'flight'][0]
             flight_data = escape('\n'.join(current_perf_data))
             perf_data += '<p>'+state.capitalize()+' Flight:<br/><pre>'+flight_data+'</pre></p>'
+    if 'perf_top_watchdog' in ulog.msg_info_multiple_dict:
+        current_top_data = ulog.msg_info_multiple_dict['perf_top_watchdog'][0]
+        flight_data = escape('\n'.join(current_top_data))
+        top_data += '<p>Watchdog:<br/><pre>'+flight_data+'</pre></p>'
 
     additional_data_html = ''
     if len(console_messages) > 0:
