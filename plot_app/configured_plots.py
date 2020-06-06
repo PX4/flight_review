@@ -602,8 +602,8 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
                          y_start=0, y_axis_label='[m]', title='Distance Sensor',
                          plot_height='small', changed_params=changed_params,
                          x_range=x_range)
-    data_plot.add_graph(['current_distance', 'covariance'], colors3[0:2],
-                        ['Distance', 'Covariance'])
+    data_plot.add_graph(['current_distance', 'variance'], colors3[0:2],
+                        ['Distance', 'Variance'])
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
