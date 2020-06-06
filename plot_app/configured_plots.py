@@ -439,6 +439,68 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
 
     if data_plot.finalize() is not None: plots.append(data_plot)
 
+    # roll, pitch, yaw rate setpoints (Main) FFT (for filter & output noise analysis)
+    data_plot = DataPlotFFT(data, plot_config, 'vehicle_rates_setpoint',
+                            title='Vehicle rates setpoints FFT')
+    data_plot.add_graph(['roll', 'pitch', 'yaw'],
+                        colors3, ['Roll rate', 'Pitch rate', 'Yaw rate'])
+    if not data_plot.had_error:
+        if 'MC_DTERM_CUTOFF' in ulog.initial_parameters: # COMPATIBILITY
+            data_plot.mark_frequency(
+                ulog.initial_parameters['MC_DTERM_CUTOFF'],
+                'MC_DTERM_CUTOFF')
+        if 'IMU_DGYRO_CUTOFF' in ulog.initial_parameters:
+            data_plot.mark_frequency(
+                ulog.initial_parameters['IMU_DGYRO_CUTOFF'],
+                'IMU_DGYRO_CUTOFF')
+        if 'IMU_GYRO_CUTOFF' in ulog.initial_parameters:
+            data_plot.mark_frequency(
+                ulog.initial_parameters['IMU_GYRO_CUTOFF'],
+                'IMU_GYRO_CUTOFF', 20)
+
+    if data_plot.finalize() is not None: plots.append(data_plot)
+
+    # Accelerometer FFT
+    data_plot = DataPlotFFT(data, plot_config, 'sensor_combined',
+                            title='Accelerometer FFT')
+    data_plot.add_graph(['accelerometer_m_s2[0]', 'accelerometer_m_s2[1]', 'accelerometer_m_s2[2]'],
+                            colors3, ['X', 'Y', 'Z'])
+    if not data_plot.had_error:
+        if 'MC_DTERM_CUTOFF' in ulog.initial_parameters: # COMPATIBILITY
+            data_plot.mark_frequency(
+                ulog.initial_parameters['MC_DTERM_CUTOFF'],
+                'MC_DTERM_CUTOFF')
+        if 'IMU_DGYRO_CUTOFF' in ulog.initial_parameters:
+            data_plot.mark_frequency(
+                ulog.initial_parameters['IMU_DGYRO_CUTOFF'],
+                'IMU_DGYRO_CUTOFF')
+        if 'IMU_GYRO_CUTOFF' in ulog.initial_parameters:
+            data_plot.mark_frequency(
+                ulog.initial_parameters['IMU_GYRO_CUTOFF'],
+                'IMU_GYRO_CUTOFF', 20)
+
+    if data_plot.finalize() is not None: plots.append(data_plot)
+
+    # Gyro FFT
+    data_plot = DataPlotFFT(data, plot_config, 'sensor_combined',
+                            title='Gyro FFT')
+    data_plot.add_graph(['gyro_rad[0]', 'gyro_rad[1]', 'gyro_rad[2]'],
+                            colors3, ['Roll rate', 'Pitch rate', 'Yaw rate'])
+    if not data_plot.had_error:
+        if 'MC_DTERM_CUTOFF' in ulog.initial_parameters: # COMPATIBILITY
+            data_plot.mark_frequency(
+                ulog.initial_parameters['MC_DTERM_CUTOFF'],
+                'MC_DTERM_CUTOFF')
+        if 'IMU_DGYRO_CUTOFF' in ulog.initial_parameters:
+            data_plot.mark_frequency(
+                ulog.initial_parameters['IMU_DGYRO_CUTOFF'],
+                'IMU_DGYRO_CUTOFF')
+        if 'IMU_GYRO_CUTOFF' in ulog.initial_parameters:
+            data_plot.mark_frequency(
+                ulog.initial_parameters['IMU_GYRO_CUTOFF'],
+                'IMU_GYRO_CUTOFF', 20)
+
+    if data_plot.finalize() is not None: plots.append(data_plot)
 
     # actuator controls 1
     # (only present on VTOL, Fixed-wing config)
