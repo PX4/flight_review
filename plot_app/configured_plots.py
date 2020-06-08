@@ -63,12 +63,23 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
         cur_dataset = ulog.get_dataset('vehicle_status')
         if np.amax(cur_dataset.data['is_vtol']) == 1:
             is_vtol = True
-            vtol_states = cur_dataset.list_value_changes('in_transition_mode')
             # find mode after transitions (states: 1=transition, 2=FW, 3=MC)
             if 'vehicle_type' in cur_dataset.data:
                 vehicle_type_field = 'vehicle_type'
                 vtol_state_mapping = {2: 2, 1: 3}
+                vehicle_type = cur_dataset.data['vehicle_type']
+                in_transition_mode = cur_dataset.data['in_transition_mode']
+                vtol_states = []
+                for i in range(len(vehicle_type)):
+                    # a VTOL can change state also w/o in_transition_mode set
+                    # (e.g. in Manual mode)
+                    if i == 0 or in_transition_mode[i-1] != in_transition_mode[i] or \
+                        vehicle_type[i-1] != vehicle_type[i]:
+                        vtol_states.append((cur_dataset.data['timestamp'][i],
+                                            in_transition_mode[i]))
+
             else: # COMPATIBILITY: old logs (https://github.com/PX4/Firmware/pull/11918)
+                vtol_states = cur_dataset.list_value_changes('in_transition_mode')
                 vehicle_type_field = 'is_rotary_wing'
                 vtol_state_mapping = {0: 2, 1: 3}
             for i in range(len(vtol_states)):
