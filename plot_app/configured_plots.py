@@ -342,7 +342,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
             data_plot.add_graph([lambda data: ('groundspeed_estimated',
                                                np.sqrt(data['vel_n']**2 + data['vel_e']**2))],
                                 colors8[0:1], ['Ground Speed Estimated'])
-            if 'airspeed_validated' in ulog.data_list:
+            if any(elem.name == 'airspeed_validated' for elem in data):
                 airspeed_validated = ulog.get_dataset('airspeed_validated')
                 data_plot.change_dataset('airspeed_validated')
                 if np.amax(airspeed_validated.data['airspeed_sensor_measurement_valid']) == 1:
