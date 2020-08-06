@@ -269,9 +269,9 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data):
     data_plot.change_dataset('position_setpoint_triplet')
     data_plot.add_circle(['current.alt'], [plot_config['mission_setpoint_color']],
                          ['Altitude Setpoint'])
-    data_plot.change_dataset('actuator_controls_0')
-    data_plot.add_graph([lambda data: ('thrust', data['control[3]']*100)],
-                        colors8[6:7], ['Thrust [0, 100]'])
+    data_plot.change_dataset('tecs_status')
+    data_plot.add_graph(['altitude_sp'], colors8[3:4], ['Tecs Altitude Setpoint'])
+    
     plot_flight_modes_background(data_plot.bokeh_plot, flight_mode_changes, vtol_states)
 
     if data_plot.finalize() is not None: plots.append(data_plot)
