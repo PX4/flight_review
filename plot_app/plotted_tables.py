@@ -6,7 +6,7 @@ import datetime
 
 import numpy as np
 
-from bokeh.layouts import widgetbox
+from bokeh.layouts import column
 from bokeh.models import ColumnDataSource
 from bokeh.models.widgets import DataTable, TableColumn, Div
 
@@ -437,7 +437,7 @@ def get_hardfault_html(ulog):
 
 def get_changed_parameters(initial_parameters, plot_width):
     """
-    get a bokeh widgetbox object with a table of the changed parameters
+    get a bokeh column object with a table of the changed parameters
     :param initial_parameters: ulog.initial_parameters
     """
     param_names = []
@@ -505,12 +505,12 @@ def get_changed_parameters(initial_parameters, plot_width):
                            height=300, sortable=False, selectable=False)
     div = Div(text="""<b>Non-default Parameters</b> (except RC and sensor calibration)""",
               width=int(plot_width/2))
-    return widgetbox(div, data_table, width=plot_width)
+    return column(div, data_table, width=plot_width)
 
 
 def get_logged_messages(logged_messages, plot_width):
     """
-    get a bokeh widgetbox object with a table of the logged text messages
+    get a bokeh column object with a table of the logged text messages
     :param logged_messages: ulog.logged_messages
     """
     log_times = []
@@ -538,4 +538,4 @@ def get_logged_messages(logged_messages, plot_width):
     data_table = DataTable(source=source, columns=columns, width=plot_width,
                            height=300, sortable=False, selectable=False)
     div = Div(text="""<b>Logged Messages</b>""", width=int(plot_width/2))
-    return widgetbox(div, data_table, width=plot_width)
+    return column(div, data_table, width=plot_width)

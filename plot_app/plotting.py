@@ -49,7 +49,7 @@ def plot_dropouts(p, dropouts, min_value, show_hover_tooltips=False):
     source = ColumnDataSource(dropout_dict)
     quad = p.quad(left='left', right='right', top='top', bottom='bottom', source=source,
                   line_color='black', line_alpha=0.3, fill_color='black',
-                  fill_alpha=0.15, legend='logging dropout')
+                  fill_alpha=0.15, legend_label='logging dropout')
 
     if show_hover_tooltips:
         p.add_tools(HoverTool(tooltips=[('dropout', '@duration ms')],
@@ -198,10 +198,15 @@ def plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states=Non
         # use screen coords so that the label always stays. It's a bit
         # unfortunate that the x position includes the x-offset of the y-axis,
         # which depends on the axis labels (e.g. 4.000e+5 creates a large offset)
-        label = Label(x=83, y=12, x_units='screen', y_units='screen',
+        label = Label(x=60, y=12, x_units='screen', y_units='screen',
                       text='VTOL mode', text_font_size='10pt', level='glyph',
                       background_fill_color='white', background_fill_alpha=0.8)
         p.add_layout(label)
+
+        split_line = Span(location=vtol_state_height, location_units='screen',
+                        dimension='width', line_color='black',
+                        line_width=1, line_alpha=0.5)
+        p.add_layout(split_line)
 
 
 def plot_set_equal_aspect_ratio(p, x, y, zoom_out_factor=1.3, min_range=5):
@@ -370,7 +375,7 @@ def plot_map(ulog, config, map_type='plain', api_key=None, setpoints=False,
 
             # TODO: altitude line coloring
             p.line(x='lon', y='lat', source=data_source, line_width=2,
-                   line_color=config['maps_line_color'], legend='GPS (projected)')
+                   line_color=config['maps_line_color'], legend_label='GPS (projected)')
 
 
         if setpoints:
@@ -391,7 +396,7 @@ def plot_map(ulog, config, map_type='plain', api_key=None, setpoints=False,
 
                 p.circle(x='lon', y='lat', source=data_source,
                          line_width=2, size=6, line_color=config['mission_setpoint_color'],
-                         fill_color=None, legend='Position Setpoints')
+                         fill_color=None, legend_label='Position Setpoints')
             except:
                 pass
 
@@ -537,7 +542,7 @@ class DataPlot:
                 for nan_timestamp in nan_timestamps:
                     nan_line = Span(location=nan_timestamp,
                                     dimension='height', line_color=nan_color,
-                                    line_dash='dashed', line_width=3)
+                                    line_dash='dashed', line_width=2)
                     p.add_layout(nan_line)
                 if len(nan_timestamps) > 0:
                     y_values = [30] * len(nan_timestamps)
@@ -564,11 +569,11 @@ class DataPlot:
             for field_name, color, legend in zip(field_names_expanded, colors, legends):
                 if use_step_lines:
                     p.step(x='timestamp', y=field_name, source=data_source,
-                           legend=legend, line_width=2, line_color=color,
+                           legend_label=legend, line_width=2, line_color=color,
                            mode="after")
                 else:
                     p.line(x='timestamp', y=field_name, source=data_source,
-                           legend=legend, line_width=2, line_color=color)
+                           legend_label=legend, line_width=2, line_color=color)
 
         except (KeyError, IndexError, ValueError) as error:
             print(type(error), "("+self._data_name+"):", error)
@@ -589,7 +594,7 @@ class DataPlot:
 
             for field_name, color, legend in zip(field_names_expanded, colors, legends):
                 p.circle(x='timestamp', y=field_name, source=data_source,
-                         legend=legend, line_width=2, size=4, line_color=color,
+                         legend_label=legend, line_width=2, size=4, line_color=color,
                          fill_color=None)
 
         except (KeyError, IndexError, ValueError) as error:
@@ -687,13 +692,13 @@ class DataPlot:
             p.xaxis[0].formatter = FuncTickFormatter(code='''
                     //func arguments: ticks, x_range
                     // assume us ticks
-                    ms = Math.round(tick / 1000)
-                    sec = Math.floor(ms / 1000)
-                    minutes = Math.floor(sec / 60)
-                    hours = Math.floor(minutes / 60)
-                    ms = ms % 1000
-                    sec = sec % 60
-                    minutes = minutes % 60
+                    var ms = Math.round(tick / 1000);
+                    var sec = Math.floor(ms / 1000);
+                    var minutes = Math.floor(sec / 60);
+                    var hours = Math.floor(minutes / 60);
+                    ms = ms % 1000;
+                    sec = sec % 60;
+                    minutes = minutes % 60;
 
                     function pad(num, size) {
                         var s = num+"";
@@ -702,7 +707,7 @@ class DataPlot:
                     }
 
                     if (hours > 0) {
-                        var ret_val = hours + ":" + pad(minutes, 2) + ":" + pad(sec,2)
+                        var ret_val = hours + ":" + pad(minutes, 2) + ":" + pad(sec,2);
                     } else {
                         var ret_val = minutes + ":" + pad(sec,2);
                     }
@@ -762,7 +767,7 @@ class DataPlot2D(DataPlot):
             data_source = ColumnDataSource(data=dict(x=x, y=y))
 
             p.line(x="x", y="y", source=data_source, line_width=2,
-                   line_color=color, legend=legend)
+                   line_color=color, legend_label=legend)
 
             if self._is_first_graph:
                 self._is_first_graph = False
@@ -951,13 +956,13 @@ class DataPlotFFT(DataPlot):
                     fft_plot_values = fft_plot_values[::step_size]
                     freqs_plot = freqs_plot[::step_size]
                 self._p.line(freqs_plot, fft_plot_values,
-                             line_color=color, line_width=2, legend=legend,
+                             line_color=color, line_width=2, legend_label=legend,
                              alpha=0.8)
             # plot the mean lines above the fft graphs
             for fft_values, mean_fft_value, legend, color in plot_data:
                 self._p.line([mean_start_freq, np.max(freqs)],
                              [mean_fft_value, mean_fft_value],
-                             line_color=color, line_width=2, legend=legend)
+                             line_color=color, line_width=2, legend_label=legend)
 
             self._p.y_range = Range1d(0, 5)
 

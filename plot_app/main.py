@@ -9,7 +9,7 @@ import os
 from html import escape
 
 from bokeh.io import curdoc
-from bokeh.layouts import column, widgetbox
+from bokeh.layouts import column
 from bokeh.models.widgets import Div
 
 from helper import *
@@ -39,10 +39,10 @@ if GET_arguments is not None and 'stats' in GET_arguments:
 
     # title
     div = Div(text="<h3>Statistics</h3>")
-    plots.append(widgetbox(div))
+    plots.append(column(div))
 
     div = Div(text="<h4>All Logs</h4>")
-    plots.append(widgetbox(div))
+    plots.append(column(div))
 
     p = statistics.plot_log_upload_statistics([colors8[0], colors8[1], colors8[3],
                                                colors8[4], colors8[5]])
@@ -50,7 +50,7 @@ if GET_arguments is not None and 'stats' in GET_arguments:
     div_info = Div(text="Number of Continous Integration (Simulation Tests) Logs: %i<br />" \
             "Total Number of Logs on the Server: %i" %
                    (statistics.num_logs_ci(), statistics.num_logs_total()))
-    plots.append(widgetbox(div_info))
+    plots.append(column(div_info))
 
     div = Div(text="<br/><h4>Flight Report Logs "
               "<small class='text-muted'>(Public Logs only)</small></h4>")
@@ -60,7 +60,7 @@ if GET_arguments is not None and 'stats' in GET_arguments:
             " release %s (starting from the first RC candidate): %.1f"%
                            (statistics.latest_major_release()+'.x',
                             statistics.total_public_flight_duration_latest_release()))
-    plots.append(widgetbox([div, div_info, div_info_release]))
+    plots.append(column([div, div_info, div_info_release]))
 
     p = statistics.plot_public_airframe_statistics()
     plots.append(p)
@@ -177,7 +177,7 @@ else:
                              'https://github.com/PX4/flight_review/issues</a> with a link '
                              'to this log.')
             div = Div(text=error_message, width=int(plot_width*0.9))
-            plots = [widgetbox(div, width=int(plot_width*0.9))]
+            plots = [column(div, width=int(plot_width*0.9))]
             curdoc().template_variables['internal_error'] = True
             return (title, error_message, plots)
 
@@ -248,7 +248,7 @@ else:
         title = 'Error'
 
         div = Div(text="<h3>Error</h3><p>"+error_message+"</p>", width=int(plot_width*0.9))
-        plots = [widgetbox(div, width=int(plot_width*0.9))]
+        plots = [column(div, width=int(plot_width*0.9))]
 
     # layout
     layout = column(plots)

@@ -1,7 +1,7 @@
 """ This contains PID analysis plots """
 from bokeh.io import curdoc
 from bokeh.models.widgets import Div
-from bokeh.layouts import widgetbox
+from bokeh.layouts import column
 from scipy.interpolate import interp1d
 
 from config import plot_width, plot_config, colors3
@@ -77,7 +77,7 @@ The analysis may take a while...
                   "(required topics: vehicle_angular_velocity, vehicle_rates_setpoint, "
                   "vehicle_attitude, vehicle_attitude_setpoint and "
                   "actuator_controls_0).</p>", width=int(plot_width*0.9))
-        plots.append(widgetbox(div, width=int(plot_width*0.9)))
+        plots.append(column(div, width=int(plot_width*0.9)))
 
     has_attitude = True
     try:
@@ -117,7 +117,7 @@ The analysis may take a while...
 
         p = data_plot.bokeh_plot
         p.patch(time_controls, thrust, line_width=0, fill_color='#555555',
-                fill_alpha=0.4, alpha=0, legend='Thrust [0, {:}]'.format(thrust_max))
+                fill_alpha=0.4, alpha=0, legend_label='Thrust [0, {:}]'.format(thrust_max))
 
         data_plot.change_dataset(rate_topic_name)
         data_plot.add_graph([lambda data: ("rate"+str(index),
@@ -156,7 +156,7 @@ The analysis may take a while...
                           "error causes are: logged data rate is too low, or there "
                           "is not enough motion for the analysis.</p>",
                           width=int(plot_width*0.9))
-                plots.insert(0, widgetbox(div, width=int(plot_width*0.9)))
+                plots.insert(0, column(div, width=int(plot_width*0.9)))
                 pid_analysis_error = True
 
     # attitude
@@ -184,7 +184,7 @@ The analysis may take a while...
                           "error causes are: logged data rate is too low/data missing, "
                           "or there is not enough motion for the analysis.</p>",
                           width=int(plot_width*0.9))
-                plots.insert(0, widgetbox(div, width=int(plot_width*0.9)))
+                plots.insert(0, column(div, width=int(plot_width*0.9)))
                 pid_analysis_error = True
 
     return plots

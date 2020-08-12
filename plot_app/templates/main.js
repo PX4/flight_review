@@ -121,7 +121,7 @@ function setupPlots() {
 			var a = $('<a id="'+plot_fragments[index_of]+'" '+
 					'class="fragment bk-plot-layout"' +
 					' href="#'+plot_fragments[index_of]+'"><big>&para;</big></a>');
-			$(plot_view.canvas_view.canvas_el).before(a);
+			$(plot_view.canvas_view.el).before(a);
 		}
 	});
 

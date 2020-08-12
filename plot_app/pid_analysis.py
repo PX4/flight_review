@@ -392,7 +392,7 @@ def plot_pid_response(trace, data, plot_config, label='Rate'):
         low_rates_label = ' (<500 deg/s)'
 
     p.line(x=trace.time_resp, y=trace.resp_low[0],
-           legend=trace.name.capitalize() + low_rates_label,
+           legend_label=trace.name.capitalize() + low_rates_label,
            line_width=4, line_color=colors3[2])
 
 # Plotting a marker for the response time (first crossing of 1) looks nice, but
@@ -433,7 +433,7 @@ def plot_pid_response(trace, data, plot_config, label='Rate'):
         p.image([image], x=0, y=-1.5, dw=trace.resplen, dh=5, color_mapper=color_mapper)
 
         p.line(x=trace.time_resp, y=trace.resp_high[0],
-               legend=trace.name.capitalize() + ' (>500 deg/s)',
+               legend_label=trace.name.capitalize() + ' (>500 deg/s)',
                line_width=4, line_color=colors3[0])
 
     # horizonal marker line at 1

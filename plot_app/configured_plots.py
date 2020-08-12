@@ -2,7 +2,7 @@
 
 from html import escape
 
-from bokeh.layouts import widgetbox
+from bokeh.layouts import column
 from bokeh.models import Range1d
 from bokeh.models.widgets import Button
 from bokeh.io import curdoc
@@ -815,7 +815,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
     jinja_plot_data = []
     for i in range(len(plots)):
         if plots[i] is None:
-            plots[i] = widgetbox(param_changes_button, width=int(plot_width * 0.99))
+            plots[i] = column(param_changes_button, width=int(plot_width * 0.99))
         if isinstance(plots[i], DataPlot):
             if plots[i].param_change_label is not None:
                 param_change_labels.append(plots[i].param_change_label)
@@ -852,7 +852,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
 #            '<th>Number of data points</th><th>Total bytes</th></tr>' + ''.join(
 #            ['<tr><td>'+'</td><td>'.join(list(x))+'</td></tr>' for x in table_text]) + '</table>'
 #    topics_div = Div(text=topics_info, width=int(plot_width*0.9))
-#    plots.append(widgetbox(topics_div, width=int(plot_width*0.9)))
+#    plots.append(column(topics_div, width=int(plot_width*0.9)))
 
 
     # log messages

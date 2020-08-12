@@ -289,7 +289,7 @@ class StatisticsPlots:
                     dates_list_subsampled.append(last_date)
 
                 p.line(dates_list_subsampled, counts_subsampled,
-                       legend=legend, line_width=2, line_color=color)
+                       legend_label=legend, line_width=2, line_color=color)
 
         if len(self._all_logs_dates) > 0:
             last_date = self._all_logs_dates[-1]
@@ -545,7 +545,7 @@ class StatisticsPlots:
         x2 = np.hstack((x[::-1], x))
         for i in range(len(all_data)):
             area.patch(x2, stacked_patches[i], color=colors[i],
-                       legend=label_cb(all_data[i], False), alpha=0.8, line_color=None)
+                       legend_label=label_cb(all_data[i], False), alpha=0.8, line_color=None)
 
         if area.legend:
             area.legend[0].items.reverse()
