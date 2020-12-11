@@ -359,6 +359,11 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
             data_plot.add_graph(['vel_m_s'], colors8[2:3], ['Ground Speed (from GPS)'])
             data_plot.change_dataset('tecs_status')
             data_plot.add_graph(['airspeed_sp'], colors8[3:4], ['Airspeed Setpoint'])
+            data_plot.change_dataset('wind_estimate')
+            data_plot.add_graph([lambda data: ('windspeed',
+                                               np.sqrt(data['windspeed_north']**2 + data['windspeed_east']**2))] ,
+                                               colors8[4:5], ['Wind Speed'])
+
 
             plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
 
