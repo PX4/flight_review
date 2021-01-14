@@ -42,7 +42,9 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
             if 'voltage5V_v' in topic.data:     # old (prior to PX4/Firmware:213aa93)
                 topic.data['voltage5v_v'] = topic.data.pop('voltage5V_v')
             if 'voltage3V3_v' in topic.data:    # old (prior to PX4/Firmware:213aa93)
-                topic.data['voltage3v3_v'] = topic.data.pop('voltage3V3_v')
+                topic.data['sensors3v3[0]'] = topic.data.pop('voltage3V3_v')
+            if 'voltage3v3_v' in topic.data:
+                topic.data['sensors3v3[0]'] = topic.data.pop('voltage3v3_v')
 
     if any(elem.name == 'vehicle_angular_velocity' for elem in data):
         rate_estimated_topic_name = 'vehicle_angular_velocity'
@@ -683,9 +685,9 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
         if 'voltage5v_v' in data_plot.dataset.data and \
                         np.amax(data_plot.dataset.data['voltage5v_v']) > 0.0001:
             data_plot.add_graph(['voltage5v_v'], colors8[7:8], ['5 V'])
-        if 'voltage3v3_v' in data_plot.dataset.data and \
-                        np.amax(data_plot.dataset.data['voltage3v3_v']) > 0.0001:
-            data_plot.add_graph(['voltage3v3_v'], colors8[5:6], ['3.3 V'])
+        if 'sensors3v3[0]' in data_plot.dataset.data and \
+                        np.amax(data_plot.dataset.data['sensors3v3[0]']) > 0.0001:
+            data_plot.add_graph(['sensors3v3[0]'], colors8[5:6], ['3.3 V'])
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
