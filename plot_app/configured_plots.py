@@ -52,6 +52,10 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
         rate_estimated_topic_name = 'vehicle_attitude'
         rate_groundtruth_topic_name = 'vehicle_attitude_groundtruth'
         rate_field_names = ['rollspeed', 'pitchspeed', 'yawspeed']
+    if any(elem.name == 'manual_control_switches' for elem in data):
+        manual_control_switches_topic = 'manual_control_switches'
+    else: # old
+        manual_control_switches_topic = 'manual_control_setpoint'
 
     # initialize flight mode changes
     flight_mode_changes = get_flight_mode_changes(ulog)
@@ -384,13 +388,13 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
                              title='Manual Control Inputs (Radio or Joystick)',
                              plot_height='small', y_range=Range1d(-1.1, 1.1),
                              changed_params=changed_params, x_range=x_range)
-        data_plot.add_graph(['y', 'x', 'r', 'z',
-                             lambda data: ('mode_slot', data['mode_slot']/6),
-                             'aux1', 'aux2',
-                             lambda data: ('kill_switch', data['kill_switch'] == 1)],
-                            colors8,
+        data_plot.add_graph(['y', 'x', 'r', 'z', 'aux1', 'aux2'], colors8[0:6],
                             ['Y / Roll', 'X / Pitch', 'Yaw', 'Throttle [0, 1]',
-                             'Flight Mode', 'Aux1', 'Aux2', 'Kill Switch'])
+                             'Aux1', 'Aux2'])
+        data_plot.change_dataset(manual_control_switches_topic)
+        data_plot.add_graph([lambda data: ('mode_slot', data['mode_slot']/6),
+                             lambda data: ('kill_switch', data['kill_switch'] == 1)],
+                            colors8[6:8], ['Flight Mode', 'Kill Switch'])
         # TODO: add RTL switch and others? Look at params which functions are mapped?
         plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
 
