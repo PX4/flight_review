@@ -39,7 +39,7 @@ class ThreeDHandler(TornadoRequestHandlerBase):
         try:
             # required topics: none of these are optional
             gps_pos = ulog.get_dataset('vehicle_gps_position').data
-            vehicle_global_position = ulog.get_dataset('vehicle_global_position').data
+            #vehicle_global_position = ulog.get_dataset('vehicle_global_position').data
             attitude = ulog.get_dataset('vehicle_attitude').data
         except (KeyError, IndexError, ValueError) as error:
             raise CustomHTTPError(
