@@ -93,7 +93,7 @@ if args.allow_websocket_origin is not None:
 server_kwargs['websocket_max_message_size'] = 100 * 1024 * 1024
 
 # increase the maximum upload size (default is 100MB)
-server_kwargs['http_server_kwargs'] = {'max_buffer_size': 300 * 1024 * 1024}
+server_kwargs['http_server_kwargs'] = {'max_buffer_size': 1000 * 1024 * 1024}
 
 
 show_ulog_file = False
@@ -168,4 +168,3 @@ if callable(run_op):
     server.run_until_shutdown()
 else:
     server.start()
-
