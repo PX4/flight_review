@@ -126,7 +126,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
         data_plot.add_graph('y', 'x', colors2[0], 'Estimated',
                             check_if_all_zero=True)
     else:
-        any(elem.name == 'vehicle_gps_position' for elem in ulog.data_list):
+        any(elem.name == 'vehicle_gps_position' for elem in ulog.data_list)
         data_plot = DataPlot2D(data, plot_config, 'vehicle_gps_position',
                            x_axis_label='[m]', y_axis_label='[m]', plot_height='large')
 
