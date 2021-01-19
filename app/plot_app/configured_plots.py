@@ -139,14 +139,15 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
         if data_plot.finalize() is not None:
             plots.append(data_plot.bokeh_plot)
 
-            # Leaflet Map
-            try:
-                pos_datas, flight_modes = ulog_to_polyline(ulog, flight_mode_changes)
-                curdoc().template_variables['pos_datas'] = pos_datas
-                curdoc().template_variables['pos_flight_modes'] = flight_modes
-            except:
-                pass
-            curdoc().template_variables['has_position_data'] = True
+    if any(elem.name == 'vehicle_gps_position' for elem in ulog.data_list):
+        # Leaflet Map
+        try:
+            pos_datas, flight_modes = ulog_to_polyline(ulog, flight_mode_changes)
+            curdoc().template_variables['pos_datas'] = pos_datas
+            curdoc().template_variables['pos_flight_modes'] = flight_modes
+        except:
+            pass
+        curdoc().template_variables['has_position_data'] = True
 
     # initialize parameter changes
     changed_params = None
