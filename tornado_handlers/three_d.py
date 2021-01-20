@@ -156,6 +156,12 @@ class ThreeDHandler(TornadoRequestHandlerBase):
         if mav_type == 1: # fixed wing
             model_scale_factor = 0.06
             model_uri = 'plot_app/static/cesium/SampleData/models/CesiumAir/Cesium_Air.glb'
+        elif mav_type == 7: # Airship, controlled
+            model_scale_factor = 0.1
+            model_uri = 'plot_app/static/cesium/SampleData/models/CesiumBalloon/CesiumBalloon.glb'
+        elif mav_type == 8: # Free balloon, uncontrolled
+            model_scale_factor = 0.1
+            model_uri = 'plot_app/static/cesium/SampleData/models/CesiumBalloon/CesiumBalloon.glb'
         elif mav_type == 2: # quad
             model_scale_factor = 1
             model_uri = 'plot_app/static/cesium/models/iris/iris.glb'
@@ -184,4 +190,3 @@ class ThreeDHandler(TornadoRequestHandlerBase):
             log_id=log_id,
             bing_api_key=get_bing_maps_api_key(),
             cesium_api_key=get_cesium_api_key()))
-
