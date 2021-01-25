@@ -352,11 +352,11 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
                 airspeed_validated = ulog.get_dataset('airspeed_validated')
                 data_plot.change_dataset('airspeed_validated')
                 if np.amax(airspeed_validated.data['airspeed_sensor_measurement_valid']) == 1:
-                    data_plot.add_graph(['equivalent_airspeed_m_s'], colors8[1:2],
-                                        ['Equivalent Airspeed'])
+                    data_plot.add_graph(['true_airspeed_m_s'], colors8[1:2],
+                                        ['True Airspeed'])
                 else:
-                    data_plot.add_graph(['equivalent_ground_minus_wind_m_s'], colors8[1:2],
-                                        ['Ground Minus Wind'])
+                    data_plot.add_graph(['true_ground_minus_wind_m_s'], colors8[1:2],
+                                        ['True Airspeed (estimated)'])
             else:
                 data_plot.change_dataset('airspeed')
                 data_plot.add_graph(['indicated_airspeed_m_s'], colors8[1:2],
@@ -364,7 +364,10 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
             data_plot.change_dataset('vehicle_gps_position')
             data_plot.add_graph(['vel_m_s'], colors8[2:3], ['Ground Speed (from GPS)'])
             data_plot.change_dataset('tecs_status')
-            data_plot.add_graph(['airspeed_sp'], colors8[3:4], ['Airspeed Setpoint'])
+            if 'true_airspeed_sp' in cur_dataset.data:
+                data_plot.add_graph(['true_airspeed_sp'], colors8[3:4], ['True Airspeed Setpoint'])
+            else:
+                data_plot.add_graph(['airspeed_sp'], colors8[3:4], ['True Airspeed Setpoint'])
 
             plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
 
