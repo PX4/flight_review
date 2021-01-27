@@ -46,10 +46,8 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
             if 'voltage3v3_v' in topic.data:
                 topic.data['sensors3v3[0]'] = topic.data.pop('voltage3v3_v')
         if topic.name == 'tecs_status':
-            if 'true_airspeed_sp' in topic.data:
-                tecs_true_airspeed_sp_message = 'true_airspeed_sp'
-            else:
-                tecs_true_airspeed_sp_message = 'airspeed_sp'
+            if 'airspeed_sp' in topic.data: # old (prior to PX4-Autopilot/pull/16585)
+                topic.data['true_airspeed_sp'] = topic.data.pop('airspeed_sp')
 
     if any(elem.name == 'vehicle_angular_velocity' for elem in data):
         rate_estimated_topic_name = 'vehicle_angular_velocity'
@@ -369,7 +367,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
             data_plot.change_dataset('vehicle_gps_position')
             data_plot.add_graph(['vel_m_s'], colors8[2:3], ['Ground Speed (from GPS)'])
             data_plot.change_dataset('tecs_status')
-            data_plot.add_graph([tecs_true_airspeed_sp_message], colors8[3:4], ['True Airspeed Setpoint'])
+            data_plot.add_graph(['true_airspeed_sp'], colors8[3:4], ['True Airspeed Setpoint'])
             plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
 
             if data_plot.finalize() is not None: plots.append(data_plot)
