@@ -1,20 +1,15 @@
-# Flight Review
+# Meta
 
-[![Build Status](https://travis-ci.org/PX4/flight_review.svg?branch=master)](https://travis-ci.org/PX4/flight_review)
+* *Maintainer:* Herman Øie Kolden
+* *Review policy:* Self-approval
+
+# Flight Review
 
 This is a web application for flight log analysis. It allows users to upload
 ULog flight logs, and analyze them through the browser.
 
 It uses the [bokeh](http://bokeh.pydata.org) library for plotting and the
 [Tornado Web Server](http://www.tornadoweb.org).
-
-Flight Review is deployed at https://review.px4.io.
-
-![Plot View](screenshots/plot_view.png)
-
-## 3D View
-![3D View](screenshots/3d_view.gif)
-
 
 ## Installation and Setup
 
@@ -50,10 +45,11 @@ brew install fftw
 
 ```bash
 # After git clone, enter the directory
-git clone https://github.com/PX4/flight_review.git
+git clone https://github.com/aviant-tech/flight_review.git
 cd flight_review
+virtualenv -p python3 venv
+source venv/bin/activate
 pip install -r requirements.txt
-# Note: preferably use a virtualenv
 ```
 
 ### Setup
@@ -88,19 +84,6 @@ bokeh serve --show main.py`, to start without the html template).
 
 The whole web application is run with the `serve.py` script. Run `./serve.py -h`
 for further details.
-
-## Interactive Usage
-The plotting can also be used interative using a Jupyter Notebook. It
-requires python knowledge, but provides full control over what and how to plot
-with immediate feedback.
-
-- Start the notebook
-- Locate and open the test notebook file `testing_notebook.ipynb`.
-
-```bash
-# Launch jupyter notebook
-jupyter notebook testing_notebook.ipynb
-```
 
 # Implementation
 The web site is structured around a bokeh application in `plot_app`
@@ -138,7 +121,3 @@ the root directory (Eg `tornado_handlers.py`). Then to make sure the same module
 is only loaded once, we use `import xy` instead of `import plot_app.xy`.
 It's useful to look at `print('\n'.join(sys.modules.keys()))` to check this.
 
-
-## Contributing
-Contributions are welcome! Just open a pull request with detailed description
-why the changes are needed, or open an issue for bugs, feature requests, etc...
