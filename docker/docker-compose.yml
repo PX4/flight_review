@@ -2,6 +2,9 @@ version: "3.3"
 services:
   srv:
     image: px4flightreview
+    build:
+      context: ../
+      dockerfile: ./docker/Dockerfile
     restart: always
     network_mode: bridge
     ports:
@@ -10,6 +13,6 @@ services:
       USE_PROXY: "True"
       # PORT: "5006"
       # DOMAIN: "test.ru"
-    # volumes:
-    #   - ./data:/opt/service/data
-    #   - ./config_user.ini:/opt/service/config_user.ini:ro
+    volumes:
+      - ../data:/opt/service/data
+      - ../config_default.ini:/opt/service/config_default.ini:ro
