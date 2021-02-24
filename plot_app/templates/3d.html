@@ -10,6 +10,10 @@
   <script src="plot_app/static/cesium/Build/Cesium/Cesium.js"></script>
   <script src="plot_app/static/js/two.min.js"></script>
   <script src="plot_app/static/js/radio_controller.js"></script>
+
+  <!-- Javascript library of plot.ly.-->
+  <script src="plot_app/static/js/plotly-latest.min.js"></script>
+
   <style>
       @import url(plot_app/static/cesium/Build/Cesium/Widgets/widgets.css);
       @import url(plot_app/static/cesium/Build/Cesium/Widgets/lighter.css);
@@ -63,19 +67,105 @@
       #radio-controller {
 		  position: absolute;
 		  width: 300px;
-		  height: 200px;
+		  height: 100px;
 		  top: 100%;
 		  left: 100%;
 		  margin-left: -320px;
-		  margin-top: -300px;
+		  margin-top: -350px;
       }
+
+    #Chart2D_Left {
+		z-index: 2;
+		width: 500px;
+		height:150px; 
+	    position:absolute;
+	    left:0;
+	    right:0;
+	    bottom: 15%;
+	    margin-left:2%;
+	    margin-right:auto;
+	}
+
+    #Chart2D_Right {
+		z-index: 2;
+		width: 500px;
+		height:150px; 
+	    position:absolute;
+	    left:0;
+	    right:0;
+	    bottom: 40%;
+	    margin-left:2%;
+	    margin-right:auto;
+	}	
+
+    #Chart2D_Bottom {
+		z-index: 2;
+		width: 500px;
+		height:150px; 
+	    position:absolute;
+	    left:0;
+	    right:0;
+	    bottom: 65%;
+	    margin-left:2%;
+	    margin-right:auto;
+	}		
+
+	#DataSelector{
+		z-index: 3;
+		width: 100px;
+		height:20px; 
+	    position:absolute;
+	    left:0;
+	    right:0;
+	    bottom: 10%;
+	    margin-left:auto;
+	    margin-right:1%;				
+	}
+
   </style>
 </head>
 <body>
-  <div id="cesiumContainer"></div>
-  <div id="radio-controller"></div>
 
-  <div id="toolbar">
+	<!-- All HTML-side code for 2D Charting is below.  They depend on css classes: DataSelector, Chart2D_Bottom, Chart2D_Right, Chart2D_Left.
+	Don't mind the naming. -->
+	<div id="Chart2D_Left" >
+		<select id="DataSelector" class="DataSet">
+		<option value="Attitude">Attitude</option>
+		<option value="Attitude_Rate">Attitude Rate</option>option>
+		<option value="Position" selected="selected">Position</option>
+		<option value="Velocity">Velocity</option>
+		<option value="Controls">Controls</option>
+		<option value="Raw_Sensors">Raw Sensors</option>
+		<option value="Actuator_Outputs">Actuator Outputs</option>option>
+		</select>
+	</div>
+	<div id="Chart2D_Right" >
+		<select id="DataSelector" class="DataSet2">
+		<option value="Attitude">Attitude</option>
+		<option value="Attitude_Rate" selected="selected">Attitude Rate</option>option>
+		<option value="Position">Position</option>
+		<option value="Velocity">Velocity</option>
+		<option value="Controls">Controls</option>
+		<option value="Raw_Sensors">Raw Sensors</option>
+		<option value="Actuator_Outputs">Actuator Outputs</option>option>
+		</select>
+	</div> 
+	<div id="Chart2D_Bottom" >
+		<select id="DataSelector" class="DataSet3">
+		<option value="Attitude" selected="selected">Attitude</option>
+		<option value="Attitude_Rate">Attitude Rate</option>option>
+		<option value="Position">Position</option>
+		<option value="Velocity">Velocity</option>
+		<option value="Controls">Controls</option>
+		<option value="Raw_Sensors">Raw Sensors</option>
+		<option value="Actuator_Outputs">Actuator Outputs</option>option>
+		</select>
+	</div>   
+
+  <div id="cesiumContainer" style="z-index: 1;position: absolute;"></div>
+  <div id="radio-controller" style="z-index: 1;position: absolute;"></div>
+
+  <div id="toolbar" style="z-index: 2;position: absolute;">
 	  <table><tbody>
 			  <tr>
 				  <td class="noalign" colspan="2"><a href="plot_app?log={{ log_id }}">Open Plot Page</a></td>
@@ -151,9 +241,22 @@ var start = Cesium.JulianDate.fromIso8601({{ start_timestamp }});
 var boot_timestamp = Cesium.JulianDate.fromIso8601({{ boot_timestamp }});
 var stop = Cesium.JulianDate.fromIso8601({{ end_timestamp }});
 var attitude_data = {{ attitude_data }};
+var vehicle_attitude_setpoint_data = {{vehicle_attitude_setpoint_data}};
+var vehicle_local_position_data = {{vehicle_local_position_data}};
+var vehicle_local_position_setpoint_data = {{vehicle_local_position_setpoint_data}};
+
+console.log(vehicle_local_position_setpoint_data)
+
+var actuator_outputs_data = {{actuator_outputs_data}};
+var vehicle_rates_setpoint_data = {{vehicle_rates_setpoint_data}};
+var sensor_combined_data = {{sensor_combined_data}};
+var actuator_controls_0_data = {{actuator_controls_0_data}};
 
 var model_scale_factor = {{ model_scale_factor }}; // model-specific scale factor
 var model_uri = "{{ model_uri }}";
+
+// Color codes used in static charts
+colors8 = ['#e0212d', '#208900', '#2877a2', '#333333', '#999999', '#e58C33', '#33e5e5', '#e533e5']
 
 //Make sure viewer is at the desired time.
 viewer.clock.startTime = start.clone();
@@ -171,7 +274,6 @@ viewer.animation.viewModel.setShuttleRingTicks([
 
 //Set timeline to simulation bounds
 viewer.timeline.zoomTo(start, stop);
-
 
 function computePositionProperty(altitude_offset) {
     var property = new Cesium.SampledPositionProperty();
@@ -221,8 +323,6 @@ function computeOrientationProperty() {
     // rotation quaterion from ENU to ECEF
     var q_enu_to_ecef = Cesium.Quaternion.fromRotationMatrix(rotation_matrix);
 
-	
-    
     for (i = 0; i < attitude_data.length; ++i) {
         var cur_attitude = attitude_data[i];
         var time_att = Cesium.JulianDate.fromIso8601(cur_attitude[0]);
@@ -323,7 +423,7 @@ var entity = viewer.entities.add({
         resolution : 1,
         material : new Cesium.PolylineGlowMaterialProperty({
             glowPower : 0.1,
-            color : Cesium.Color.YELLOW
+            color : Cesium.Color.TEAL
         }),
         width : 10
     }
@@ -386,9 +486,785 @@ viewer.timeline.updateFromClock();
 viewer.timeline.zoomTo(viewer.clock.startTime, viewer.clock.stopTime);
 
 
+//// 2D CHARTING/STREAMING \\\\
+
+// Helper Functions \\
+
+// RPY data is computed from quaternion. Used for 2D Charting.
+function ComputeRollPitchYaw(quaternionArray_IN)
+{
+	// This is the return value of the function
+	var dataRollPitchYaw = [];
+
+	for (i = 0; i < quaternionArray_IN.length; ++i)
+	{
+		var currentAttitude = quaternionArray_IN[i];
+		var myQuaternion = new Cesium.Quaternion(currentAttitude[1], -currentAttitude[2],-currentAttitude[3], currentAttitude[4]);
+		var myRollPitchYawRad = Cesium.HeadingPitchRoll.fromQuaternion(myQuaternion)
+		var myRollPitchYawDeg = [Cesium.Math.toDegrees(myRollPitchYawRad.roll), Cesium.Math.toDegrees(myRollPitchYawRad.pitch),Cesium.Math.toDegrees(myRollPitchYawRad.heading)]
+		dataRollPitchYaw.push(myRollPitchYawDeg);
+	}
+	return dataRollPitchYaw;
+}
+
+// Number of buttons and traces are computed from input arrays so make sure input array dimensions are correct.
+function CreateButton(buttonNameList_IN, buttonVisibilityArray_IN, traceColorArray_IN, yAxisLabel_IN)
+{
+	var numberOfButtons_IN = buttonNameList_IN.length;
+	var buttonArray = [];
+
+	// Don't run this function with less thatn 2 args.
+	if(arguments.length < 2){return;}
+
+	// Default button
+	if(arguments.length == 2)
+	{
+		for (var buttonIndex = 0 ; buttonIndex<numberOfButtons_IN; buttonIndex++)
+		{
+			buttonArray.push(
+			{
+				args: [{'visible': buttonVisibilityArray_IN[buttonIndex]}],
+			    label:buttonNameList_IN[buttonIndex],            
+			    method: 'update'
+			} );
+		}	
+	}
+	// Button with trace color change functionality.
+	if(arguments.length == 3)
+	{
+		for (var buttonIndex = 0 ; buttonIndex<numberOfButtons_IN; buttonIndex++)
+		{
+			buttonArray.push(
+			{
+				args: [{'visible': buttonVisibilityArray_IN[buttonIndex], 'line': traceColorArray_IN[buttonIndex]}],
+			    label:buttonNameList_IN[buttonIndex],            
+			    method: 'update'
+			} );
+		}			
+	}
+
+	// Button with trace color change & y-axis change functionalities.
+	if(arguments.length == 4)
+	{
+		for (var buttonIndex = 0 ; buttonIndex<numberOfButtons_IN; buttonIndex++)
+		{
+			buttonArray.push(
+			{
+				args: [{'visible': buttonVisibilityArray_IN[buttonIndex], 'line': traceColorArray_IN[buttonIndex]},{'yaxis': {title: yAxisLabel_IN[buttonIndex] ,titlefont:{color: '#ffffff'},tickfont:{color: '#00ffff'}}}],
+			    label:buttonNameList_IN[buttonIndex],            
+			    method: 'update'
+			} );
+		}			
+	}
+
+	return buttonArray;
+}
+
+// Input is time array as collected from Python side ulog file. Output is x-axis data ready to be plotted in plotly. Output time unit is mintues.
+function TimeAxisArrayBuilder(timeData_IN, startTime_IN)
+{
+	for(var i = 0; i < timeData_IN.length; i++) 
+	{
+		timeData_IN[i] = Cesium.JulianDate.fromIso8601(timeData_IN[i]).secondsOfDay/60.0 - startTime_IN;
+	}
+
+	return timeData_IN;
+}
+
+// Simple function iterates over array and does conversion.
+function Rad2Deg(radArray_IN)
+{
+	for(var i = 0; i < radArray_IN.length; i++) 
+	{
+		radArray_IN[i] = radArray_IN[i]*57.2958;
+	}
+	return radArray_IN;
+}
+
+// Create a trace. Inputs are x and y axis data.
+function CreateTrace(xData_IN, yData_IN, traceColor_IN, traceName_IN, traceVisible_IN)
+{
+	return {x: xData_IN, y: yData_IN, line: {color: traceColor_IN}, name: traceName_IN, visible: traceVisible_IN};	
+}
+
+// Create a layout. Inputs are buttons, total data time in seconds, and y-axis label.
+function CreateLayout(buttons_IN, totalTime_IN, yLabel_IN)
+{
+	// We create the buttons and the user control options.
+	var updatemenus = [
+	{
+	    buttons: buttons_IN,
+	    direction: 'left',
+	    pad: {'r': 0, 't': 0},
+	    showactive: true,
+	    type: 'buttons',
+	    x: 0.0,
+	    xanchor: 'left',
+	    y: -0.58,
+	    yanchor: 'bottom'
+	}];
+
+	// We embed the user control options into the layout object.
+	var updateLayout = {
+	showlegend: false,	
+	xaxis: 
+	{
+		range: [-totalTime_IN, totalTime_IN],
+		title: 'Time [sec]',
+		titlefont:
+		{
+			color: '#ffffff'
+		},	
+		tickfont:
+		{
+			color: '#00ffff'
+		}	
+	},
+
+	yaxis: 
+	{
+		title: yLabel_IN,
+		titlefont:
+		{
+			color: '#ffffff'
+		},
+		tickfont:
+		{
+			color: '#00ffff'
+		}	
+	},	
+
+	shapes: [
+	{
+		type: 'line',
+		xref: 'paper',
+		yref: 'paper',
+		x0: 0.5,
+		y0: 0,
+		x1: 0.5,
+		y1: 1,
+		line: 
+		{
+			color: '#ffffff',
+			width: 2,
+			dash: 'dashdot'
+		}
+	}],
+
+	paper_bgcolor: 'rgba(0,0,0,0.5)',
+
+	plot_bgcolor: 'rgba(0,0,0,0.5)',  
+
+	margin: 
+	{
+		l: 50,
+		r: 10,
+		b: 20,
+		t: 10,
+		pad: 0
+	},
+
+	updatemenus: updatemenus
+	};	
+
+	return updateLayout;
+};
+
+// Grabs a column from a 2D matrix
+function ColumnGrabber(matrix_IN, columnIndex_IN)
+{
+	return matrix_IN.map(function(value,index) {return value[columnIndex_IN];});
+}
+
+// DATA COLLECTION \\
+// Collect data to be charted
+var totalTimeInSec = (stop.secondsOfDay-start.secondsOfDay)/60.0;
+
+// Collect start time of each data stream first.
+var initialTimeArray = [];
+
+// Initialize time arrays to be plotted on x-axis
+var positionTime = [];
+var positionSPTime = [];
+var attitudeTime = [];
+var setPointTime = [];
+var actuatorOutputTime = [];
+var attitudeRateSPTime =[];
+var sensorCombinedTime = [];
+var contTime = [];
+var rcTime = [];
+
+// Collect attitude data
+var attitude_RPY = [];
+var rollRate = [];
+var pitchRate = [];
+var yawRate = [];
+if(attitude_data.length != 0)
+{
+	attitude_RPY = ComputeRollPitchYaw(attitude_data);
+
+	// Collect attitude rate data
+	rollRate = ColumnGrabber(attitude_data,5);
+	pitchRate = ColumnGrabber(attitude_data,6);
+	yawRate = ColumnGrabber(attitude_data,7);
+
+	attitudeTime = ColumnGrabber(attitude_data,0);
+	initialTimeArray.push(Cesium.JulianDate.fromIso8601(attitudeTime[0]).secondsOfDay/60.0);	
+}
+
+// Collect attitude rate setpoint data
+var rollRateSP = [];
+var pitchRateSP = [];
+var yawRateSP = [];
+if(vehicle_rates_setpoint_data.length != 0)
+{
+	rollRateSP = ColumnGrabber(vehicle_rates_setpoint_data,1);
+	pitchRateSP = ColumnGrabber(vehicle_rates_setpoint_data,2);
+	yawRateSP = ColumnGrabber(vehicle_rates_setpoint_data,3);
+
+	attitudeRateSPTime = ColumnGrabber(vehicle_rates_setpoint_data,0);
+	initialTimeArray.push(Cesium.JulianDate.fromIso8601(attitudeRateSPTime[0]).secondsOfDay/60.0);	
+}
+
+
+var positionLocalX = [];
+var positionLocalY = [];
+var positionLocalZ = [];
+var positionLocalvX = [];
+var positionLocalvY = [];
+var positionLocalvZ = [];
+if(vehicle_local_position_data.length != 0)
+{
+	// Collect Position data
+	positionLocalX = ColumnGrabber(vehicle_local_position_data,1);
+	positionLocalY = ColumnGrabber(vehicle_local_position_data,2);
+	positionLocalZ = ColumnGrabber(vehicle_local_position_data,3);
+
+	// Collect Velocity Data
+	positionLocalvX = ColumnGrabber(vehicle_local_position_data,4);
+	positionLocalvY = ColumnGrabber(vehicle_local_position_data,5);
+	positionLocalvZ = ColumnGrabber(vehicle_local_position_data,6);	
+
+	positionTime = ColumnGrabber(vehicle_local_position_data,0);
+	initialTimeArray.push(Cesium.JulianDate.fromIso8601(positionTime[0]).secondsOfDay/60.0);	
+}
+
+// Collect Position setpoint data
+var positionLocalXSP = [];
+var positionLocalYSP = [];
+var positionLocalZSP = [];
+if(vehicle_local_position_setpoint_data.length != 0)
+{
+	positionLocalXSP = ColumnGrabber(vehicle_local_position_setpoint_data,1);
+	positionLocalYSP = ColumnGrabber(vehicle_local_position_setpoint_data,2);
+	positionLocalZSP = ColumnGrabber(vehicle_local_position_setpoint_data,3);
+}
+
+// Collect Velocity Setpoint Data
+var positionLocalvXSP = [];
+var positionLocalvYSP = [];
+var positionLocalvZSP = [];
+if(vehicle_local_position_setpoint_data.length != 0)
+{
+	positionLocalvXSP = ColumnGrabber(vehicle_local_position_setpoint_data,4);
+	positionLocalvYSP = ColumnGrabber(vehicle_local_position_setpoint_data,5);
+	positionLocalvZSP = ColumnGrabber(vehicle_local_position_setpoint_data,6);
+
+	positionSPTime = ColumnGrabber(vehicle_local_position_setpoint_data,0);
+	initialTimeArray.push(Cesium.JulianDate.fromIso8601(positionSPTime[0]).secondsOfDay/60.0);	
+}
+
+// Collect actuator outputs data
+var actuatorOutputs = [];
+var num_actuator_outputs = 0;
+if(actuator_outputs_data.length != 0)
+{
+	num_actuator_outputs = actuator_outputs_data[0].length - 1; // This only holds true because data is structured in a specific way.
+	for(var i = 1; i <= num_actuator_outputs; i++) 
+	{
+	    actuatorOutputs[i-1] = ColumnGrabber(actuator_outputs_data,i);
+	}
+
+	actuatorOutputTime = ColumnGrabber(actuator_outputs_data,0);
+	initialTimeArray.push(Cesium.JulianDate.fromIso8601(actuatorOutputTime[0]).secondsOfDay/60.0);	
+}
+
+// Collect attitude setpoint data
+var rollSP = [];
+var pitchSP = [];
+var yawSP = [];
+if(vehicle_attitude_setpoint_data.length != 0)
+{
+	rollSP = ColumnGrabber(vehicle_attitude_setpoint_data,1);
+	pitchSP = ColumnGrabber(vehicle_attitude_setpoint_data,2);
+	yawSP = ColumnGrabber(vehicle_attitude_setpoint_data,3);
+
+	setPointTime = ColumnGrabber(vehicle_attitude_setpoint_data,0);
+	initialTimeArray.push(Cesium.JulianDate.fromIso8601(setPointTime[0]).secondsOfDay/60.0);	
+}
+
+var rollGyro = [];
+var pitchGyro = [];
+var yawGyro = [];
+var xAccel = [];
+var yAccel = [];
+var zAccel = [];
+if(sensor_combined_data.length != 0)
+{
+	// Collect Raw Gyro	
+	rollGyro = ColumnGrabber(sensor_combined_data,1);
+	pitchGyro = ColumnGrabber(sensor_combined_data,2);
+	yawGyro = ColumnGrabber(sensor_combined_data,3);
+
+	// Collect Raw Accel
+	xAccel = ColumnGrabber(sensor_combined_data,4);
+	yAccel = ColumnGrabber(sensor_combined_data,5);
+	zAccel = ColumnGrabber(sensor_combined_data,6);	
+
+	sensorCombinedTime = ColumnGrabber(sensor_combined_data,0);
+	initialTimeArray.push(Cesium.JulianDate.fromIso8601(sensorCombinedTime[0]).secondsOfDay/60.0);	
+}
+
+// Collect actuator controls
+var contRoll = [];
+var contPitch = [];
+var contYaw = [];
+var contThrust = [];
+if(actuator_controls_0_data.length != 0)
+{
+	contRoll = ColumnGrabber(actuator_controls_0_data,1);
+	contPitch = ColumnGrabber(actuator_controls_0_data,2);
+	contYaw = ColumnGrabber(actuator_controls_0_data,3);
+	contThrust = ColumnGrabber(actuator_controls_0_data,4);
+
+	contTime = ColumnGrabber(actuator_controls_0_data,0);
+	initialTimeArray.push(Cesium.JulianDate.fromIso8601(contTime[0]).secondsOfDay/60.0);	
+}
+
+// Collect Manual control
+var rcRoll = [];
+var rcPitch = [];
+var rcThrust = [];
+var rcYaw = [];
+if(manual_control_setpoints.length != 0)
+{
+	rcRoll = ColumnGrabber(manual_control_setpoints,1);
+	rcPitch = ColumnGrabber(manual_control_setpoints,2);
+	rcThrust = ColumnGrabber(manual_control_setpoints,3);
+	rcYaw = ColumnGrabber(manual_control_setpoints,4);
+
+	rcTime = ColumnGrabber(manual_control_setpoints,0);
+	initialTimeArray.push(Cesium.JulianDate.fromIso8601(rcTime[0]).secondsOfDay/60.0);	
+}
+
+// Data collection is finished. Empty the unused arrays.
+attitude_data = [];
+vehicle_attitude_setpoint_data = [];
+vehicle_local_position_data = [];
+vehicle_local_position_setpoint_data = [];
+actuator_outputs_data = [];
+sensor_combined_data = [];
+actuator_controls_0_data = [];
+manual_control_setpoints = [];
+vehicle_rates_setpoint_data = [];
+
+// Rad-2-Deg Conversions \\
+rollRate = Rad2Deg(rollRate);
+pitchRate = Rad2Deg(pitchRate);
+yawRate = Rad2Deg(yawRate);
+
+rollSP = Rad2Deg(rollSP);
+pitchSP = Rad2Deg(pitchSP);
+yawSP = Rad2Deg(yawSP);
+
+rollRateSP = Rad2Deg(rollRateSP);
+pitchRateSP = Rad2Deg(pitchRateSP);
+yawRateSP = Rad2Deg(yawRateSP);
+
+rollGyro = Rad2Deg(rollGyro);
+pitchGyro = Rad2Deg(pitchGyro);
+yawGyro = Rad2Deg(yawGyro);    
+
+// Time Axis Building \\
+// Find the earliest data start time
+var initialTime = Math.min(...initialTimeArray);
+
+// Create x-axis array for attitude
+var attitudeXData = TimeAxisArrayBuilder(attitudeTime, initialTime);
+
+// Create x-axis array for attitude setpoint
+var attitudeSPXData = TimeAxisArrayBuilder(setPointTime, initialTime);
+
+// Create x-axis array for position data. Be careful with naming posLocalXData denotes x-axis data array. Not x-axis position on the map.
+var posLocalXData = TimeAxisArrayBuilder(positionTime, initialTime);
+
+// Create x-axis array for position setpoint data. 
+var posSPLocalXData = TimeAxisArrayBuilder(positionSPTime, initialTime);
+
+// Create x-axis array for actuator outputs.
+var actuatorOutputsXData = TimeAxisArrayBuilder(actuatorOutputTime, initialTime);
+
+// Create x-axis array attitude rate setpoint	
+var attitudeRateSPXData = TimeAxisArrayBuilder(attitudeRateSPTime, initialTime);
+
+// Create x-axis array for sensors combined
+var sensorCombinedXData = TimeAxisArrayBuilder(sensorCombinedTime, initialTime);	
+
+// Create x-axis array for actuator controls
+var controllerXData = TimeAxisArrayBuilder(contTime, initialTime);
+
+// Create x-axis array for rc setpoints
+var rcSPXData = TimeAxisArrayBuilder(rcTime, initialTime);		
+
+// Empty out unused arrays.
+attitudeTime = []
+setPointTime = []
+positionTime = []
+positionSPTime = []
+actuatorOutputTime = []
+attitudeRateSPTime = []
+sensorCombinedTime = []
+contTime = []
+rcTime = []
+						
+// BUTTON LAYOUT \\										
+// Buttons - Attitude
+var buttonsAttitude = CreateButton(['All','Roll','Pitch','Yaw'],[[true, true, true, false, false, false],[true, false, false, true, false, false],[false, true, false, false, true, false],[false, false, true, false, false, true]],[[{color: '#FF0000' }, {color: '#00FF00' },{color: '#154D9B' },{color: '#139709' }, {color: '#139709' },{color: '#139709' }],[{color: '#FF0000' }, {color: '#FF0000' },{color: '#FF0000' },{color: '#139709' }, {color: '#139709' },{color: '#139709' }],[{color: '#FF0000' }, {color: '#FF0000' },{color: '#FF0000' },{color: '#139709' }, {color: '#139709' },{color: '#139709' }],[{color: '#FF0000' }, {color: '#FF0000' },{color: '#FF0000' },{color: '#139709' }, {color: '#139709' },{color: '#139709' }]]);
+
+// Buttons - Position
+var buttonsPos = CreateButton(['All','X-Position','Y-Position','Z-Position'],[[true, true, true, false, false, false],[true, false, false, true, false, false],[false, true, false, false, true, false],[false, false, true, false, false, true]],[[{color: '#FF0000' }, {color: '#00FF00' },{color: '#154D9B' },{color: '#139709' }, {color: '#139709' },{color: '#139709' }],[{color: '#FF0000' }, {color: '#FF0000' },{color: '#FF0000' },{color: '#139709' }, {color: '#139709' },{color: '#139709' }],[{color: '#FF0000' }, {color: '#FF0000' },{color: '#FF0000' },{color: '#139709' }, {color: '#139709' },{color: '#139709' }],[{color: '#FF0000' }, {color: '#FF0000' },{color: '#FF0000' },{color: '#139709' }, {color: '#139709' },{color: '#139709' }]]);
+
+// Buttons - Angle/Attitude Rate
+var buttonsAngleRate = CreateButton(['All','Roll Rate','Pitch Rate','Yaw Rate'],[[true, true, true, false, false, false],[true, false, false, true, false, false],[false, true, false, false, true, false],[false, false, true, false, false, true]],[[{color: '#FF0000' }, {color: '#00FF00' },{color: '#154D9B' },{color: '#139709' }, {color: '#139709' },{color: '#139709' }],[{color: '#FF0000' }, {color: '#FF0000' },{color: '#FF0000' },{color: '#139709' }, {color: '#139709' },{color: '#139709' }], [{color: '#FF0000' }, {color: '#FF0000' },{color: '#FF0000' },{color: '#139709' }, {color: '#139709' },{color: '#139709' }], [{color: '#FF0000' }, {color: '#FF0000' },{color: '#FF0000' },{color: '#139709' }, {color: '#139709' },{color: '#139709' }]]);
+
+// Buttons - Velocity
+var buttonsVelocity = CreateButton(['All','X-Speed','Y-Speed','Z-Speed'],[[true, true, true, false, false, false],[true, false, false, true, false, false],[false, true, false, false, true, false],[false, false, true, false, false, true]],[[{color: '#FF0000' }, {color: '#00FF00' },{color: '#154D9B' },{color: '#139709' }, {color: '#139709' },{color: '#139709' }],[{color: '#FF0000' }, {color: '#FF0000' },{color: '#FF0000' },{color: '#139709' }, {color: '#139709' },{color: '#139709' }],[{color: '#FF0000' }, {color: '#FF0000' },{color: '#FF0000' },{color: '#139709' }, {color: '#139709' },{color: '#139709' }],[{color: '#FF0000' }, {color: '#FF0000' },{color: '#FF0000' },{color: '#139709' }, {color: '#139709' },{color: '#139709' }]]);
+
+// Buttons - Raw sensors
+var buttonsRawSensors = CreateButton(['Raw Gyro','Raw Accel'],[[true, true, true, false, false, false],[false, false, false, true, true, true]],[[{color: '#FF0000' }, {color: '#00FF00' },{color: '#154D9B' },{color: '#FF0000' }, {color: '#00FF00' },{color: '#154D9B' }],[{color: '#FF0000' }, {color: '#00FF00' },{color: '#154D9B' },{color: '#FF0000' }, {color: '#00FF00' },{color: '#154D9B' }]],['Rate [deg/s]','Accel. [m/s/s]']);
+		
+// Buttons - Actuator Controls and Manual Control Inputs
+buttonsControls = CreateButton(['Actuator Controls','Manual Control Inputs'], [[true, true, true, true, false, false, false, false],[false, false, false, false, true, true, true, true]]);
+
+// Buttons - Actuator Outputs
+var actOutputVisibility = new Array(num_actuator_outputs);
+for (var i = 0; i < actOutputVisibility.length; ++i) { actOutputVisibility[i] = true; }
+buttonsActuatorOutputs = CreateButton(['All'], [actOutputVisibility]);
+
+// 2D Charting Layouts \\
+// We create updatemenus first and then pass them into layout variables.
+var updateLayoutInitialAttitude = CreateLayout(buttonsAttitude, totalTimeInSec, 'Angle [deg]');
+var updateLayoutInitialPos = CreateLayout(buttonsPos, totalTimeInSec, 'Position [m]');
+var updateLayoutInitialAngleRate = CreateLayout(buttonsAngleRate, totalTimeInSec, 'Rate [deg/s]');
+
+// Initial data pack for the attitude chart.
+var dataInitialAttitude = [CreateTrace(attitudeXData, attitude_RPY.map(function(value,index) { return value[0]; }),'#FF0000','Roll',true), CreateTrace(attitudeXData, attitude_RPY.map(function(value,index) { return value[1]; }),'#00FF00','Pitch',true), CreateTrace(attitudeXData, attitude_RPY.map(function(value,index) { return value[2]; }),'#154D9B','Yaw',true),CreateTrace(attitudeSPXData,rollSP,'#139709','Roll Setpoint',false),CreateTrace(attitudeSPXData,pitchSP,'#139709','Pitch Setpoint',false),CreateTrace(attitudeSPXData,yawSP,'#139709','Yaw Setpoint',false)];
+
+// Initial data pack for the position chart.
+var dataInitialPos = [CreateTrace(posLocalXData, positionLocalX,'#FF0000','X-Pos', true), CreateTrace(posLocalXData, positionLocalY,'#00FF00','Y-Pos', true), CreateTrace(posLocalXData, positionLocalZ,'#154D9B','Z-Pos', true),CreateTrace(posSPLocalXData,positionLocalXSP,'#139709','X-Pos Setpoint',false),CreateTrace(posSPLocalXData,positionLocalYSP,'#139709','Y-Pos Setpoint',false),CreateTrace(posSPLocalXData,positionLocalZSP,'#139709','Z-Pos Setpoint',false)];
+
+// Initial data pack for the attitude rate chart.
+var dataInitialattitudeRate = [CreateTrace(attitudeXData, rollRate,'#FF0000','Roll Rate',true), CreateTrace(attitudeXData, pitchRate,'#00FF00','Pitch Rate',true), CreateTrace(attitudeXData, yawRate,'#154D9B','Yaw Rate',true),CreateTrace(attitudeRateSPXData,rollRateSP,'#139709','Roll Rate Setpoint',false),CreateTrace(attitudeRateSPXData,pitchRateSP,'#139709','Pitch Rate Setpoint',false),CreateTrace(attitudeRateSPXData,yawRateSP,'#139709','Yaw Rate Setpoint',false)];
+
+// Callback Functions \\
+function updateDataSet(input)
+{
+	// Update function didn't work so I just went with purge+plot. Slower but works.
+	Plotly.purge(dataChart)
+
+	switch (datasetSelector.value)
+	{
+		case 'Attitude':
+			var updateLayoutCallBackAttitude = CreateLayout(buttonsAttitude, totalTimeInSec, 'Angle [deg]');
+			var dataCallBackAttitude = [CreateTrace(attitudeXData, attitude_RPY.map(function(value,index) { return value[0]; }),'#FF0000','Roll',true), CreateTrace(attitudeXData, attitude_RPY.map(function(value,index) { return value[1]; }),'#00FF00','Pitch',true), CreateTrace(attitudeXData, attitude_RPY.map(function(value,index) { return value[2]; }),'#154D9B','Yaw',true),CreateTrace(attitudeSPXData,rollSP,'#139709','Roll Setpoint',false),CreateTrace(attitudeSPXData,pitchSP,'#139709','Pitch Setpoint',false),CreateTrace(attitudeSPXData,yawSP,'#139709','Yaw Setpoint',false)];
+			Plotly.plot(dataChart, dataCallBackAttitude, updateLayoutCallBackAttitude);
+
+			// Release variables
+			updateLayoutCallBackAttitude = [];
+			dataCallBackAttitude = [];
+
+			break;
+
+		case 'Attitude_Rate':
+			var updateLayoutCallBackAttitudeRate = CreateLayout(buttonsAngleRate, totalTimeInSec, 'Rate [deg/s]');
+			var dataCallBackAttitudeRate = [CreateTrace(attitudeXData, rollRate,'#FF0000','Roll Rate',true), CreateTrace(attitudeXData, pitchRate,'#00FF00','Pitch Rate',true), CreateTrace(attitudeXData, yawRate,'#154D9B','Yaw Rate',true),CreateTrace(attitudeRateSPXData,rollRateSP,'#139709','Roll Rate Setpoint',false),CreateTrace(attitudeRateSPXData,pitchRateSP,'#139709','Pitch Rate Setpoint',false),CreateTrace(attitudeRateSPXData,yawRateSP,'#139709','Yaw Rate Setpoint',false)];
+			Plotly.plot(dataChart, dataCallBackAttitudeRate, updateLayoutCallBackAttitudeRate);
+
+			// Release variables
+			updateLayoutCallBackAttitudeRate = [];
+			dataCallBackAttitudeRate = [];
+
+			break;
+
+		case 'Position':
+			var updateLayoutCallBackPos = CreateLayout(buttonsPos, totalTimeInSec, 'Position [m]');
+			var dataCallBackPos = [CreateTrace(posLocalXData, positionLocalX,'#FF0000','X-Pos', true), CreateTrace(posLocalXData, positionLocalY,'#00FF00','Y-Pos', true), CreateTrace(posLocalXData, positionLocalZ,'#154D9B','Z-Pos', true),CreateTrace(posSPLocalXData,positionLocalXSP,'#139709','X-Pos Setpoint',false),CreateTrace(posSPLocalXData,positionLocalYSP,'#139709','Y-Pos Setpoint',false),CreateTrace(posSPLocalXData,positionLocalZSP,'#139709','Z-Pos Setpoint',false)];
+			Plotly.plot(dataChart, dataCallBackPos, updateLayoutCallBackPos);
+
+			// Release variables
+			updateLayoutCallBackPos = [];
+			dataCallBackPos = [];
+
+			break;
+
+		case 'Velocity':
+			var updateLayoutCallBackVel = CreateLayout(buttonsVelocity, totalTimeInSec, 'Velocity [m/s]');
+			var dataCallBackVel = [CreateTrace(posLocalXData, positionLocalvX,'#FF0000','X-Vel', true), CreateTrace(posLocalXData, positionLocalvY,'#00FF00','Y-Vel', true), CreateTrace(posLocalXData, positionLocalvZ,'#154D9B','Z-Vel', true),CreateTrace(posSPLocalXData,positionLocalvXSP,'#139709','X-Vel Setpoint',false),CreateTrace(posSPLocalXData,positionLocalvYSP,'#139709','Y-Vel Setpoint',false),CreateTrace(posSPLocalXData,positionLocalvZSP,'#139709','Z-Vel Setpoint',false)];
+			Plotly.plot(dataChart, dataCallBackVel, updateLayoutCallBackVel);
+
+			// Release variables
+			updateLayoutCallBackVel = [];
+			dataCallBackVel = [];
+
+			break;
+
+		case 'Raw_Sensors':
+			var updateLayoutCallBackSensors = CreateLayout(buttonsRawSensors, totalTimeInSec, 'Rate [deg/s]');
+			var dataCallBackSensors = [CreateTrace(sensorCombinedXData, rollGyro,'#FF0000','Roll Gyro', true), CreateTrace(sensorCombinedXData, pitchGyro,'#00FF00','Pitch Gyro', true), CreateTrace(sensorCombinedXData, yawGyro,'#154D9B','Yaw Gyro', true),CreateTrace(sensorCombinedXData,xAccel,'#FF0000','X Accel',false),CreateTrace(sensorCombinedXData,yAccel,'#00FF00','Y Accel',false),CreateTrace(sensorCombinedXData,zAccel,'#139709','Z Accel',false)];
+			Plotly.plot(dataChart, dataCallBackSensors, updateLayoutCallBackSensors);
+
+			// Release variables
+			updateLayoutCallBackSensors = [];
+			dataCallBackSensors = [];
+
+			break;
+
+		case 'Controls':
+			var updateLayoutCallBackControls = CreateLayout(buttonsControls, totalTimeInSec, 'N.A.');
+			var dataCallBackControls = [CreateTrace(controllerXData, contRoll,'#FF0000','Cont. Roll', true), CreateTrace(controllerXData, contPitch,'#00FF00','Cont. Pitch', true), CreateTrace(controllerXData, contYaw,'#154D9B','Cont. Yaw', true), CreateTrace(controllerXData,contThrust,'#F5FF39','Cont. Thrust',true),CreateTrace(rcSPXData,rcRoll,'#FF0000','RC Roll',false),CreateTrace(rcSPXData,rcPitch,'#00FF00','RC Pitch',false),CreateTrace(rcSPXData,rcYaw,'#154D9B','RC Yaw',false), CreateTrace(rcSPXData,rcThrust,'#F5FF39','RC Thrust',false)];
+			Plotly.plot(dataChart, dataCallBackControls, updateLayoutCallBackControls);
+
+			// Release variables
+			updateLayoutCallBackControls = [];
+			dataCallBackControls = [];
+
+			break;
+
+		case 'Actuator_Outputs':
+			var updateLayoutCallBackActuatorOutputs = CreateLayout(buttonsActuatorOutputs, totalTimeInSec, 'P.W.M. [us]');
+			var figureDataActOut = [];
+			for(var i = 0; i < num_actuator_outputs; i++) 
+			{
+				figureDataActOut[i] = CreateTrace(actuatorOutputsXData, actuatorOutputs[i],colors8[i],'Output '+i.toString());
+			}
+			Plotly.plot(dataChart, figureDataActOut, updateLayoutCallBackActuatorOutputs);
+
+			// Release variables
+			updateLayoutCallBackActuatorOutputs = [];
+			figureDataActOut = [];
+
+			break;			
+	};
+}
+
+// Callback function for dropdown menu.
+function updateDataSet2(input)
+{
+	// Update function didn't work so I just went purge. Probably slower but works.
+	Plotly.purge(dataChart2)
+	switch (datasetSelector2.value)
+	{
+		case 'Attitude':
+			var updateLayoutCallBackAttitude = CreateLayout(buttonsAttitude, totalTimeInSec, 'Angle [deg]');
+			var dataCallBackAttitude = [CreateTrace(attitudeXData, attitude_RPY.map(function(value,index) { return value[0]; }),'#FF0000','Roll',true), CreateTrace(attitudeXData, attitude_RPY.map(function(value,index) { return value[1]; }),'#00FF00','Pitch',true), CreateTrace(attitudeXData, attitude_RPY.map(function(value,index) { return value[2]; }),'#154D9B','Yaw',true),CreateTrace(attitudeSPXData,rollSP,'#139709','Roll Setpoint',false),CreateTrace(attitudeSPXData,pitchSP,'#139709','Pitch Setpoint',false),CreateTrace(attitudeSPXData,yawSP,'#139709','Yaw Setpoint',false)];
+			Plotly.plot(dataChart2, dataCallBackAttitude, updateLayoutCallBackAttitude);
+
+			// Release variables
+			updateLayoutCallBackAttitude = [];
+			dataCallBackAttitude = [];
+
+			break;
+
+		case 'Attitude_Rate':
+			var updateLayoutCallBackAttitudeRate = CreateLayout(buttonsAngleRate, totalTimeInSec, 'Rate [deg/s]');
+			var dataCallBackAttitudeRate = [CreateTrace(attitudeXData, rollRate,'#FF0000','Roll Rate',true), CreateTrace(attitudeXData, pitchRate,'#00FF00','Pitch Rate',true), CreateTrace(attitudeXData, yawRate,'#154D9B','Yaw Rate',true),CreateTrace(attitudeRateSPXData,rollRateSP,'#139709','Roll Rate Setpoint',false),CreateTrace(attitudeRateSPXData,pitchRateSP,'#139709','Pitch Rate Setpoint',false),CreateTrace(attitudeRateSPXData,yawRateSP,'#139709','Yaw Rate Setpoint',false)];
+			Plotly.plot(dataChart2, dataCallBackAttitudeRate, updateLayoutCallBackAttitudeRate);
+
+			// Release variables
+			updateLayoutCallBackAttitudeRate = [];
+			dataCallBackAttitudeRate = [];
+			break;
+
+		case 'Position':
+			var updateLayoutCallBackPos = CreateLayout(buttonsPos, totalTimeInSec, 'Position [m]');
+			var dataCallBackPos = [CreateTrace(posLocalXData, positionLocalX,'#FF0000','X-Pos', true), CreateTrace(posLocalXData, positionLocalY,'#00FF00','Y-Pos', true), CreateTrace(posLocalXData, positionLocalZ,'#154D9B','Z-Pos', true),CreateTrace(posSPLocalXData,positionLocalXSP,'#139709','X-Pos Setpoint',false),CreateTrace(posSPLocalXData,positionLocalYSP,'#139709','Y-Pos Setpoint',false),CreateTrace(posSPLocalXData,positionLocalZSP,'#139709','Z-Pos Setpoint',false)];
+			Plotly.plot(dataChart2, dataCallBackPos, updateLayoutCallBackPos);
+
+			// Release variables
+			updateLayoutCallBackPos = [];
+			dataCallBackPos = [];
+
+			break;
+
+		case 'Velocity':
+			var updateLayoutCallBackVel = CreateLayout(buttonsVelocity, totalTimeInSec, 'Velocity [m/s]');
+			var dataCallBackVel = [CreateTrace(posLocalXData, positionLocalvX,'#FF0000','X-Vel', true), CreateTrace(posLocalXData, positionLocalvY,'#00FF00','Y-Vel', true), CreateTrace(posLocalXData, positionLocalvZ,'#154D9B','Z-Vel', true),CreateTrace(posSPLocalXData,positionLocalvXSP,'#139709','X-Vel Setpoint',false),CreateTrace(posSPLocalXData,positionLocalvYSP,'#139709','Y-Vel Setpoint',false),CreateTrace(posSPLocalXData,positionLocalvZSP,'#139709','Z-Vel Setpoint',false)];
+			Plotly.plot(dataChart2, dataCallBackVel, updateLayoutCallBackVel);
+
+			// Release variables
+			updateLayoutCallBackVel = [];
+			dataCallBackVel = [];
+
+			break;		
+
+		case 'Raw_Sensors':
+			var updateLayoutCallBackSensors = CreateLayout(buttonsRawSensors, totalTimeInSec, 'Rate [deg/s]');
+			var dataCallBackSensors = [CreateTrace(sensorCombinedXData, rollGyro,'#FF0000','Roll Gyro', true), CreateTrace(sensorCombinedXData, pitchGyro,'#00FF00','Pitch Gyro', true), CreateTrace(sensorCombinedXData, yawGyro,'#154D9B','Yaw Gyro', true),CreateTrace(sensorCombinedXData,xAccel,'#FF0000','X Accel',false),CreateTrace(sensorCombinedXData,yAccel,'#00FF00','Y Accel',false),CreateTrace(sensorCombinedXData,zAccel,'#139709','Z Accel',false)];
+			Plotly.plot(dataChart2, dataCallBackSensors, updateLayoutCallBackSensors);
+
+			// Release variables
+			updateLayoutCallBackSensors = [];
+			dataCallBackSensors = [];
+
+			break;		
+
+		case 'Controls':
+			var updateLayoutCallBackControls = CreateLayout(buttonsControls, totalTimeInSec, 'N.A.');
+			var dataCallBackControls = [CreateTrace(controllerXData, contRoll,'#FF0000','Cont. Roll', true), CreateTrace(controllerXData, contPitch,'#00FF00','Cont. Pitch', true), CreateTrace(controllerXData, contYaw,'#154D9B','Cont. Yaw', true), CreateTrace(controllerXData,contThrust,'#F5FF39','Cont. Thrust',true),CreateTrace(rcSPXData,rcRoll,'#FF0000','RC Roll',false),CreateTrace(rcSPXData,rcPitch,'#00FF00','RC Pitch',false),CreateTrace(rcSPXData,rcYaw,'#154D9B','RC Yaw',false), CreateTrace(rcSPXData,rcThrust,'#F5FF39','RC Thrust',false)];
+			Plotly.plot(dataChart2, dataCallBackControls, updateLayoutCallBackControls);
+
+			// Release variables
+			updateLayoutCallBackControls = [];
+			dataCallBackControls = [];
+
+			break;			
+
+		case 'Actuator_Outputs':
+			var updateLayoutCallBackActuatorOutputs = CreateLayout(buttonsActuatorOutputs, totalTimeInSec, 'P.W.M. [us]');
+			var figureDataActOut = []
+			for(var i = 0; i < num_actuator_outputs; i++) 
+			{
+				figureDataActOut[i] = CreateTrace(actuatorOutputsXData, actuatorOutputs[i],colors8[i],'Output '+i.toString());
+			}
+			Plotly.plot(dataChart2, figureDataActOut, updateLayoutCallBackActuatorOutputs);
+
+			// Release variables
+			updateLayoutCallBackActuatorOutputs = [];
+			figureDataActOut = [];
+
+			break;					
+	};
+}
+
+// Callback function for dropdown menu.
+function updateDataSet3(input)
+{
+	// Update function didn't work so I just went with purge+plot. Slower but works.
+	Plotly.purge(dataChart3)
+	switch (datasetSelector3.value)
+	{
+		case 'Attitude':
+			var updateLayoutCallBackAttitude = CreateLayout(buttonsAttitude, totalTimeInSec, 'Angle [deg]');
+			var dataCallBackAttitude = [CreateTrace(attitudeXData, attitude_RPY.map(function(value,index) { return value[0]; }),'#FF0000','Roll',true), CreateTrace(attitudeXData, attitude_RPY.map(function(value,index) { return value[1]; }),'#00FF00','Pitch',true), CreateTrace(attitudeXData, attitude_RPY.map(function(value,index) { return value[2]; }),'#154D9B','Yaw',true),CreateTrace(attitudeSPXData,rollSP,'#139709','Roll Setpoint',false),CreateTrace(attitudeSPXData,pitchSP,'#139709','Pitch Setpoint',false),CreateTrace(attitudeSPXData,yawSP,'#139709','Yaw Setpoint',false)];
+			Plotly.plot(dataChart3, dataCallBackAttitude, updateLayoutCallBackAttitude);
+
+			// Release variables
+			updateLayoutCallBackAttitude = [];
+			dataCallBackAttitude = [];
+
+			break;
+
+		case 'Attitude_Rate':
+			var updateLayoutCallBackAttitudeRate = CreateLayout(buttonsAngleRate, totalTimeInSec, 'Rate [deg/s]');
+			var dataCallBackAttitudeRate = [CreateTrace(attitudeXData, rollRate,'#FF0000','Roll Rate',true), CreateTrace(attitudeXData, pitchRate,'#00FF00','Pitch Rate',true), CreateTrace(attitudeXData, yawRate,'#154D9B','Yaw Rate',true),CreateTrace(attitudeRateSPXData,rollRateSP,'#139709','Roll Rate Setpoint',false),CreateTrace(attitudeRateSPXData,pitchRateSP,'#139709','Pitch Rate Setpoint',false),CreateTrace(attitudeRateSPXData,yawRateSP,'#139709','Yaw Rate Setpoint',false)];
+			Plotly.plot(dataChart3, dataCallBackAttitudeRate, updateLayoutCallBackAttitudeRate);
+
+			// Release variables
+			updateLayoutCallBackAttitudeRate = [];
+			dataCallBackAttitudeRate = [];
+			break;
+
+		case 'Position':
+			var updateLayoutCallBackPos = CreateLayout(buttonsPos, totalTimeInSec, 'Position [m]');
+			var dataCallBackPos = [CreateTrace(posLocalXData, positionLocalX,'#FF0000','X-Pos', true), CreateTrace(posLocalXData, positionLocalY,'#00FF00','Y-Pos', true), CreateTrace(posLocalXData, positionLocalZ,'#154D9B','Z-Pos', true),CreateTrace(posSPLocalXData,positionLocalXSP,'#139709','X-Pos Setpoint',false),CreateTrace(posSPLocalXData,positionLocalYSP,'#139709','Y-Pos Setpoint',false),CreateTrace(posSPLocalXData,positionLocalZSP,'#139709','Z-Pos Setpoint',false)];
+			Plotly.plot(dataChart3, dataCallBackPos, updateLayoutCallBackPos);
+
+			// Release variables
+			updateLayoutCallBackPos = [];
+			dataCallBackPos = [];
+
+			break;
+
+		case 'Velocity':
+			var updateLayoutCallBackVel = CreateLayout(buttonsVelocity, totalTimeInSec, 'Velocity [m/s]');
+			var dataCallBackVel = [CreateTrace(posLocalXData, positionLocalvX,'#FF0000','X-Vel', true), CreateTrace(posLocalXData, positionLocalvY,'#00FF00','Y-Vel', true), CreateTrace(posLocalXData, positionLocalvZ,'#154D9B','Z-Vel', true),CreateTrace(posSPLocalXData,positionLocalvXSP,'#139709','X-Vel Setpoint',false),CreateTrace(posSPLocalXData,positionLocalvYSP,'#139709','Y-Vel Setpoint',false),CreateTrace(posSPLocalXData,positionLocalvZSP,'#139709','Z-Vel Setpoint',false)];
+			Plotly.plot(dataChart3, dataCallBackVel, updateLayoutCallBackVel);
+
+			// Release variables
+			updateLayoutCallBackVel = [];
+			dataCallBackVel = [];
+
+			break;		
+
+		case 'Raw_Sensors':
+			var updateLayoutCallBackSensors = CreateLayout(buttonsRawSensors, totalTimeInSec, 'Rate [deg/s]');
+			var dataCallBackSensors = [CreateTrace(sensorCombinedXData, rollGyro,'#FF0000','Roll Gyro', true), CreateTrace(sensorCombinedXData, pitchGyro,'#00FF00','Pitch Gyro', true), CreateTrace(sensorCombinedXData, yawGyro,'#154D9B','Yaw Gyro', true),CreateTrace(sensorCombinedXData,xAccel,'#FF0000','X Accel',false),CreateTrace(sensorCombinedXData,yAccel,'#00FF00','Y Accel',false),CreateTrace(sensorCombinedXData,zAccel,'#139709','Z Accel',false)];
+			Plotly.plot(dataChart3, dataCallBackSensors, updateLayoutCallBackSensors);
+
+			// Release variables
+			updateLayoutCallBackSensors = [];
+			dataCallBackSensors = [];
+
+			break;				
+
+		case 'Controls':
+			var updateLayoutCallBackControls = CreateLayout(buttonsControls, totalTimeInSec, 'N.A.');
+			var dataCallBackControls = [CreateTrace(controllerXData, contRoll,'#FF0000','Cont. Roll', true), CreateTrace(controllerXData, contPitch,'#00FF00','Cont. Pitch', true), CreateTrace(controllerXData, contYaw,'#154D9B','Cont. Yaw', true), CreateTrace(controllerXData,contThrust,'#F5FF39','Cont. Thrust',true),CreateTrace(rcSPXData,rcRoll,'#FF0000','RC Roll',false),CreateTrace(rcSPXData,rcPitch,'#00FF00','RC Pitch',false),CreateTrace(rcSPXData,rcYaw,'#154D9B','RC Yaw',false), CreateTrace(rcSPXData,rcThrust,'#F5FF39','RC Thrust',false)];
+			Plotly.plot(dataChart3, dataCallBackControls, updateLayoutCallBackControls);
+
+			// Release variables
+			updateLayoutCallBackControls = [];
+			dataCallBackControls = [];
+
+			break;				
+
+		case 'Actuator_Outputs':
+			var updateLayoutCallBackActuatorOutputs = CreateLayout(buttonsActuatorOutputs, totalTimeInSec, 'P.W.M. [us]');
+			var figureDataActOut = []
+			for(var i = 0; i < num_actuator_outputs; i++) 
+			{
+				figureDataActOut[i] = CreateTrace(actuatorOutputsXData, actuatorOutputs[i],colors8[i],'Output '+i.toString());
+			}
+			Plotly.plot(dataChart3, figureDataActOut, updateLayoutCallBackActuatorOutputs);
+
+			// Release variables
+			updateLayoutCallBackActuatorOutputs = [];
+			figureDataActOut = [];
+
+			break;			
+	};
+}
+
+// Grab the dropdown menu from html and add a listener
+var datasetSelector = document.querySelector('.DataSet');
+datasetSelector.addEventListener('change', updateDataSet, false);
+
+var datasetSelector2 = document.querySelector('.DataSet2');
+datasetSelector2.addEventListener('change', updateDataSet2, false);
+
+var datasetSelector3 = document.querySelector('.DataSet3');
+datasetSelector3.addEventListener('change', updateDataSet3, false);
+
+// Selim's addition for plot.ly.
+dataChart = document.getElementById('Chart2D_Left');
+
+dataChart2 = document.getElementById('Chart2D_Right');
+
+dataChart3 = document.getElementById('Chart2D_Bottom');
+
+// Pass data and layout as variables for better code readability.
+Plotly.plot( dataChart, dataInitialPos, updateLayoutInitialPos);
+
+Plotly.plot( dataChart2, dataInitialattitudeRate, updateLayoutInitialAngleRate);
+
+Plotly.plot( dataChart3, dataInitialAttitude, updateLayoutInitialAttitude);
+
+// Used for moving the x-axis right/left in play-mode
+var dummyVariable = 0;
 
 // Radio Controller
 radio_controller.init(document.getElementById('radio-controller'), 300, 200);
+
 // update the radio whenever the time changes
 viewer.clock.onTick.addEventListener(function(clock) {
 	 var manual_sp = manualControlSetpointsProperty.getValue(clock.currentTime);
@@ -401,11 +1277,15 @@ viewer.clock.onTick.addEventListener(function(clock) {
 		 // this is mode 2 (map throttle from [0, 1] to [-1, 1])
 		 radio_controller.updateSticks(manual_sp.w, manual_sp.z*2.-1.,
 			 manual_sp.y, manual_sp.x);
+
 	 }
 
 	 // stick history
 	 var stick_history = [];
 	 var time = clock.currentTime.clone();
+
+	 //console.log(time.secondsOfDay)
+
 	 for (var i = 0; i < 30; ++i) {
 		 manual_sp = manualControlSetpointsProperty.getValue(time);
 		 if (manual_sp !== undefined) {
@@ -417,8 +1297,14 @@ viewer.clock.onTick.addEventListener(function(clock) {
 	 radio_controller.updateHistory(stick_history);
 
 	 radio_controller.redraw();
-});
 
+	// Updates for 2D charting are made with the radio panel.
+	dummyVariable = (time.secondsOfDay - start.secondsOfDay) /60.0;
+	var update = {xaxis:  {range: [-totalTimeInSec+dummyVariable, totalTimeInSec+dummyVariable],tickfont:{color: '#00ffff'}}}
+	Plotly.relayout(dataChart, update)	 
+	Plotly.relayout(dataChart2, update)	
+	Plotly.relayout(dataChart3, update)	
+});
 
 // additional keyboard handling
 document.addEventListener('keyup', function(e) {
@@ -473,10 +1359,11 @@ Cesium.knockout.getObservable(viewModel, 'track_vehicle').subscribe(
     }
 );
 
-
 // initial view: show the vehicle from top
 viewer.zoomTo(entity, new Cesium.HeadingPitchRange(0,
 	Cesium.Math.toRadians(-90), 200));
+
+
 
   </script>
 </body>
