@@ -143,7 +143,7 @@ class TemporaryFileStreamedPart(StreamedPart):
         the temporary file to a different location. If you do not call the
         move() method, then the file will be deleted when release() is called.
         """
-        super(TemporaryFileStreamedPart, self).__init__(streamer, headers)
+        super().__init__(streamer, headers)
         self.is_moved = False
         self.is_finalized = False
         self.f_out = tempfile.NamedTemporaryFile(dir=tmp_dir, delete=False)
@@ -161,7 +161,7 @@ class TemporaryFileStreamedPart(StreamedPart):
             self.f_out.flush()
             self.is_finalized = True
         finally:
-            super(TemporaryFileStreamedPart, self).finalize()
+            super().finalize()
 
     def move(self, file_path):
         """Move the temporary file to a new location.
@@ -189,7 +189,7 @@ class TemporaryFileStreamedPart(StreamedPart):
                 self.f_out.close()
                 os.unlink(self.f_out.name)
         finally:
-            super(TemporaryFileStreamedPart, self).release()
+            super().release()
 
     def get_payload(self):
         """Load part data from disk and return it.

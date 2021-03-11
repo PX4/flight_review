@@ -116,7 +116,7 @@ The analysis may take a while...
                                       [time_controls[0], time_controls[-1]])
 
         p = data_plot.bokeh_plot
-        p.patch(time_controls, thrust, line_width=0, fill_color='#555555',
+        p.patch(time_controls, thrust, line_width=0, fill_color='#555555', # pylint: disable=too-many-function-args
                 fill_alpha=0.4, alpha=0, legend_label='Thrust [0, {:}]'.format(thrust_max))
 
         data_plot.change_dataset(rate_topic_name)

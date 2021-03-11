@@ -543,7 +543,7 @@ class StatisticsPlots:
         x = data_hours['x']
         x2 = np.hstack((x[::-1], x))
         for i in range(len(all_data)):
-            area.patch(x2, stacked_patches[i], color=colors[i],
+            area.patch(x2, stacked_patches[i], color=colors[i], # pylint: disable=too-many-function-args
                        legend_label=label_cb(all_data[i], False), alpha=0.8, line_color=None)
 
         if area.legend:

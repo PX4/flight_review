@@ -302,14 +302,14 @@ class UploadHandler(TornadoRequestHandlerBase):
             except CustomHTTPError:
                 raise
 
-            except ULogException:
+            except ULogException as e:
                 raise CustomHTTPError(
                     400,
-                    'Failed to parse the file. It is most likely corrupt.')
-            except:
+                    'Failed to parse the file. It is most likely corrupt.') from e
+            except Exception as e:
                 print('Error when handling POST data', sys.exc_info()[0],
                       sys.exc_info()[1])
-                raise CustomHTTPError(500)
+                raise CustomHTTPError(500) from e
 
             finally:
                 self.multipart_streamer.release_parts()

@@ -46,7 +46,7 @@ class ThreeDHandler(TornadoRequestHandlerBase):
                 400,
                 'The log does not contain all required topics<br />'
                 '(vehicle_gps_position, vehicle_global_position, '
-                'vehicle_attitude)')
+                'vehicle_attitude)') from error
 
         # manual control setpoint is optional
         manual_control_setpoint = None

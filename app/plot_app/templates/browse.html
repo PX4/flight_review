@@ -50,7 +50,6 @@ this script</a> for automated download of public log files.
 <script type="text/javascript">
 
 $(document).ready(function() {
-    console.log("test");
 	$('#logs_table').DataTable({
 {% if initial_search %}
         "search": {
@@ -85,7 +84,6 @@ $(document).ready(function() {
             "ajax": "browse_data_retrieval",
     });
     var table = $('#logs_table').DataTable();
-    console.log("table!",table);
     table.on('xhr', function () {
         
         try {
@@ -100,7 +98,6 @@ $(document).ready(function() {
             }
             window.history.replaceState(null, null, url);
         } catch (e) {
-            console.log("Failed")
         }
     });
 

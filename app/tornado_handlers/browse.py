@@ -211,8 +211,8 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
                 if columns is None:
                     continue
 
-                if any([search_str in str(column).lower() for column in \
-                        (columns.columns, columns.search_only_columns)]):
+                if any(search_str in str(column).lower() for column in \
+                        (columns.columns, columns.search_only_columns)):
                     if data_start <= filtered_counter < data_start + data_length:
                         json_output['data'].append(columns.columns)
                     filtered_counter += 1
@@ -244,7 +244,6 @@ class BrowseHandler(tornado.web.RequestHandler):
         template_args = {}
 
         search_str = self.get_argument('search', '').lower()
-        print("Browse!")
         if len(search_str) > 0:
             template_args['initial_search'] = json.dumps(search_str)
 
