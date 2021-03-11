@@ -30,7 +30,6 @@ if GET_arguments is not None and 'stats' in GET_arguments:
 
     plots = []
     start_time = timer()
-
     statistics = StatisticsPlots(plot_config, debug_verbose_output())
 
     print_timing("Data Loading Stats", start_time)
