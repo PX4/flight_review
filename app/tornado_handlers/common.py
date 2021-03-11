@@ -29,7 +29,7 @@ class CustomHTTPError(tornado.web.HTTPError):
     """ simple class for HTTP exceptions with a custom error message """
     def __init__(self, status_code, error_message=None):
         self.error_message = error_message
-        super(CustomHTTPError, self).__init__(status_code, error_message)
+        super().__init__(status_code, error_message)
 
 class TornadoRequestHandlerBase(tornado.web.RequestHandler):
     """

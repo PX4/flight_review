@@ -2,7 +2,7 @@
 import configparser
 import os
 
-#pylint: disable=bad-whitespace, invalid-name
+#pylint: disable=invalid-name
 
 # load the config
 _conf = configparser.ConfigParser()

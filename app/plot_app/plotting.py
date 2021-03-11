@@ -732,7 +732,7 @@ class DataPlot2D(DataPlot):
                  y_axis_label=None, title=None, plot_height='normal',
                  equal_aspect=True):
 
-        super(DataPlot2D, self).__init__(data, config, data_name,
+        super().__init__(data, config, data_name,
                                          x_axis_label=x_axis_label,
                                          y_axis_label=y_axis_label,
                                          title=title, plot_height=plot_height)
@@ -796,7 +796,7 @@ class DataPlotSpec(DataPlot):
                  y_axis_label=None, title=None, plot_height='small',
                  x_range=None, y_range=None, topic_instance=0):
 
-        super(DataPlotSpec, self).__init__(data, config, data_name, x_axis_label=x_axis_label,
+        super().__init__(data, config, data_name, x_axis_label=x_axis_label,
                                            y_axis_label=y_axis_label, title=title, plot_height=plot_height,
                                            x_range=x_range, y_range=y_range, topic_instance=topic_instance)
 
@@ -898,7 +898,7 @@ class DataPlotFFT(DataPlot):
                  title=None, plot_height='small',
                  x_range=None, y_range=None, topic_instance=0):
 
-        super(DataPlotFFT, self).__init__(data, config, data_name, x_axis_label='Hz',
+        super().__init__(data, config, data_name, x_axis_label='Hz',
                                           y_axis_label='Amplitude * 1000', title=title, plot_height=plot_height,
                                           x_range=x_range, y_range=y_range, topic_instance=topic_instance)
         self._use_time_formatter = False
@@ -955,12 +955,11 @@ class DataPlotFFT(DataPlot):
                     step_size = int(len(fft_plot_values) / max_num_data_points)
                     fft_plot_values = fft_plot_values[::step_size]
                     freqs_plot = freqs_plot[::step_size]
-                self._p.line(freqs_plot, fft_plot_values,
-                             line_color=color, line_width=2, legend_label=legend,
-                             alpha=0.8)
+                self._p.line(freqs_plot, fft_plot_values, # pylint: disable=too-many-function-args
+                             line_color=color, line_width=2, legend_label=legend, alpha=0.8)
             # plot the mean lines above the fft graphs
             for fft_values, mean_fft_value, legend, color in plot_data:
-                self._p.line([mean_start_freq, np.max(freqs)],
+                self._p.line([mean_start_freq, np.max(freqs)], # pylint: disable=too-many-function-args
                              [mean_fft_value, mean_fft_value],
                              line_color=color, line_width=2, legend_label=legend)
 

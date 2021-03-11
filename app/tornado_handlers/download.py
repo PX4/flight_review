@@ -108,9 +108,9 @@ class DownloadHandler(TornadoRequestHandlerBase):
                                      style=style,
                                      camera_trigger_topic_name='camera_capture')
                     shutil.move(temp_file_name, kml_file_name)
-                except:
+                except Exception as e:
                     print('Error creating KML file', sys.exc_info()[0], sys.exc_info()[1])
-                    raise CustomHTTPError(400, 'No Position Data in log')
+                    raise CustomHTTPError(400, 'No Position Data in log') from e
 
 
             kml_dl_file_name = get_original_filename('track.kml', '.kml')

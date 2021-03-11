@@ -318,7 +318,7 @@ def load_ulog_file(file_name):
     # catch all other exceptions and turn them into an ULogException
     except Exception as error:
         traceback.print_exception(*sys.exc_info())
-        raise ULogException()
+        raise ULogException() from error
 
     # filter messages with timestamp = 0 (these are invalid).
     # The better way is not to publish such messages in the first place, and fix
