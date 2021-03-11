@@ -1,8 +1,6 @@
 """ configuration variables """
-
 import configparser
 import os
-
 
 #pylint: disable=bad-whitespace, invalid-name
 

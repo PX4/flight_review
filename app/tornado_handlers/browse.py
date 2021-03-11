@@ -244,6 +244,7 @@ class BrowseHandler(tornado.web.RequestHandler):
         template_args = {}
 
         search_str = self.get_argument('search', '').lower()
+        print("Browse!")
         if len(search_str) > 0:
             template_args['initial_search'] = json.dumps(search_str)
 

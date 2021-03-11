@@ -1,10 +1,12 @@
 version: "3.3"
 services:
+  # nginx:
+  #   image: nginx
   srv:
-    image: px4flightreview
+    # image: px4flightreview
     build:
-      context: ../
-      dockerfile: ./docker/Dockerfile
+      context: ./app
+      dockerfile: Dockerfile
     restart: always
     network_mode: bridge
     ports:
@@ -14,5 +16,5 @@ services:
       # PORT: "5006"
       # DOMAIN: "test.ru"
     volumes:
-      - ../data:/opt/service/data
-      - ../config_default.ini:/opt/service/config_default.ini:ro
+      - ./data:/opt/service/data
+      - ./app/config_default.ini:/opt/service/config_default.ini:ro

@@ -460,7 +460,6 @@ class StatisticsPlots:
         versions = [] # sorted list of all versions
         for ver in sorted(self._version_data, key=functools.cmp_to_key(_Log.compare_version)):
             versions.append(ver)
-
             # all data points of the requested type for this version
             version_type_data = getattr(self._version_data[ver],
                                         version_attr_name)
@@ -469,7 +468,6 @@ class StatisticsPlots:
                 if not d in version_type_data:
                     version_type_data[d] = 0.
                 data_hours[d].append(version_type_data[d])
-
 
         # cumulative over each version
         for key in all_data:
@@ -511,17 +509,18 @@ class StatisticsPlots:
         # all versions)
         grouping_factor = 3 # higher=stronger grouping, 0=disabled
         versions_spaced = []
-        prev_version = versions[0]
-        for i in range(len(versions)):
-            version = versions[i]
-            if prev_version.split('.')[0:2] == version.split('.')[0:2]:
-                version_display = 'x.'+version.split('.')[2]
-            else:
-                versions_spaced.extend(['']*grouping_factor)
-                version_display = version
-            data_hours['x'][i] = len(versions_spaced)
-            versions_spaced.append(version_display)
-            prev_version = version
+        if len(versions) > 0:
+            prev_version = versions[0]
+            for i in range(len(versions)):
+                version = versions[i]
+                if prev_version.split('.')[0:2] == version.split('.')[0:2]:
+                    version_display = 'x.'+version.split('.')[2]
+                else:
+                    versions_spaced.extend(['']*grouping_factor)
+                    version_display = version
+                data_hours['x'][i] = len(versions_spaced)
+                versions_spaced.append(version_display)
+                prev_version = version
 
         # hover tool
         if is_flight_hours:
