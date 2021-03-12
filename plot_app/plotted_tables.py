@@ -418,7 +418,7 @@ def get_hardfault_html(ulog):
     <p class="card-text">
         This log contains hardfault data from a software crash
         (see <a style="color:#fff; text-decoration: underline;"
-        href="https://dev.px4.io/en/debug/gdb_debugging.html#debugging-hard-faults-in-nuttx">
+        href="https://docs.px4.io/master/en/debug/gdb_debugging.html#hard-fault-debugging">
         here</a> how to debug).
         <br/>
         The hardfault data is shown below.
