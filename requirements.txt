@@ -3,7 +3,7 @@ jinja2
 jupyter
 pyfftw
 pylint
-pyulog
+pyulog>=0.9
 requests
 scipy==1.3.3
 simplekml

@@ -50,6 +50,7 @@ __VERBOSE_OUTPUT = int(_conf.get('debug', 'verbose_output'))
 plot_width = 840
 
 plot_color_blue = '#2877a2' # or: #3539e0
+plot_color_red = '#e0212d'
 
 plot_config = dict(
     maps_line_color = plot_color_blue,
@@ -61,7 +62,7 @@ plot_config = dict(
         ),
     )
 
-colors3 = ['#e0212d', '#208900', plot_color_blue]
+colors3 = [plot_color_red, '#208900', plot_color_blue]
 colors2 = [colors3[0], colors3[1]] # for data to express: 'what it is' and 'what it should be'
 colors8 = [colors3[0], colors3[1], colors3[2], '#333333', '#999999', '#e58C33',
            '#33e5e5', '#e533e5']
