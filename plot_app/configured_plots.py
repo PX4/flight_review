@@ -829,7 +829,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
 
 
     # changed parameters
-    plots.append(get_changed_parameters(ulog.initial_parameters, plot_width))
+    plots.append(get_changed_parameters(ulog, plot_width))
 
 
 

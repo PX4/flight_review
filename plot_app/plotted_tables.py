@@ -8,8 +8,9 @@ import numpy as np
 
 from bokeh.layouts import column
 from bokeh.models import ColumnDataSource
-from bokeh.models.widgets import DataTable, TableColumn, Div
+from bokeh.models.widgets import DataTable, TableColumn, Div, HTMLTemplateFormatter
 
+from config import plot_color_red
 from helper import (
     get_default_parameters, get_airframe_name,
     get_total_flight_time, error_labels_table
@@ -435,7 +436,7 @@ def get_hardfault_html(ulog):
         return hardfault_html
     return None
 
-def get_changed_parameters(initial_parameters, plot_width):
+def get_changed_parameters(ulog, plot_width):
     """
     get a bokeh column object with a table of the changed parameters
     :param initial_parameters: ulog.initial_parameters
@@ -446,37 +447,60 @@ def get_changed_parameters(initial_parameters, plot_width):
     param_mins = []
     param_maxs = []
     param_descriptions = []
+    param_colors = []
     default_params = get_default_parameters()
+    initial_parameters = ulog.initial_parameters
+    system_defaults = None
+    airframe_defaults = None
+    if ulog.has_default_parameters:
+        system_defaults = ulog.get_default_parameters(0)
+        airframe_defaults = ulog.get_default_parameters(1)
+
     for param_name in sorted(initial_parameters):
         param_value = initial_parameters[param_name]
 
         if param_name.startswith('RC') or param_name.startswith('CAL_'):
             continue
 
+        system_default = None
+        airframe_default = None
+        is_airframe_default = True
+        if system_defaults is not None:
+            system_default = system_defaults.get(param_name, param_value)
+        if airframe_defaults is not None:
+            airframe_default = airframe_defaults.get(param_name, param_value)
+            is_airframe_default = abs(float(airframe_default) - float(param_value)) < 0.00001
+
         try:
             if param_name in default_params:
                 default_param = default_params[param_name]
+                if system_default is None:
+                    system_default = default_param['default']
+                    airframe_default = default_param['default']
                 if default_param['type'] == 'FLOAT':
-                    is_default = abs(float(default_param['default']) - float(param_value)) < 0.00001
+                    is_default = abs(float(system_default) - float(param_value)) < 0.00001
                     if 'decimal' in default_param:
                         param_value = round(param_value, int(default_param['decimal']))
+                        airframe_default = round(float(airframe_default), int(default_param['decimal']))
                 else:
-                    is_default = int(default_param['default']) == int(param_value)
+                    is_default = int(system_default) == int(param_value)
                 if not is_default:
                     param_names.append(param_name)
                     param_values.append(param_value)
-                    param_defaults.append(default_param['default'])
+                    param_defaults.append(airframe_default)
                     param_mins.append(default_param.get('min', ''))
                     param_maxs.append(default_param.get('max', ''))
                     param_descriptions.append(default_param.get('short_desc', ''))
+                    param_colors.append('black' if is_airframe_default else plot_color_red)
             else:
                 # not found: add it as if it were changed
                 param_names.append(param_name)
                 param_values.append(param_value)
-                param_defaults.append('')
+                param_defaults.append(airframe_default if airframe_default else '')
                 param_mins.append('')
                 param_maxs.append('')
                 param_descriptions.append('(unknown)')
+                param_colors.append('black' if is_airframe_default else plot_color_red)
         except Exception as error:
             print(type(error), error)
     param_data = dict(
@@ -485,14 +509,17 @@ def get_changed_parameters(initial_parameters, plot_width):
         defaults=param_defaults,
         mins=param_mins,
         maxs=param_maxs,
-        descriptions=param_descriptions)
+        descriptions=param_descriptions,
+        colors=param_colors)
     source = ColumnDataSource(param_data)
+    formatter = HTMLTemplateFormatter(template='<font color="<%= colors %>"><%= value %></font>')
     columns = [
         TableColumn(field="names", title="Name",
                     width=int(plot_width*0.2), sortable=False),
         TableColumn(field="values", title="Value",
-                    width=int(plot_width*0.15), sortable=False),
-        TableColumn(field="defaults", title="Default",
+                    width=int(plot_width*0.15), sortable=False, formatter=formatter),
+        TableColumn(field="defaults",
+                    title="Frame Default" if airframe_defaults else "Default",
                     width=int(plot_width*0.1), sortable=False),
         TableColumn(field="mins", title="Min",
                     width=int(plot_width*0.075), sortable=False),
