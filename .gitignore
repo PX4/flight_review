@@ -10,3 +10,6 @@ __pycache__
 /config_user.ini
 
 data/img/*
+
+data/app_data
+data/certbot

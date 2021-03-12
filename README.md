@@ -51,7 +51,7 @@ brew install fftw
 ```bash
 # After git clone, enter the directory
 git clone https://github.com/PX4/flight_review.git
-cd flight_review
+cd flight_review/app
 pip install -r requirements.txt
 # Note: preferably use a virtualenv
 ```
@@ -74,11 +74,13 @@ For local usage, the server can be started directly with a log file name,
 without having to upload it first:
 
 ```bash
+cd app
 ./serve.py -f <file.ulg>
 ```
 
 To start the whole web application:
 ```bash
+cd app
 ./serve.py --show
 ```
 
@@ -137,6 +139,58 @@ imports. We have to use `sys.path.append` to include modules in `plot_app` from
 the root directory (Eg `tornado_handlers.py`). Then to make sure the same module
 is only loaded once, we use `import xy` instead of `import plot_app.xy`.
 It's useful to look at `print('\n'.join(sys.modules.keys()))` to check this.
+
+# Description
+
+This section explain about how to work with docker.
+
+# Arguments
+
+- PORT - The number of port, what listen service in docker, default 5006
+- USE_PROXY - The set his, if you use reverse proxy (Nginx, ...)
+- DOMAIN - The address domain name for origin, default = *
+- CERT_PATH - The SSL certificate volume path
+- EMAIL - Email for challenging Let's Encrypt DNS
+
+# Paths
+
+- /opt/service/config_user.ini - Path for config
+- /opt/service/data - Folder where stored database
+- .env - Environment variables for nginx and app docker container
+
+# Build Docker Image
+
+```bash
+cd app
+docker build -t px4flightreview -f Dockerfile .
+```
+
+# Work with docker-compose 
+Run with following command to start docker container.
+Please modify the .env and app/config_default.ini or add app/config_user.ini with respective stages.
+
+***
+
+Uncomment the BOKEH_ALLOW_WS_ORIGIN with your local IP Address when developing, this is for the bokeh application's websocket to work.
+### Development
+```bash
+docker-compose -f docker-compose.dev.yml up
+```
+***
+Test locally with nginx.
+
+### Test Locally
+```bash
+docker-compose up
+```
+
+Remember to Change NGINX_CONF to use default_ssl.conf and add the EMAIL for production.
+
+### Production
+```bash
+chmod u+x init-letsencrypt.sh
+./init-letsencrypt.sh
+```
 
 
 ## Contributing
