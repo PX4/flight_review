@@ -8,7 +8,7 @@ pylint_exec=$(which pylint 2>/dev/null)
 set -e
 
 export PYTHONPATH=plot_app
-python $pylint_exec tornado_handlers/*.py serve.py \
+python3 $pylint_exec tornado_handlers/*.py serve.py \
 	plot_app/*.py download_logs.py
 
 exit 0

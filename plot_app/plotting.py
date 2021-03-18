@@ -815,11 +815,17 @@ class DataPlotSpec(DataPlot):
         if self._had_error: return
         try:
             data_set = {}
-            data_set['timestamp'] = self._cur_dataset.data['timestamp']
+
+            timestamp_key = 'timestamp'
+
+            if 'timestamp_sample' in self._cur_dataset.data.keys():
+                timestamp_key = 'timestamp_sample'
+
+            data_set[timestamp_key] = self._cur_dataset.data[timestamp_key]
 
             # calculate the sampling frequency
             # (Note: logging dropouts are not taken into account here)
-            delta_t = ((data_set['timestamp'][-1] - data_set['timestamp'][0]) * 1.0e-6) / len(data_set['timestamp'])
+            delta_t = ((data_set[timestamp_key][-1] - data_set[timestamp_key][0]) * 1.0e-6) / len(data_set[timestamp_key])
             if delta_t < 0.000001: # avoid division by zero
                 self._had_error = True
                 return
@@ -847,7 +853,7 @@ class DataPlotSpec(DataPlot):
 
             # offset = int(((1024/2.0)/250.0)*1e6)
             # scale time to microseconds and add start time as offset
-            time = time * 1.0e6 + self._cur_dataset.data['timestamp'][0]
+            time = time * 1.0e6 + self._cur_dataset.data[timestamp_key][0]
 
             color_mapper = LinearColorMapper(palette=viridis(256), low=-80, high=0)
 
@@ -878,7 +884,7 @@ class DataPlotSpec(DataPlot):
 
             # add plot zoom tool that only zooms in time axis
             wheel_zoom = WheelZoomTool()
-            self._p.toolbar.tools = [PanTool(), wheel_zoom, BoxZoomTool(dimensions="width"), ResetTool(), SaveTool()]   # updated_tools
+            self._p.toolbar.tools = [PanTool(), wheel_zoom, BoxZoomTool(), ResetTool(), SaveTool()]   # updated_tools
             self._p.toolbar.active_scroll = wheel_zoom
 
         except (KeyError, IndexError, ValueError, ZeroDivisionError) as error:
@@ -899,7 +905,7 @@ class DataPlotFFT(DataPlot):
                  x_range=None, y_range=None, topic_instance=0):
 
         super(DataPlotFFT, self).__init__(data, config, data_name, x_axis_label='Hz',
-                                          y_axis_label='Amplitude * 1000', title=title, plot_height=plot_height,
+                                          y_axis_label='Amplitude', title=title, plot_height=plot_height,
                                           x_range=x_range, y_range=y_range, topic_instance=topic_instance)
         self._use_time_formatter = False
 
@@ -915,12 +921,18 @@ class DataPlotFFT(DataPlot):
         if self._had_error: return
         try:
             data_set = {}
-            data_set['timestamp'] = self._cur_dataset.data['timestamp']
-            data_len = len(data_set['timestamp'])
+
+            timestamp_key = 'timestamp'
+
+            if 'timestamp_sample' in self._cur_dataset.data.keys():
+                timestamp_key = 'timestamp_sample'
+
+            data_set[timestamp_key] = self._cur_dataset.data[timestamp_key]
+            data_len = len(data_set[timestamp_key])
 
             # calculate the sampling frequency
             # (Note: logging dropouts are not taken into account here)
-            delta_t = ((data_set['timestamp'][-1] - data_set['timestamp'][0]) * 1.0e-6) / data_len
+            delta_t = ((data_set[timestamp_key][-1] - data_set[timestamp_key][0]) * 1.0e-6) / data_len
             sampling_frequency = 1.0 / delta_t
 
             if sampling_frequency < 100 or sampling_frequency == float("inf"): # require min sampling freq
@@ -940,7 +952,7 @@ class DataPlotFFT(DataPlot):
             for field_name, color, legend in zip(field_names_expanded, colors, legends):
                 # call FFTW with reduced setup effort (which is faster for our
                 # use-case with varying input lengths)
-                fft_values = 1000 * 2/data_len*abs(pyfftw.interfaces.numpy_fft.fft(
+                fft_values = 2/data_len*abs(pyfftw.interfaces.numpy_fft.fft(
                     data_set[field_name], planner_effort='FFTW_ESTIMATE'))
                 mean_fft_value = np.mean(fft_values[np.argwhere(freqs >= mean_start_freq).flatten()])
                 legend = legend + " (mean above {:} Hz: {:.2f})".format(mean_start_freq, mean_fft_value)
@@ -963,8 +975,6 @@ class DataPlotFFT(DataPlot):
                 self._p.line([mean_start_freq, np.max(freqs)],
                              [mean_fft_value, mean_fft_value],
                              line_color=color, line_width=2, legend_label=legend)
-
-            self._p.y_range = Range1d(0, 5)
 
         except (KeyError, IndexError, ValueError, ZeroDivisionError) as error:
             print(type(error), "(" + self._data_name + "):", error)
