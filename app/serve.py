@@ -13,10 +13,11 @@ from bokeh.application import Application
 from bokeh.server.server import Server
 from bokeh.application.handlers import DirectoryHandler
 
-from tornado.web import StaticFileHandler
+
 
 # this is needed for the following imports
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'plot_app'))
+from tornado.web import StaticFileHandler
 from tornado.web import RedirectHandler
 from tornado_handlers.download import DownloadHandler
 from tornado_handlers.upload import UploadHandler
@@ -27,8 +28,8 @@ from tornado_handlers.three_d import ThreeDHandler
 from tornado_handlers.radio_controller import RadioControllerHandler
 from tornado_handlers.error_labels import UpdateErrorLabelHandler
 
-from helper import set_log_id_is_filename, print_cache_info
-from config import debug_print_timing, get_overview_img_filepath
+from helper import set_log_id_is_filename, print_cache_info #pylint: disable=C0411
+from config import debug_print_timing, get_overview_img_filepath #pylint: disable=C0411
 
 #pylint: disable=invalid-name
 
