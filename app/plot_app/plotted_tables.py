@@ -481,7 +481,7 @@ def get_changed_parameters(ulog, plot_width):
                     is_default = abs(float(system_default) - float(param_value)) < 0.00001
                     if 'decimal' in default_param:
                         param_value = round(param_value, int(default_param['decimal']))
-                        airframe_default = round(float(airframe_default), int(default_param['decimal']))
+                        airframe_default = round(float(airframe_default), int(default_param['decimal'])) #pylint: disable=line-too-long
                 else:
                     is_default = int(system_default) == int(param_value)
                 if not is_default:

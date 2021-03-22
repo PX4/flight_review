@@ -5,9 +5,9 @@ if ! [ -x "$(command -v docker-compose -f docker-compose.prod.yml)" ]; then
   exit 1
 fi
 
-export $(cat .env_prod | grep -v ^\# | xargs); # get variable from .env file
+. .env # get variable from .env file
 
-domain=(${DOMAIN} www.${DOMAIN})
+domain=${DOMAIN} # www.${DOMAIN})
 rsa_key_size=4096
 cert_path=${CERT_PATH}
 email=${EMAIL} # Adding a valid address is strongly recommended
@@ -21,6 +21,7 @@ if [ -d "$cert_path" ]; then
 fi
 
 
+# Download TLS parameters
 if [ ! -e "$cert_path/conf/options-ssl-nginx.conf" ] || [ ! -e "$cert_path/conf/ssl-dhparams.pem" ]; then
   echo "### Downloading recommended TLS parameters ..."
   mkdir -p "$cert_path/conf"
@@ -80,3 +81,5 @@ echo
 
 echo "### Reloading nginx ..."
 docker-compose -f docker-compose.prod.yml exec nginx nginx -s reload
+docker-compose -f docker-compose.prod.yml build certbot
+docker-compose -f docker-compose.prod.yml up -d

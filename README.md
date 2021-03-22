@@ -140,11 +140,13 @@ the root directory (Eg `tornado_handlers.py`). Then to make sure the same module
 is only loaded once, we use `import xy` instead of `import plot_app.xy`.
 It's useful to look at `print('\n'.join(sys.modules.keys()))` to check this.
 
-# Description
+# Docker usage
 
 This section explain about how to work with docker.
 
-# Arguments
+## Arguments
+
+Edit the `.env` file according to your setup:
 
 - PORT - The number of port, what listen service in docker, default 5006
 - USE_PROXY - The set his, if you use reverse proxy (Nginx, ...)
@@ -188,6 +190,8 @@ Remember to Change NGINX_CONF to use default_ssl.conf and add the EMAIL for prod
 
 ### Production
 ```bash
+htpasswd -c ./nginx/.htpasswd username
+# here to create a .htpasswd for nginx basic authentication
 chmod u+x init-letsencrypt.sh
 ./init-letsencrypt.sh
 ```

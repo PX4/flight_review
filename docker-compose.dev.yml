@@ -9,6 +9,6 @@ services:
      - 5006:5006
     volumes:
       - ./app:/opt/service/
-      - ./data:/opt/service/data
-      - ${PWD}/config_default.ini:/opt/service/config_default.ini:ro # Absolute for volume a file.
+      - ./data:/opt/data
+      - ${PWD}/app/config_default.ini:/opt/service/config_default.ini:ro # Absolute for volume a file.
     restart: always
