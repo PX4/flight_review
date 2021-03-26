@@ -9,6 +9,10 @@ _conf = configparser.ConfigParser()
 _cur_dir = os.path.dirname(os.path.realpath(__file__))
 _conf.read_file(open(os.path.join(_cur_dir, '../config_default.ini')))
 _user_config_file = os.path.join(_cur_dir, '../config_user.ini')
+_user_config_file_old = os.path.join(_cur_dir, '../../config_user.ini')
+if os.path.exists(_user_config_file_old) and not os.path.exists(_user_config_file):
+    print('moving config file')
+    os.rename(_user_config_file_old, _user_config_file)
 if os.path.exists(_user_config_file):
     _conf.read_file(open(_user_config_file))
 
