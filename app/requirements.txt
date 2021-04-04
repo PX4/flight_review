@@ -1,0 +1,10 @@
+bokeh==2.1.1
+jinja2
+jupyter
+pyfftw
+pylint
+pyulog>=0.9
+requests
+scipy==1.3.3
+simplekml
+smopy

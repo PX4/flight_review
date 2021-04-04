@@ -1,0 +1,49 @@
+version: "3.3"
+services:
+  flight_review_app:
+    # image: px4flightreview
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    env_file: .env
+    volumes:
+      - ./data:/opt/data
+      # Absolute for volume a file.
+      - ${PWD}/app/config_default.ini:/opt/service/config_default.ini:ro
+      - ${PWD}/app/config_user.ini:/opt/service/config_user.ini:ro
+    restart: always
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+      args:
+        - NGINX_CONF=${NGINX_CONF}
+    env_file: .env
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/www/certbot
+      - ./logs/nginx:/var/log/nginx/
+      - ${PWD}/nginx/.htpasswd:/etc/nginx/.htpasswd # for nginx basic authentication
+      - /etc/localtime:/etc/localtime:ro # for synchronize with host timezone
+    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+    links:
+      - flight_review_app
+    depends_on:
+      - flight_review_app
+    restart: always
+  certbot:
+    build:
+      context: ./letsencrypt
+      dockerfile: Dockerfile
+    volumes:
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/www/certbot
+      - ./logs/letsencrypt:/var/log/letsencrypt
+      - /etc/localtime:/etc/localtime:ro # for synchronize with host timezone
+    entrypoint: "/bin/sh -c 'trap exit TERM; crond -f'"
+    # tty: true
+    restart: always
+

@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false  # don't cancel if a job from the matrix fails
       matrix:
-        python-version: [3.6, 3.8]
+        python-version: [3.6, 3.7, 3.8]
 
     steps:
       - uses: actions/checkout@v2
@@ -27,7 +27,7 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt install -y sqlite3 fftw3 libfftw3-dev
-          pip install -r requirements.txt
+          pip install -r app/requirements.txt
       - name : Running Tests
         run: |
           ./run_pylint.sh
