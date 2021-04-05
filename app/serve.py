@@ -169,4 +169,3 @@ if callable(run_op):
     server.run_until_shutdown()
 else:
     server.start()
-
