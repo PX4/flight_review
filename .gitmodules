@@ -1,0 +1,3 @@
+[submodule "app/plot_app/libevents"]
+	path = app/plot_app/libevents
+	url = https://github.com/mavlink/libevents.git
