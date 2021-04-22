@@ -8,6 +8,7 @@ __pycache__
 /.ipynb_checkpoints
 
 /config_user.ini
+/app/config_user.ini
 
 data/img/*
 
