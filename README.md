@@ -50,7 +50,7 @@ brew install fftw
 
 ```bash
 # After git clone, enter the directory
-git clone https://github.com/PX4/flight_review.git
+git clone --recursive https://github.com/PX4/flight_review.git
 cd flight_review/app
 pip install -r requirements.txt
 # Note: preferably use a virtualenv

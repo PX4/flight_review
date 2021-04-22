@@ -1,5 +1,6 @@
 """ some helper methods that don't fit in elsewhere """
 import json
+import lzma
 from timeit import default_timer as timer
 import time
 import re
@@ -20,7 +21,11 @@ from config_tables import *
 from config import get_log_filepath, get_airframes_filename, get_airframes_url, \
                    get_parameters_filename, get_parameters_url, \
                    get_log_cache_size, debug_print_timing, \
-                   get_releases_filename
+                   get_releases_filename, get_events_url, get_events_filename
+
+#pylint: disable=wrong-import-position
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'libevents/libs/python'))
+from libevents_parse.parser import Parser
 
 #pylint: disable=line-too-long, global-variable-not-assigned,invalid-name,global-statement
 
@@ -76,7 +81,7 @@ __last_failed_downloads = {} # dict with key=file name and a timestamp of last f
 
 def download_file_maybe(filename, url):
     """ download an url to filename if it does not exist or it's older than a day.
-        returns True if the file can be used
+        returns 0: on problem, 1: file usable, 2: file usable and was downloaded
     """
     need_download = False
     if os.path.exists(filename):
@@ -90,7 +95,7 @@ def download_file_maybe(filename, url):
         if filename in __last_failed_downloads:
             if time.time() < __last_failed_downloads[filename] + 30:
                 # don't try to download too often
-                return False
+                return 0
         print("Downloading "+url)
         try:
             # download to a temporary random file, then move to avoid race
@@ -101,8 +106,9 @@ def download_file_maybe(filename, url):
         except Exception as e:
             print("Download error: "+str(e))
             __last_failed_downloads[filename] = time.time()
-            return False
-    return True
+            return 0
+        return 2
+    return 1
 
 
 @lru_cache(maxsize=128)
@@ -110,7 +116,7 @@ def __get_airframe_data(airframe_id):
     """ cached version of get_airframe_data()
     """
     airframe_xml = get_airframes_filename()
-    if download_file_maybe(airframe_xml, get_airframes_url()):
+    if download_file_maybe(airframe_xml, get_airframes_url()) > 0:
         try:
             e = xml.etree.ElementTree.parse(airframe_xml).getroot()
             for airframe_group in e.findall('airframe_group'):
@@ -138,13 +144,31 @@ def get_airframe_data(airframe_id):
         __get_airframe_data.cache_clear()
     return __get_airframe_data(airframe_id)
 
+__event_parser = None
+def get_event_parser():
+    """ get event parser instance or None on error """
+    global __event_parser
+    events_json_xz = get_events_filename()
+    # check for cached file update
+    downloaded = download_file_maybe(events_json_xz, get_events_url())
+    if downloaded == 2 or (downloaded == 1 and __event_parser is None):
+        # decompress
+        with lzma.open(events_json_xz, 'rt') as f:
+            p = Parser()
+            p.load_definitions(json.load(f))
+            p.set_profile('dev')
+            __event_parser = p
+
+    return __event_parser
+
+
 def get_sw_releases():
     """ return a JSON object of public releases.
     Downloads releases from github if necessary. Returns None on error
     """
 
     releases_json = get_releases_filename()
-    if download_file_maybe(releases_json, 'https://api.github.com/repos/PX4/Firmware/releases'):
+    if download_file_maybe(releases_json, 'https://api.github.com/repos/PX4/Firmware/releases') > 0:
         with open(releases_json) as data_file:
             return json.load(data_file)
     return None
@@ -157,7 +181,7 @@ def get_default_parameters():
     """
     parameters_xml = get_parameters_filename()
     param_dict = {}
-    if download_file_maybe(parameters_xml, get_parameters_url()):
+    if download_file_maybe(parameters_xml, get_parameters_url()) > 0:
         try:
             e = xml.etree.ElementTree.parse(parameters_xml).getroot()
             for group in e.findall('group'):
@@ -308,7 +332,7 @@ def load_ulog_file(file_name):
                   'vehicle_magnetometer', 'system_power', 'tecs_status',
                   'sensor_baro', 'sensor_accel', 'sensor_accel_fifo',
                   'sensor_gyro_fifo', 'vehicle_angular_acceleration',
-                  'ekf2_timestamps', 'manual_control_switches']
+                  'ekf2_timestamps', 'manual_control_switches', 'event']
     try:
         ulog = ULog(file_name, msg_filter, disable_str_exceptions=False)
     except FileNotFoundError:

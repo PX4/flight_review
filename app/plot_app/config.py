@@ -28,6 +28,7 @@ __DOMAIN_NAME = _conf.get('general', 'domain_name')
 __HTTP_PROTOCOL = _conf.get('general', 'http_protocol')
 __AIRFRAMES_URL = _conf.get('general', 'airframes_url')
 __PARAMETERS_URL = _conf.get('general', 'parameters_url')
+__EVENTS_URL = _conf.get('general', 'events_url')
 __MAPBOX_API_ACCESS_TOKEN = _conf.get('general', 'mapbox_api_access_token')
 __BING_API_KEY = _conf.get('general', 'bing_maps_api_key')
 __CESIUM_API_KEY = _conf.get('general', 'cesium_api_key')
@@ -43,6 +44,7 @@ __DB_FILENAME = os.path.join(__STORAGE_PATH, 'logs.sqlite')
 __CACHE_FILE_PATH = os.path.join(__STORAGE_PATH, 'cache')
 __AIRFRAMES_FILENAME = os.path.join(__CACHE_FILE_PATH, 'airframes.xml')
 __PARAMETERS_FILENAME = os.path.join(__CACHE_FILE_PATH, 'parameters.xml')
+__EVENTS_FILENAME = os.path.join(__CACHE_FILE_PATH, 'events.json.xz')
 __RELEASES_FILENAME = os.path.join(__CACHE_FILE_PATH, 'releases.json')
 
 __PRINT_TIMING = int(_conf.get('debug', 'print_timing'))
@@ -110,6 +112,14 @@ def get_airframes_filename():
 def get_airframes_url():
     """ get airframes download URL """
     return __AIRFRAMES_URL
+
+def get_events_filename():
+    """ get configured events file name (.json.xz) """
+    return __EVENTS_FILENAME
+
+def get_events_url():
+    """ get events download URL """
+    return __EVENTS_URL
 
 def get_releases_filename():
     """ get configured releases file name """

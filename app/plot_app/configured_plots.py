@@ -925,7 +925,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
 
 
     # log messages
-    plots.append(get_logged_messages(ulog.logged_messages, plot_width))
+    plots.append(get_logged_messages(ulog, plot_width))
 
 
     # console messages, perf & top output
