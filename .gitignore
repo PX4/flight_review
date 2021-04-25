@@ -10,3 +10,5 @@ __pycache__
 /config_user.ini
 
 data/img/*
+
+review_venv/
