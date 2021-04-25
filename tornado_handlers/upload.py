@@ -91,6 +91,10 @@ class UploadHandler(TornadoRequestHandlerBase):
             if 'expected_size' in self.request.arguments:
                 self.request.connection.set_max_body_size(
                     int(self.get_argument('expected_size')))
+            else:
+                # Set max upload size to 10GB
+                self.request.connection.set_max_body_size(10*1024*1024*1024)
+
             try:
                 total = int(self.request.headers.get("Content-Length", "0"))
             except KeyError:
