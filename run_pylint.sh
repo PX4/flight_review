@@ -9,7 +9,7 @@ set -e
 
 pushd app
 export PYTHONPATH=plot_app
-python $pylint_exec tornado_handlers/*.py serve.py \
+python3 $pylint_exec tornado_handlers/*.py serve.py \
 	plot_app/*.py download_logs.py
 popd
 exit 0
