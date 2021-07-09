@@ -348,8 +348,9 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
                              y_axis_label='[ms]', title='Visual Odometry Latency',
                              plot_height='small', changed_params=changed_params,
                              x_range=x_range)
-        data_plot.add_graph([lambda data: ('latency', 1e-3*(data['timestamp'] - data['timestamp_sample']))
-                             ], colors3, ['VIO Latency'], mark_nan=True)
+        data_plot.add_graph(
+            [lambda data: ('latency', 1e-3*(data['timestamp'] - data['timestamp_sample']))],
+            colors3, ['VIO Latency'], mark_nan=True)
         plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
 
         if data_plot.finalize() is not None: plots.append(data_plot)
