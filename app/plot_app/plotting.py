@@ -625,10 +625,12 @@ class DataPlot:
         if self._had_error: return
         try:
             accumulated_data = accumulator_func(self._cur_dataset.data[field_name])
-            data_span = Span(location=accumulated_data.item(),
-                             dimension='width', line_color=line_color,
-                             line_alpha=line_alpha, line_width=1)
-            self._p.add_layout(data_span)
+            value = accumulated_data.item()
+            if not np.isnan(value):
+                data_span = Span(location=value,
+                                 dimension='width', line_color=line_color,
+                                 line_alpha=line_alpha, line_width=1)
+                self._p.add_layout(data_span)
 
         except (KeyError, IndexError, ValueError) as error:
             print(type(error), "("+self._data_name+"):", error)
