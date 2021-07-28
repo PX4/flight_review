@@ -141,8 +141,12 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
 
             start_time_str = 'N/A'
             if db_data.start_time_utc != 0:
-                start_datetime = datetime.fromtimestamp(db_data.start_time_utc)
-                start_time_str = start_datetime.strftime("%Y-%m-%d  %H:%M")
+                try:
+                    start_datetime = datetime.fromtimestamp(db_data.start_time_utc)
+                    start_time_str = start_datetime.strftime("%Y-%m-%d %H:%M")
+                except ValueError as value_error:
+                    # bogus date
+                    print(value_error)
 
             # make sure to break long descriptions w/o spaces (otherwise they
             # mess up the layout)
