@@ -123,16 +123,11 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
         curdoc().template_variables['corrupt_log_html'] = corrupt_log_html
 
     # Position plot
-    if any(elem.name == 'vehicle_local_position' for elem in ulog.data_list):
-        data_plot = DataPlot2D(data, plot_config, 'vehicle_local_position',
-                           x_axis_label='[m]', y_axis_label='[m]', plot_height='large')
-        data_plot.add_graph('y', 'x', colors2[0], 'Estimated',
-                            check_if_all_zero=True)
-    else:
-        any(elem.name == 'vehicle_gps_position' for elem in ulog.data_list)
-        data_plot = DataPlot2D(data, plot_config, 'vehicle_gps_position',
-                           x_axis_label='[m]', y_axis_label='[m]', plot_height='large')
-
+    data_plot = DataPlot2D(data, plot_config, 'vehicle_local_position',
+                       x_axis_label='[m]', y_axis_label='[m]', plot_height='large')
+    data_plot.add_graph('y', 'x', colors2[0], 'Estimated',
+                        check_if_all_zero=True)
+        
     if not data_plot.had_error: # vehicle_local_position is required
         data_plot.change_dataset('vehicle_local_position_setpoint')
         data_plot.add_graph('y', 'x', colors2[1], 'Setpoint')
@@ -144,15 +139,16 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
                  bokeh_plot=data_plot.bokeh_plot)
         if data_plot.finalize() is not None:
             plots.append(data_plot.bokeh_plot)
-
-            # Leaflet Map
-            try:
-                pos_datas, flight_modes = ulog_to_polyline(ulog, flight_mode_changes)
-                curdoc().template_variables['pos_datas'] = pos_datas
-                curdoc().template_variables['pos_flight_modes'] = flight_modes
-            except:
-                pass
-            curdoc().template_variables['has_position_data'] = True
+    
+    if any(elem.name == 'vehicle_gps_position' for elem in ulog.data_list):
+        # Leaflet Map
+        try:
+            pos_datas, flight_modes = ulog_to_polyline(ulog, flight_mode_changes)
+            curdoc().template_variables['pos_datas'] = pos_datas
+            curdoc().template_variables['pos_flight_modes'] = flight_modes
+        except:
+            pass
+        curdoc().template_variables['has_position_data'] = True
 
     # initialize parameter changes
     changed_params = None
