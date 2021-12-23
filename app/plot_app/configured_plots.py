@@ -769,6 +769,9 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
     data_plot.change_dataset('airspeed')
     data_plot.add_graph(['air_temperature_celsius'], colors8[4:5],
                         ['Airspeed temperature'])
+    data_plot.change_dataset('battery_status')
+    data_plot.add_graph(['temperature'], colors8[6:7],
+                        ['Battery temperature'])
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
