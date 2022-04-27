@@ -30,7 +30,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
     data = ulog.data_list
 
     # COMPATIBILITY support for old logs
-    if any(elem.name == 'vehicle_air_data' or elem.name == 'vehicle_magnetometer' for elem in data):
+    if any(elem.name in ('vehicle_air_data', 'vehicle_magnetometer') for elem in data):
         baro_alt_meter_topic = 'vehicle_air_data'
         magnetometer_ga_topic = 'vehicle_magnetometer'
     else: # old
@@ -61,6 +61,10 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
         manual_control_switches_topic = 'manual_control_switches'
     else: # old
         manual_control_switches_topic = 'manual_control_setpoint'
+    dynamic_control_alloc = any(elem.name in ('actuator_motors', 'actuator_servos')
+                                for elem in data)
+    actuator_controls_0 = ActuatorControls(ulog, dynamic_control_alloc, 0)
+    actuator_controls_1 = ActuatorControls(ulog, dynamic_control_alloc, 1)
 
     # initialize flight mode changes
     flight_mode_changes = get_flight_mode_changes(ulog)
@@ -174,9 +178,10 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
     data_plot.change_dataset('position_setpoint_triplet')
     data_plot.add_circle(['current.alt'], [plot_config['mission_setpoint_color']],
                          ['Altitude Setpoint'])
-    data_plot.change_dataset('actuator_controls_0')
-    data_plot.add_graph([lambda data: ('thrust', data['control[3]']*100)],
-                        colors8[6:7], ['Thrust [0, 100]'])
+    data_plot.change_dataset(actuator_controls_0.thrust_sp_topic)
+    if actuator_controls_0.thrust_z_neg is not None:
+        data_plot.add_graph([lambda data: ('thrust', actuator_controls_0.thrust_z_neg*100)],
+                            colors8[6:7], ['Thrust [0, 100]'])
     plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
 
     if data_plot.finalize() is not None: plots.append(data_plot)
@@ -442,20 +447,27 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
         if data_plot.finalize() is not None: plots.append(data_plot)
 
 
-
     # actuator controls 0
-    data_plot = DataPlot(data, plot_config, 'actuator_controls_0',
-                         y_start=0, title='Actuator Controls 0', plot_height='small',
-                         changed_params=changed_params, x_range=x_range)
-    data_plot.add_graph(['control[0]', 'control[1]', 'control[2]', 'control[3]'],
-                        colors8[0:4], ['Roll', 'Pitch', 'Yaw', 'Thrust'], mark_nan=True)
+    data_plot = DataPlot(data, plot_config, actuator_controls_0.torque_sp_topic,
+                         y_start=0, title='Actuator Controls',
+                         plot_height='small', changed_params=changed_params,
+                         x_range=x_range)
+    data_plot.add_graph(actuator_controls_0.torque_axes_field_names,
+                        colors8[0:3], ['Roll', 'Pitch', 'Yaw'], mark_nan=True)
+    data_plot.change_dataset(actuator_controls_0.thrust_sp_topic)
+    if actuator_controls_0.thrust_z_neg is not None:
+        data_plot.add_graph([lambda data: ('thrust', actuator_controls_0.thrust_z_neg)],
+                            colors8[3:4], ['Thrust (up)'], mark_nan=True)
+    if actuator_controls_0.thrust_x is not None:
+        data_plot.add_graph([lambda data: ('thrust', actuator_controls_0.thrust_x)],
+                            colors8[4:5], ['Thrust (forward)'], mark_nan=True)
     plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
     if data_plot.finalize() is not None: plots.append(data_plot)
 
     # actuator controls (Main) FFT (for filter & output noise analysis)
-    data_plot = DataPlotFFT(data, plot_config, 'actuator_controls_0',
+    data_plot = DataPlotFFT(data, plot_config, actuator_controls_0.torque_sp_topic,
                             title='Actuator Controls FFT', y_range = Range1d(0, 0.01))
-    data_plot.add_graph(['control[0]', 'control[1]', 'control[2]'],
+    data_plot.add_graph(actuator_controls_0.torque_axes_field_names,
                         colors3, ['Roll', 'Pitch', 'Yaw'])
     if not data_plot.had_error:
         if 'MC_DTERM_CUTOFF' in ulog.initial_parameters: # COMPATIBILITY
@@ -511,46 +523,79 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
 
     if data_plot.finalize() is not None: plots.append(data_plot)
 
-
-    # actuator controls 1
+    # actuator controls 1 (torque + thrust)
     # (only present on VTOL, Fixed-wing config)
-    data_plot = DataPlot(data, plot_config, 'actuator_controls_1',
+    data_plot = DataPlot(data, plot_config, actuator_controls_1.torque_sp_topic,
                          y_start=0, title='Actuator Controls 1 (VTOL in Fixed-Wing mode)',
-                         plot_height='small', changed_params=changed_params,
+                         plot_height='small', changed_params=changed_params, topic_instance=1,
                          x_range=x_range)
-    data_plot.add_graph(['control[0]', 'control[1]', 'control[2]', 'control[3]'],
-                        colors8[0:4], ['Roll', 'Pitch', 'Yaw', 'Thrust'], mark_nan=True)
+    data_plot.add_graph(actuator_controls_1.torque_axes_field_names,
+                        colors8[0:3], ['Roll', 'Pitch', 'Yaw'], mark_nan=True)
+    data_plot.change_dataset(actuator_controls_1.thrust_sp_topic,
+                             actuator_controls_1.topic_instance)
+    if actuator_controls_1.thrust_x is not None:
+        data_plot.add_graph([lambda data: ('thrust', actuator_controls_1.thrust_x)],
+                            colors8[3:4], ['Thrust (forward)'], mark_nan=True)
     plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
     if data_plot.finalize() is not None: plots.append(data_plot)
 
-    actuator_output_plots = [(0, "Actuator Outputs (Main)"), (1, "Actuator Outputs (AUX)"),
-                             (2, "Actuator Outputs (EXTRA)")]
-    for topic_instance, plot_name in actuator_output_plots:
+    if dynamic_control_alloc:
 
-        data_plot = DataPlot(data, plot_config, 'actuator_outputs',
-                             y_start=0, title=plot_name, plot_height='small',
-                             changed_params=changed_params, topic_instance=topic_instance,
-                             x_range=x_range)
-        num_actuator_outputs = 16
-        # only plot if at least one of the outputs is not constant
-        all_constant = True
-        if data_plot.dataset:
-            max_outputs = np.amax(data_plot.dataset.data['noutputs'])
-            if max_outputs < num_actuator_outputs: num_actuator_outputs = max_outputs
+        # actuator motors, actuator servos
+        actuator_output_plots = [("actuator_motors", "Motor"), ("actuator_servos", "Servo")]
+        for topic_name, plot_name in actuator_output_plots:
 
-            for i in range(num_actuator_outputs):
-                output_data = data_plot.dataset.data['output['+str(i)+']']
-                if not np.all(output_data == output_data[0]):
-                    all_constant = False
+            data_plot = DataPlot(data, plot_config, topic_name,
+                                 y_range=Range1d(-1, 1), title=plot_name+' Outputs',
+                                 plot_height='small', changed_params=changed_params,
+                                 x_range=x_range)
+            num_actuator_outputs = 8
+            if data_plot.dataset:
+                for i in range(num_actuator_outputs):
+                    output_data = data_plot.dataset.data['control['+str(i)+']']
+                    if np.isnan(output_data).all():
+                        num_actuator_outputs = i
+                        break
 
-        if not all_constant:
-            data_plot.add_graph(['output['+str(i)+']' for i in range(num_actuator_outputs)],
-                                [colors8[i % 8] for i in range(num_actuator_outputs)],
-                                ['Output '+str(i) for i in range(num_actuator_outputs)],
-                                mark_nan=True)
-            plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
+                if num_actuator_outputs > 0:
+                    data_plot.add_graph(['control['+str(i)+']'
+                                         for i in range(num_actuator_outputs)],
+                                        [colors8[i % 8] for i in range(num_actuator_outputs)],
+                                        [plot_name+' '+str(i+1)
+                                         for i in range(num_actuator_outputs)])
+                    plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
+                    if data_plot.finalize() is not None: plots.append(data_plot)
 
-            if data_plot.finalize() is not None: plots.append(data_plot)
+    else:
+
+        actuator_output_plots = [(0, "Actuator Outputs (Main)"), (1, "Actuator Outputs (AUX)"),
+                                 (2, "Actuator Outputs (EXTRA)")]
+        for topic_instance, plot_name in actuator_output_plots:
+
+            data_plot = DataPlot(data, plot_config, 'actuator_outputs',
+                                 y_start=0, title=plot_name, plot_height='small',
+                                 changed_params=changed_params, topic_instance=topic_instance,
+                                 x_range=x_range)
+            num_actuator_outputs = 16
+            # only plot if at least one of the outputs is not constant
+            all_constant = True
+            if data_plot.dataset:
+                max_outputs = np.amax(data_plot.dataset.data['noutputs'])
+                if max_outputs < num_actuator_outputs: num_actuator_outputs = max_outputs
+
+                for i in range(num_actuator_outputs):
+                    output_data = data_plot.dataset.data['output['+str(i)+']']
+                    if not np.all(output_data == output_data[0]):
+                        all_constant = False
+
+            if not all_constant:
+                data_plot.add_graph(['output['+str(i)+']' for i in range(num_actuator_outputs)],
+                                    [colors8[i % 8] for i in range(num_actuator_outputs)],
+                                    ['Output '+str(i) for i in range(num_actuator_outputs)],
+                                    mark_nan=True)
+                plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
+
+                if data_plot.finalize() is not None: plots.append(data_plot)
 
     # raw acceleration
     data_plot = DataPlot(data, plot_config, 'sensor_combined',
@@ -722,13 +767,15 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
                                           data['magnetometer_ga[1]']**2 +
                                           data['magnetometer_ga[2]']**2))],
         colors3[0:1], ['Norm of Magnetic Field'])
-    data_plot.change_dataset('actuator_controls_0')
-    data_plot.add_graph([lambda data: ('thrust', data['control[3]'])],
-                        colors3[1:2], ['Thrust'])
-    if is_vtol:
-        data_plot.change_dataset('actuator_controls_1')
-        data_plot.add_graph([lambda data: ('thrust', data['control[3]'])],
-                            colors3[2:3], ['Thrust (Fixed-wing)'])
+    data_plot.change_dataset(actuator_controls_0.thrust_sp_topic)
+    if actuator_controls_0.thrust is not None:
+        data_plot.add_graph([lambda data: ('thrust', actuator_controls_0.thrust)],
+                            colors3[1:2], ['Thrust'])
+    if is_vtol and not dynamic_control_alloc:
+        data_plot.change_dataset(actuator_controls_1.thrust_sp_topic)
+        if actuator_controls_1.thrust_x is not None:
+            data_plot.add_graph([lambda data: ('thrust', actuator_controls_1.thrust_x)],
+                                colors3[2:3], ['Thrust (Fixed-wing'])
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 

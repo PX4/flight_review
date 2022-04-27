@@ -5,7 +5,7 @@ from bokeh.layouts import column
 from scipy.interpolate import interp1d
 
 from config import plot_width, plot_config, colors3
-from helper import get_flight_mode_changes
+from helper import get_flight_mode_changes, ActuatorControls
 from pid_analysis import Trace, plot_pid_response
 from plotting import *
 from plotted_tables import get_heading_html
@@ -57,6 +57,9 @@ The analysis may take a while...
     else: # old
         rate_topic_name = 'rate_ctrl_status'
         rate_field_names = ['rollspeed', 'pitchspeed', 'yawspeed']
+    dynamic_control_alloc = any(elem.name in ('actuator_motors', 'actuator_servos')
+                                for elem in data)
+    actuator_controls_0 = ActuatorControls(ulog, dynamic_control_alloc, 0)
 
     # required PID response data
     pid_analysis_error = False
@@ -66,9 +69,9 @@ The analysis may take a while...
         gyro_time = rate_data.data['timestamp']
 
         vehicle_rates_setpoint = ulog.get_dataset('vehicle_rates_setpoint')
-        actuator_controls_0 = ulog.get_dataset('actuator_controls_0')
-        throttle = _resample(actuator_controls_0.data['timestamp'],
-                             actuator_controls_0.data['control[3]'] * 100, gyro_time)
+        actuator_controls_0_data = ulog.get_dataset(actuator_controls_0.thrust_sp_topic)
+        throttle = _resample(actuator_controls_0_data.data['timestamp'],
+                             actuator_controls_0.thrust * 100, gyro_time)
         time_seconds = gyro_time / 1e6
     except (KeyError, IndexError, ValueError) as error:
         print(type(error), ":", error)
@@ -92,31 +95,31 @@ The analysis may take a while...
     for index, axis in enumerate(['roll', 'pitch', 'yaw']):
         axis_name = axis.capitalize()
         # rate
-        data_plot = DataPlot(data, plot_config, 'actuator_controls_0',
+        data_plot = DataPlot(data, plot_config, actuator_controls_0.thrust_sp_topic,
                              y_axis_label='[deg/s]', title=axis_name+' Angular Rate',
                              plot_height='small',
                              x_range=x_range)
 
         thrust_max = 200
-        actuator_controls = data_plot.dataset
-        if actuator_controls is None: # do not show the rate plot if actuator_controls is missing
+        thrust_sp_data = data_plot.dataset
+        if thrust_sp_data is None: # do not show the rate plot if actuator_controls is missing
             continue
-        time_controls = actuator_controls.data['timestamp']
-        thrust = actuator_controls.data['control[3]'] * thrust_max
+        time_thrust = thrust_sp_data.data['timestamp']
+        thrust = actuator_controls_0.thrust * thrust_max
         # downsample if necessary
         max_num_data_points = 4.0*plot_config['plot_width']
-        if len(time_controls) > max_num_data_points:
-            step_size = int(len(time_controls) / max_num_data_points)
-            time_controls = time_controls[::step_size]
+        if len(time_thrust) > max_num_data_points:
+            step_size = int(len(time_thrust) / max_num_data_points)
+            time_thrust = time_thrust[::step_size]
             thrust = thrust[::step_size]
-        if len(time_controls) > 0:
+        if len(time_thrust) > 0:
             # make sure the polygon reaches down to 0
             thrust = np.insert(thrust, [0, len(thrust)], [0, 0])
-            time_controls = np.insert(time_controls, [0, len(time_controls)],
-                                      [time_controls[0], time_controls[-1]])
+            time_thrust = np.insert(time_thrust, [0, len(time_thrust)],
+                                      [time_thrust[0], time_thrust[-1]])
 
         p = data_plot.bokeh_plot
-        p.patch(time_controls, thrust, line_width=0, fill_color='#555555', # pylint: disable=too-many-function-args
+        p.patch(time_thrust, thrust, line_width=0, fill_color='#555555', # pylint: disable=too-many-function-args
                 fill_alpha=0.4, alpha=0, legend_label='Thrust [0, {:}]'.format(thrust_max))
 
         data_plot.change_dataset(rate_topic_name)
@@ -161,8 +164,8 @@ The analysis may take a while...
 
     # attitude
     if not pid_analysis_error and has_attitude:
-        throttle = _resample(actuator_controls_0.data['timestamp'],
-                             actuator_controls_0.data['control[3]'] * 100, attitude_time)
+        throttle = _resample(actuator_controls_0_data.data['timestamp'],
+                             actuator_controls_0.thrust * 100, attitude_time)
         time_seconds = attitude_time / 1e6
     # don't plot yaw, as yaw is mostly controlled directly by rate
     for index, axis in enumerate(['roll', 'pitch']):
