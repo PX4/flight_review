@@ -333,7 +333,8 @@ def load_ulog_file(file_name):
                   'sensor_baro', 'sensor_accel', 'sensor_accel_fifo',
                   'sensor_gyro_fifo', 'vehicle_angular_acceleration',
                   'ekf2_timestamps', 'manual_control_switches', 'event',
-                  'vehicle_imu_status']
+                  'vehicle_imu_status', 'actuator_motors', 'actuator_servos',
+                  'vehicle_thrust_setpoint', 'vehicle_torque_setpoint']
     try:
         ulog = ULog(file_name, msg_filter, disable_str_exceptions=False)
     except FileNotFoundError:
@@ -356,6 +357,80 @@ def load_ulog_file(file_name):
 #            d.data = np.compress(non_zero_indices, d.data, axis=0)
 
     return ulog
+
+class ActuatorControls:
+    """
+        Compatibility for actuator control topics
+    """
+
+    def __init__(self, ulog, use_dynamic_control_alloc, instance=0):
+        self._thrust_x = None
+        self._thrust_z_neg = None
+        if use_dynamic_control_alloc:
+            self._topic_instance = instance
+            self._torque_sp_topic = 'vehicle_torque_setpoint'
+            self._thrust_sp_topic = 'vehicle_thrust_setpoint'
+            self._torque_axes_field_names = ['xyz[0]', 'xyz[1]', 'xyz[2]']
+            try:
+                # thrust is always instance 0
+                thrust_sp = ulog.get_dataset('vehicle_thrust_setpoint', 0)
+                self._thrust = np.sqrt(thrust_sp.data['xyz[0]']**2 + \
+                        thrust_sp.data['xyz[1]']**2 + thrust_sp.data['xyz[2]']**2)
+                self._thrust_x = thrust_sp.data['xyz[0]']
+                self._thrust_z_neg = -thrust_sp.data['xyz[2]']
+            except:
+                self._thrust = None
+        else:
+            self._topic_instance = 0
+            self._torque_sp_topic = 'actuator_controls_'+str(instance)
+            self._thrust_sp_topic = 'actuator_controls_'+str(instance)
+            self._torque_axes_field_names = ['control[0]', 'control[1]', 'control[2]']
+            try:
+                torque_sp = ulog.get_dataset(self._torque_sp_topic)
+                self._thrust = torque_sp.data['control[3]']
+                if instance == 0:
+                    # for FW this would be in X direction
+                    self._thrust_z_neg = torque_sp.data['control[3]']
+                else:
+                    self._thrust_x = torque_sp.data['control[3]']
+            except:
+                self._thrust = None
+
+    @property
+    def topic_instance(self):
+        """ get the topic instance """
+        return self._topic_instance
+
+    @property
+    def torque_sp_topic(self):
+        """ get the torque setpoint topic name """
+        return self._torque_sp_topic
+
+    @property
+    def thrust_sp_topic(self):
+        """ get the thrust setpoint topic name """
+        return self._thrust_sp_topic
+
+    @property
+    def torque_axes_field_names(self):
+        """ get the list of axes field names for roll, pitch and yaw """
+        return self._torque_axes_field_names
+
+    @property
+    def thrust(self):
+        """ get the thrust data (norm) """
+        return self._thrust
+
+    @property
+    def thrust_x(self):
+        """ get the thrust data in x dir """
+        return self._thrust_x
+
+    @property
+    def thrust_z_neg(self):
+        """ get the thrust data in -z dir """
+        return self._thrust_z_neg
+
 
 def get_airframe_name(ulog, multi_line=False):
     """
