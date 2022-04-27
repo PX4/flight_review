@@ -35,7 +35,7 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
         data_length = int(self.get_argument('length'))
         draw_counter = int(self.get_argument('draw'))
 
-        json_output = dict()
+        json_output = {}
         json_output['draw'] = draw_counter
 
 

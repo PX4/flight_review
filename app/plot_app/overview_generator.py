@@ -52,9 +52,7 @@ def generate_overview_img(ulog, log_id):
         min_lon = min(lon)
         max_lon = max(lon)
 
-        z = get_zoom((min_lat, min_lon, max_lat, max_lon)) - 2
-        if z < 0:
-            z = 0
+        z = max(get_zoom((min_lat, min_lon, max_lat, max_lon)) - 2, 0)
 
         render_map = smopy.Map((min_lat, min_lon, max_lat, max_lon), z=z)
         fig, axes = plt.subplots(nrows=1, ncols=1)

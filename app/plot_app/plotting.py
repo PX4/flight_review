@@ -215,12 +215,10 @@ def plot_set_equal_aspect_ratio(p, x, y, zoom_out_factor=1.3, min_range=5):
     The plot size must already have been set before calling this.
     """
     x_range = [np.amin(x), np.amax(x)]
-    x_diff = x_range[1]-x_range[0]
-    if x_diff < min_range: x_diff = min_range
+    x_diff = max(x_range[1]-x_range[0], min_range)
     x_center = (x_range[0]+x_range[1])/2
     y_range = [np.amin(y), np.amax(y)]
-    y_diff = y_range[1]-y_range[0]
-    if y_diff < min_range: y_diff = min_range
+    y_diff = max(y_range[1]-y_range[0], min_range)
     y_center = (y_range[0]+y_range[1])/2
 
     # keep same aspect ratio as the plot
@@ -841,7 +839,7 @@ class DataPlotSpec(DataPlot):
             field_names_expanded = self._expand_field_names(field_names, data_set)
 
             # calculate the spectrogram
-            psd = dict()
+            psd = {}
             for key in field_names_expanded:
                 frequency, time, psd[key] = scipy.signal.spectrogram(
                     data_set[key], fs=sampling_frequency, window=window,

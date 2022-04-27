@@ -93,8 +93,8 @@ class DynamicDownsample:
             indices = np.logical_and(init_x > new_range[0], init_x < new_range[1])
 
             self.cur_data = {}
-            for k in self.init_data:
-                self.cur_data[k] = self.init_data[k][indices]
+            for k,value in self.init_data.items():
+                self.cur_data[k] = value[indices]
 
             # downsample
             self.downsample(self.cur_data, num_data_points)
