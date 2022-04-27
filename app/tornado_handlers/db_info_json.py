@@ -26,7 +26,7 @@ class DBInfoHandler(tornado.web.RequestHandler):
     def get(self, *args, **kwargs):
         """ GET request """
 
-        jsonlist = list()
+        jsonlist = []
 
         # get the logs (but only the public ones)
         con = sqlite3.connect(get_db_filename(), detect_types=sqlite3.PARSE_DECLTYPES)
@@ -43,7 +43,7 @@ class DBInfoHandler(tornado.web.RequestHandler):
         # iterating (having multiple cursor's does not seem to work)
         db_tuples = cur.fetchall()
         for db_tuple in db_tuples:
-            jsondict = dict()
+            jsondict = {}
             db_data = DBData()
             log_id = db_tuple[0]
             jsondict['log_id'] = log_id

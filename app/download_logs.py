@@ -68,8 +68,8 @@ def flight_modes_to_ids(flight_modes):
     returns a list of mode ids for a list of mode labels
     """
     flight_ids = []
-    for i in flight_modes_table:
-        if flight_modes_table[i][0] in flight_modes:
+    for i,value in flight_modes_table.items():
+        if value[0] in flight_modes:
             flight_ids.append(i)
     return flight_ids
 

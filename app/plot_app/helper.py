@@ -169,7 +169,7 @@ def get_sw_releases():
 
     releases_json = get_releases_filename()
     if download_file_maybe(releases_json, 'https://api.github.com/repos/PX4/Firmware/releases') > 0:
-        with open(releases_json) as data_file:
+        with open(releases_json, encoding='utf-8') as data_file:
             return json.load(data_file)
     return None
 
