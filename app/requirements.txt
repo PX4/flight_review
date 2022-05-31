@@ -1,5 +1,5 @@
 bokeh==2.1.1
-jinja2
+jinja2==3.0.0
 jupyter
 pyfftw
 pylint
