@@ -5,6 +5,9 @@ __pycache__
 *.sqlite
 *.sql
 
+*sublime-project
+*sublime-workspace
+
 /.ipynb_checkpoints
 
 /config_user.ini
