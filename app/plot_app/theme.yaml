@@ -1,8 +1,8 @@
 attrs:
 
   Axis:
-    minor_tick_in: null
-    major_tick_in: null
+    minor_tick_in: 0
+    major_tick_in: 0
     major_label_text_font_style: 'normal'
 
     axis_line_color: '#AAAAAA'

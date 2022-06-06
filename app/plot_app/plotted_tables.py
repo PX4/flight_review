@@ -530,7 +530,8 @@ def get_changed_parameters(ulog, plot_width):
                     width=int(plot_width*0.40), sortable=False),
         ]
     data_table = DataTable(source=source, columns=columns, width=plot_width,
-                           height=300, sortable=False, selectable=False)
+                           height=300, sortable=False, selectable=False,
+                           autosize_mode='none')
     div = Div(text="""<b>Non-default Parameters</b> (except RC and sensor calibration)""",
               width=int(plot_width/2))
     return column(div, data_table, width=plot_width)
@@ -629,6 +630,7 @@ def get_logged_messages(ulog, plot_width):
                     width=int(plot_width*0.75), sortable=False),
         ]
     data_table = DataTable(source=source, columns=columns, width=plot_width,
-                           height=300, sortable=False, selectable=False)
+                           height=300, sortable=False, selectable=False,
+                           autosize_mode='none')
     div = Div(text="""<b>Logged Messages</b>""", width=int(plot_width/2))
     return column(div, data_table, width=plot_width)
