@@ -256,8 +256,6 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
 
     # Roll/Pitch/Yaw angle & angular rate
     for index, axis in enumerate(['roll', 'pitch', 'yaw']):
-        print(axis)
-        print(index)
         # angle
         axis_name = axis.capitalize()
         data_plot = DataPlot(data, plot_config, 'vehicle_attitude',
