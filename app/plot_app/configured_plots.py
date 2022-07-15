@@ -17,6 +17,8 @@ from plotted_tables import (
     get_hardfault_html, get_corrupt_log_html
     )
 
+from scipy.spatial.transform import Rotation as Rot
+
 #pylint: disable=cell-var-from-loop, undefined-loop-variable,
 #pylint: disable=consider-using-enumerate,too-many-statements
 
@@ -76,6 +78,11 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
         cur_dataset = ulog.get_dataset('vehicle_status')
         if np.amax(cur_dataset.data['is_vtol']) == 1:
             is_vtol = True
+            # check if is tailsitter
+            if np.amax(cur_dataset.data['is_vtol_tailsitter']) ==1:
+                is_vtol_tailsitter = True
+            else:
+                is_vtol_tailsitter = False
             # find mode after transitions (states: 1=transition, 2=FW, 3=MC)
             if 'vehicle_type' in cur_dataset.data:
                 vehicle_type_field = 'vehicle_type'
@@ -186,19 +193,84 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
 
     if data_plot.finalize() is not None: plots.append(data_plot)
 
+    # VTOL tailistter orientation conversion, if relevant
+    if is_vtol_tailsitter:
+        print(vtol_states)
+        for d in data:
+            if d.name == 'vehicle_attitude':
+                q0 = d.data["q[0]"]
+                q1 = d.data["q[1]"]
+                q2 = d.data["q[2]"]
+                q3 = d.data["q[3]"]
+                qt = d.data["timestamp"]
+    
+        rotations = Rot.from_quat(np.transpose(np.asarray([q0,q1,q2,q3])))
+        RPY = rotations.as_euler('xyz',degrees=True)
+        # rotate by -90 degrees pitch in quaternion form to avoid singularity
+        FW_rotation = Rot.from_euler('y',-90,degrees=True)
+        RPY_FW = (FW_rotation*rotations).as_euler('xyz',degrees=True)
 
+        # convert out into separate variables
+        roll = np.deg2rad(RPY[:,2])
+        pitch = np.deg2rad(-1*RPY[:,1])
+        yaw = -180-RPY[:,0]
+        yaw[yaw>180]=yaw[yaw>180]-360
+        yaw[yaw<-180]=yaw[yaw<-180]+360
+        yaw = np.deg2rad(yaw)
+
+        roll_fw = np.deg2rad(RPY_FW[:,2])
+        pitch_fw = np.deg2rad(-1*RPY_FW[:,1])
+        yaw_fw = -180-RPY_FW[:,0]
+        yaw_fw[yaw_fw>180]=yaw_fw[yaw_fw>180]-360
+        yaw_fw[yaw_fw<-180]=yaw_fw[yaw_fw<-180]+360
+        yaw_fw = np.deg2rad(yaw_fw)
+
+        # temporary variables for storing VTOL states
+        is_FW = False
+        FW_start = np.nan
+        FW_end = np.nan
+
+        for i in vtol_states:
+            # states: 1=transition, 2=FW, 3=MC
+            # if in FW mode then used FW conversions 
+            if is_FW == True:
+                FW_end = i[0]
+                roll[np.logical_and(qt>FW_start,qt<FW_end)] = roll_fw[np.logical_and(qt>FW_start,qt<FW_end)]
+                pitch[np.logical_and(qt>FW_start,qt<FW_end)] = pitch_fw[np.logical_and(qt>FW_start,qt<FW_end)]
+                yaw[np.logical_and(qt>FW_start,qt<FW_end)] = yaw_fw[np.logical_and(qt>FW_start,qt<FW_end)]
+                is_FW = False
+            if i[1] == 2:
+                FW_start = i[0]
+                is_FW = True
+
+        # if flight ended as FW, convert the final data segment to FW
+        if is_FW == True:
+            roll[qt>FW_start] = roll_fw[qt>FW_start]
+            pitch[qt>FW_start] = pitch_fw[qt>FW_start]
+            yaw[qt>FW_start] = yaw_fw[qt>FW_start]
+        
+        RPY = {'roll': roll, 'pitch': pitch, 'yaw': yaw}
+            
+
+    
 
     # Roll/Pitch/Yaw angle & angular rate
     for index, axis in enumerate(['roll', 'pitch', 'yaw']):
-
+        print(axis)
+        print(index)
         # angle
         axis_name = axis.capitalize()
         data_plot = DataPlot(data, plot_config, 'vehicle_attitude',
                              y_axis_label='[deg]', title=axis_name+' Angle',
                              plot_height='small', changed_params=changed_params,
                              x_range=x_range)
-        data_plot.add_graph([lambda data: (axis, np.rad2deg(data[axis]))],
+        if is_vtol_tailsitter:
+            data_plot.add_graph([lambda data: (axis+'_q', np.rad2deg(RPY[axis]))],colors3[0:1],[axis_name+' Estimated'],mark_nan=True)
+        else:
+            data_plot.add_graph([lambda data: (axis, np.rad2deg(data[axis]))],
                             colors3[0:1], [axis_name+' Estimated'], mark_nan=True)
+  
+        
         data_plot.change_dataset('vehicle_attitude_setpoint')
         data_plot.add_graph([lambda data: (axis+'_d', np.rad2deg(data[axis+'_d']))],
                             colors3[1:2], [axis_name+' Setpoint'],
