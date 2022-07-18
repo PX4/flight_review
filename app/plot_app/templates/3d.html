@@ -398,9 +398,8 @@ viewer.clock.onTick.addEventListener(function(clock) {
 	 if (manual_sp === undefined) {
 		 radio_controller.hideSticks();
 	 } else {
-		 // this is mode 2 (map throttle from [0, 1] to [-1, 1])
-		 radio_controller.updateSticks(manual_sp.w, manual_sp.z*2.-1.,
-			 manual_sp.y, manual_sp.x);
+		 // this is mode 2
+		 radio_controller.updateSticks(manual_sp.w, manual_sp.z, manual_sp.y, manual_sp.x);
 	 }
 
 	 // stick history
@@ -409,8 +408,7 @@ viewer.clock.onTick.addEventListener(function(clock) {
 	 for (var i = 0; i < 30; ++i) {
 		 manual_sp = manualControlSetpointsProperty.getValue(time);
 		 if (manual_sp !== undefined) {
-			 stick_history.unshift([manual_sp.w, manual_sp.z*2.-1.,
-				 manual_sp.y, manual_sp.x]);
+			 stick_history.unshift([manual_sp.w, manual_sp.z, manual_sp.y, manual_sp.x]);
 		 }
 		 Cesium.JulianDate.addSeconds(time, -0.03333, time);
 	 }

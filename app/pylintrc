@@ -104,7 +104,7 @@ property-classes=abc.abstractproperty
 function-rgx=[a-z_][a-z0-9_]{2,35}$
 
 # Regular expression matching correct variable names
-variable-rgx=[a-z_][a-z0-9_]{2,30}$
+variable-rgx=[a-z_][a-z0-9_]{2,35}$
 
 # Regular expression matching correct constant names
 const-rgx=(([A-Z_][A-Z0-9_]*)|(__.*__))$

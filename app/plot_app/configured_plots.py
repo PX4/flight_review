@@ -38,6 +38,8 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
     else: # old
         baro_alt_meter_topic = 'sensor_combined'
         magnetometer_ga_topic = 'sensor_combined'
+    manual_control_sp_controls = ['roll', 'pitch', 'yaw', 'throttle']
+    manual_control_sp_throttle_range = '[-1, 1]'
     for topic in data:
         if topic.name == 'system_power':
             # COMPATIBILITY: rename fields to new format
@@ -50,6 +52,10 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
         if topic.name == 'tecs_status':
             if 'airspeed_sp' in topic.data: # old (prior to PX4-Autopilot/pull/16585)
                 topic.data['true_airspeed_sp'] = topic.data.pop('airspeed_sp')
+        if topic.name == 'manual_control_setpoint':
+            if 'throttle' not in topic.data: # old (prior to PX4-Autopilot/pull/15949)
+                manual_control_sp_controls = ['y', 'x', 'r', 'z']
+                manual_control_sp_throttle_range = '[0, 1]'
 
     if any(elem.name == 'vehicle_angular_velocity' for elem in data):
         rate_estimated_topic_name = 'vehicle_angular_velocity'
@@ -431,9 +437,9 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
                              title='Manual Control Inputs (Radio or Joystick)',
                              plot_height='small', y_range=Range1d(-1.1, 1.1),
                              changed_params=changed_params, x_range=x_range)
-        data_plot.add_graph(['y', 'x', 'r', 'z', 'aux1', 'aux2'], colors8[0:6],
-                            ['Y / Roll', 'X / Pitch', 'Yaw', 'Throttle [0, 1]',
-                             'Aux1', 'Aux2'])
+        data_plot.add_graph(manual_control_sp_controls + ['aux1', 'aux2'], colors8[0:6],
+                            ['Y / Roll', 'X / Pitch', 'Yaw',
+                             'Throttle ' + manual_control_sp_throttle_range, 'Aux1', 'Aux2'])
         data_plot.change_dataset(manual_control_switches_topic)
         data_plot.add_graph([lambda data: ('mode_slot', data['mode_slot']/6),
                              lambda data: ('kill_switch', data['kill_switch'] == 1)],

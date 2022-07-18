@@ -91,10 +91,16 @@ class ThreeDHandler(TornadoRequestHandlerBase):
         manual_control_setpoints_str = '[ '
         if manual_control_setpoint:
             for i in range(len(manual_control_setpoint['timestamp'])):
-                manual_x = manual_control_setpoint['x'][i]
-                manual_y = manual_control_setpoint['y'][i]
-                manual_z = manual_control_setpoint['z'][i]
-                manual_r = manual_control_setpoint['r'][i]
+                if 'throttle' in manual_control_setpoint:
+                    manual_x = manual_control_setpoint['pitch'][i]
+                    manual_y = manual_control_setpoint['roll'][i]
+                    manual_z = manual_control_setpoint['throttle'][i]
+                    manual_r = manual_control_setpoint['yaw'][i]
+                else: # COMPATIBILITY support for old logs (PX4/PX4-Autopilot/pull/15949)
+                    manual_x = manual_control_setpoint['x'][i]
+                    manual_y = manual_control_setpoint['y'][i]
+                    manual_z = manual_control_setpoint['z'][i] * 2 - 1
+                    manual_r = manual_control_setpoint['r'][i]
                 t = manual_control_setpoint['timestamp'][i] + utc_offset
                 utctimestamp = datetime.datetime.utcfromtimestamp(t/1.e6).replace(
                     tzinfo=datetime.timezone.utc)
