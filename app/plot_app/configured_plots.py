@@ -79,7 +79,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
         if np.amax(cur_dataset.data['is_vtol']) == 1:
             is_vtol = True
             # check if is tailsitter
-            if np.amax(cur_dataset.data['is_vtol_tailsitter']) ==1:
+            is_vtol_tailsitter = np.amax(cur_dataset.data['is_vtol_tailsitter']) ==1
                 is_vtol_tailsitter = True
             else:
                 is_vtol_tailsitter = False
