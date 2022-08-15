@@ -17,7 +17,6 @@ from plotted_tables import (
     get_hardfault_html, get_corrupt_log_html
     )
 
-#from scipy.spatial.transform import Rotation as Rot
 from vtol_tailsitter import *
 
 #pylint: disable=cell-var-from-loop, undefined-loop-variable,
