@@ -74,15 +74,13 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
     # VTOL state changes & vehicle type
     vtol_states = None
     is_vtol = False
+    is_vtol_tailsitter = False
     try:
         cur_dataset = ulog.get_dataset('vehicle_status')
         if np.amax(cur_dataset.data['is_vtol']) == 1:
             is_vtol = True
             # check if is tailsitter
             is_vtol_tailsitter = np.amax(cur_dataset.data['is_vtol_tailsitter']) ==1
-                is_vtol_tailsitter = True
-            else:
-                is_vtol_tailsitter = False
             # find mode after transitions (states: 1=transition, 2=FW, 3=MC)
             if 'vehicle_type' in cur_dataset.data:
                 vehicle_type_field = 'vehicle_type'
@@ -195,7 +193,6 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
 
     # VTOL tailistter orientation conversion, if relevant
     if is_vtol_tailsitter:
-        print(vtol_states)
         for d in data:
             if d.name == 'vehicle_attitude':
                 q0 = d.data["q[0]"]
@@ -243,7 +240,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
         for i in vtol_states:
             # states: 1=transition, 2=FW, 3=MC
             # if in FW mode then used FW conversions 
-            if is_FW == True:
+            if is_FW:
                 FW_end = i[0]
                 roll[np.logical_and(qt>FW_start,qt<FW_end)] = roll_fw[np.logical_and(qt>FW_start,qt<FW_end)]
                 pitch[np.logical_and(qt>FW_start,qt<FW_end)] = pitch_fw[np.logical_and(qt>FW_start,qt<FW_end)]
