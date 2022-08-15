@@ -275,7 +275,10 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
                              plot_height='small', changed_params=changed_params,
                              x_range=x_range)
         if is_vtol_tailsitter:
-            data_plot.add_graph([lambda data: (axis+'_q', np.rad2deg(RPY[axis]))],colors3[0:1],[axis_name+' Estimated'],mark_nan=True)
+            try:
+                data_plot.add_graph([lambda data: (axis+'_q', np.rad2deg(RPY[axis]))],colors3[0:1],[axis_name+' Estimated'],mark_nan=True)
+            except:
+                pass
         else:
             data_plot.add_graph([lambda data: (axis, np.rad2deg(data[axis]))],
                             colors3[0:1], [axis_name+' Estimated'], mark_nan=True)
@@ -302,8 +305,11 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
                              y_axis_label='[deg/s]', title=axis_name+' Angular Rate',
                              plot_height='small', changed_params=changed_params,
                              x_range=x_range)
-        if is_vtol_tailsitter: 
-            data_plot.add_graph([lambda data: (axis+'_q',np.rad2deg(rates[axis]))],colors3[0:1],[axis_name+' Rate Estimated'],mark_nan=True)
+        if is_vtol_tailsitter:
+            try:
+                data_plot.add_graph([lambda data: (axis+'_q',np.rad2deg(rates[axis]))],colors3[0:1],[axis_name+' Rate Estimated'],mark_nan=True)
+            except:
+                pass
         else:
             data_plot.add_graph([lambda data: (axis+'speed',
                                                np.rad2deg(data[rate_field_names[index]]))],
