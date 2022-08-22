@@ -193,7 +193,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
 
     # VTOL tailistter orientation conversion, if relevant
     if is_vtol_tailsitter:
-        [RPY, rates] = correct_tailsitter_attitude_and_rates(data, vtol_states) 
+        [RPY, rates] = correct_tailsitter_attitude_and_rates(ulog,data, vtol_states)
 
     # Roll/Pitch/Yaw angle & angular rate
     for index, axis in enumerate(['roll', 'pitch', 'yaw']):
@@ -205,14 +205,14 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
                              x_range=x_range)
         if is_vtol_tailsitter:
             try:
-                data_plot.add_graph([lambda data: (axis+'_q', np.rad2deg(RPY[axis]))],colors3[0:1],[axis_name+' Estimated'],mark_nan=True)
+                data_plot.add_graph([lambda data: (axis+'_q', np.rad2deg(RPY[axis]))],
+                                colors3[0:1],[axis_name+' Estimated'],mark_nan=True)
             except:
                 pass
         else:
             data_plot.add_graph([lambda data: (axis, np.rad2deg(data[axis]))],
                             colors3[0:1], [axis_name+' Estimated'], mark_nan=True)
-  
-        
+
         data_plot.change_dataset('vehicle_attitude_setpoint')
         data_plot.add_graph([lambda data: (axis+'_d', np.rad2deg(data[axis+'_d']))],
                             colors3[1:2], [axis_name+' Setpoint'],
@@ -236,7 +236,8 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
                              x_range=x_range)
         if is_vtol_tailsitter:
             try:
-                data_plot.add_graph([lambda data: (axis+'_q',np.rad2deg(rates[axis]))],colors3[0:1],[axis_name+' Rate Estimated'],mark_nan=True)
+                data_plot.add_graph([lambda data: (axis+'_q',np.rad2deg(rates[axis]))],
+                                colors3[0:1],[axis_name+' Rate Estimated'],mark_nan=True)
             except:
                 pass
         else:
