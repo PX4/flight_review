@@ -17,6 +17,8 @@ from plotted_tables import (
     get_hardfault_html, get_corrupt_log_html
     )
 
+from vtol_tailsitter import *
+
 #pylint: disable=cell-var-from-loop, undefined-loop-variable,
 #pylint: disable=consider-using-enumerate,too-many-statements
 
@@ -72,10 +74,13 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
     # VTOL state changes & vehicle type
     vtol_states = None
     is_vtol = False
+    is_vtol_tailsitter = False
     try:
         cur_dataset = ulog.get_dataset('vehicle_status')
         if np.amax(cur_dataset.data['is_vtol']) == 1:
             is_vtol = True
+            # check if is tailsitter
+            is_vtol_tailsitter = np.amax(cur_dataset.data['is_vtol_tailsitter']) == 1
             # find mode after transitions (states: 1=transition, 2=FW, 3=MC)
             if 'vehicle_type' in cur_dataset.data:
                 vehicle_type_field = 'vehicle_type'
@@ -186,19 +191,27 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
 
     if data_plot.finalize() is not None: plots.append(data_plot)
 
-
+    # VTOL tailistter orientation conversion, if relevant
+    if is_vtol_tailsitter:
+        [tailsitter_attitude, tailsitter_rates] = tailsitter_orientation(ulog, vtol_states)
 
     # Roll/Pitch/Yaw angle & angular rate
     for index, axis in enumerate(['roll', 'pitch', 'yaw']):
-
         # angle
         axis_name = axis.capitalize()
         data_plot = DataPlot(data, plot_config, 'vehicle_attitude',
                              y_axis_label='[deg]', title=axis_name+' Angle',
                              plot_height='small', changed_params=changed_params,
                              x_range=x_range)
-        data_plot.add_graph([lambda data: (axis, np.rad2deg(data[axis]))],
-                            colors3[0:1], [axis_name+' Estimated'], mark_nan=True)
+        if is_vtol_tailsitter:
+            if tailsitter_attitude[axis] is not None:
+                data_plot.add_graph([lambda data: (axis+'_q',
+                                                   np.rad2deg(tailsitter_attitude[axis]))],
+                                    colors3[0:1], [axis_name+' Estimated'], mark_nan=True)
+        else:
+            data_plot.add_graph([lambda data: (axis, np.rad2deg(data[axis]))],
+                                colors3[0:1], [axis_name+' Estimated'], mark_nan=True)
+
         data_plot.change_dataset('vehicle_attitude_setpoint')
         data_plot.add_graph([lambda data: (axis+'_d', np.rad2deg(data[axis+'_d']))],
                             colors3[1:2], [axis_name+' Setpoint'],
@@ -220,9 +233,15 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
                              y_axis_label='[deg/s]', title=axis_name+' Angular Rate',
                              plot_height='small', changed_params=changed_params,
                              x_range=x_range)
-        data_plot.add_graph([lambda data: (axis+'speed',
-                                           np.rad2deg(data[rate_field_names[index]]))],
-                            colors3[0:1], [axis_name+' Rate Estimated'], mark_nan=True)
+        if is_vtol_tailsitter:
+            if tailsitter_rates[axis] is not None:
+                data_plot.add_graph([lambda data: (axis+'_q',
+                                                   np.rad2deg(tailsitter_rates[axis]))],
+                                    colors3[0:1], [axis_name+' Rate Estimated'], mark_nan=True)
+        else:
+            data_plot.add_graph([lambda data: (axis+'speed',
+                                               np.rad2deg(data[rate_field_names[index]]))],
+                                colors3[0:1], [axis_name+' Rate Estimated'], mark_nan=True)
         data_plot.change_dataset('vehicle_rates_setpoint')
         data_plot.add_graph([lambda data: (axis, np.rad2deg(data[axis]))],
                             colors3[1:2], [axis_name+' Rate Setpoint'],
