@@ -101,6 +101,7 @@ with immediate feedback.
 
 ```bash
 # Launch jupyter notebook
+cd app
 jupyter notebook testing_notebook.ipynb
 ```
 
