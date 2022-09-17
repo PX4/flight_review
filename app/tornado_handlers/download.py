@@ -132,30 +132,52 @@ class DownloadHandler(TornadoRequestHandlerBase):
 
             self.set_header("Content-Type", "text/plain")
             self.set_header('Content-Disposition', 'inline; filename=params.txt')
-
-            default_params = get_default_parameters()
-
             delimiter = ', '
-            for param_key in param_keys:
-                try:
-                    param_value = str(ulog.initial_parameters[param_key])
-                    is_default = False
 
-                    if param_key in default_params:
-                        default_param = default_params[param_key]
-                        if default_param['type'] == 'FLOAT':
-                            is_default = abs(float(default_param['default']) -
-                                             float(param_value)) < 0.00001
-                        else:
-                            is_default = int(default_param['default']) == int(param_value)
+            # Use defaults from log if available
+            if ulog.has_default_parameters:
+                system_defaults = ulog.get_default_parameters(0)
+                airframe_defaults = ulog.get_default_parameters(1)
+                for param_key in param_keys:
+                    try:
+                        param_value = ulog.initial_parameters[param_key]
+                        is_default = True
+                        if param_key in airframe_defaults:
+                            is_default = param_value == airframe_defaults[param_key]
+                        elif param_key in system_defaults:
+                            is_default = param_value == system_defaults[param_key]
 
-                    if not is_default:
-                        self.write(param_key)
-                        self.write(delimiter)
-                        self.write(param_value)
-                        self.write('\n')
-                except:
-                    pass
+                        if not is_default:
+                            self.write(param_key)
+                            self.write(delimiter)
+                            self.write(str(param_value))
+                            self.write('\n')
+                    except:
+                        pass
+
+            else:
+                default_params = get_default_parameters()
+
+                for param_key in param_keys:
+                    try:
+                        param_value = str(ulog.initial_parameters[param_key])
+                        is_default = False
+
+                        if param_key in default_params:
+                            default_param = default_params[param_key]
+                            if default_param['type'] == 'FLOAT':
+                                is_default = abs(float(default_param['default']) -
+                                                 float(param_value)) < 0.00001
+                            else:
+                                is_default = int(default_param['default']) == int(param_value)
+
+                        if not is_default:
+                            self.write(param_key)
+                            self.write(delimiter)
+                            self.write(param_value)
+                            self.write('\n')
+                    except:
+                        pass
 
         else: # download the log file
             self.set_header('Content-Type', 'application/octet-stream')
