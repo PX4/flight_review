@@ -1,6 +1,5 @@
 """ some helper methods that don't fit in elsewhere """
 import json
-import lzma
 from timeit import default_timer as timer
 import time
 import re
@@ -12,7 +11,6 @@ from urllib.request import urlretrieve
 import xml.etree.ElementTree # airframe parsing
 import shutil
 import uuid
-import numpy as np
 
 from pyulog import *
 from pyulog.px4 import *
@@ -21,11 +19,7 @@ from config_tables import *
 from config import get_log_filepath, get_airframes_filename, get_airframes_url, \
                    get_parameters_filename, get_parameters_url, \
                    get_log_cache_size, debug_print_timing, \
-                   get_releases_filename, get_events_url, get_events_filename
-
-#pylint: disable=wrong-import-position
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'libevents/libs/python'))
-from libevents_parse.parser import Parser
+                   get_releases_filename
 
 #pylint: disable=line-too-long, global-variable-not-assigned,invalid-name,global-statement
 
@@ -143,24 +137,6 @@ def get_airframe_data(airframe_id):
         __last_airframe_cache_clear_timestamp = current_time
         __get_airframe_data.cache_clear()
     return __get_airframe_data(airframe_id)
-
-__event_parser = None
-def get_event_parser():
-    """ get event parser instance or None on error """
-    global __event_parser
-    events_json_xz = get_events_filename()
-    # check for cached file update
-    downloaded = download_file_maybe(events_json_xz, get_events_url())
-    if downloaded == 2 or (downloaded == 1 and __event_parser is None):
-        # decompress
-        with lzma.open(events_json_xz, 'rt') as f:
-            p = Parser()
-            p.load_definitions(json.load(f))
-            p.set_profile('dev')
-            __event_parser = p
-
-    return __event_parser
-
 
 def get_sw_releases():
     """ return a JSON object of public releases.

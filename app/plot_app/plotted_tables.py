@@ -13,9 +13,9 @@ from bokeh.models.widgets import DataTable, TableColumn, Div, HTMLTemplateFormat
 from config import plot_color_red
 from helper import (
     get_default_parameters, get_airframe_name,
-    get_total_flight_time, error_labels_table,
-    get_event_parser
+    get_total_flight_time, error_labels_table
     )
+from events import get_logged_events
 
 #pylint: disable=consider-using-enumerate,too-many-statements
 
@@ -542,69 +542,14 @@ def get_logged_messages(ulog, plot_width):
     get a bokeh column object with a table of the logged text messages and events
     :param ulog: ULog object
     """
-    logged_messages = ulog.logged_messages
-    event_parser = None
-    messages = []
-
-    try:
-        event_parser = get_event_parser()
-    except Exception as e:
-        print('Failed to get event parser: {}'.format(e))
-
-    def event_log_level_str(log_level: int):
-        return {0: 'EMERGENCY',
-                1: 'ALERT',
-                2: 'CRITICAL',
-                3: 'ERROR',
-                4: 'WARNING',
-                5: 'NOTICE',
-                6: 'INFO',
-                7: 'DEBUG',
-                8: 'PROTOCOL',
-                9: 'DISABLED'}.get(log_level, 'UNKNOWN')
+    messages = get_logged_events(ulog)
 
     def time_str(t):
         m1, s1 = divmod(int(t/1e6), 60)
         h1, m1 = divmod(m1, 60)
         return "{:d}:{:02d}:{:02d}".format(h1, m1, s1)
 
-    # parse events
-    try:
-        events = ulog.get_dataset('event')
-        all_ids = events.data['id']
-        for event_idx in range(len(all_ids)):
-            log_level = (events.data['log_levels'][event_idx] >> 4) & 0xf
-            if log_level >= 8:
-                continue
-            args = []
-            i = 0
-            while True:
-                arg_str = 'arguments[{}]'.format(i)
-                if not arg_str in events.data:
-                    break
-                arg = events.data[arg_str][event_idx]
-                args.append(arg)
-                i += 1
-            event_id = all_ids[event_idx]
-            log_level_str = event_log_level_str(log_level)
-            t = events.data['timestamp'][event_idx]
-            event = None
-            if event_parser is not None:
-                event = event_parser.parse(event_id, bytes(args))
-            if event is None:
-                messages.append((t, time_str(t), log_level_str, \
-                    '[Unknown event with ID {:}]'.format(event_id)))
-            else:
-                # only show default group
-                if event.group() == "default":
-                    messages.append((t, time_str(t), log_level_str, event.message()))
-            # we could expand this a bit for events:
-            # - show the description too
-            # - handle url's as link (currently it's shown as text, and all tags are escaped)
-    except (KeyError, IndexError, ValueError) as error:
-        # no events in log
-        pass
-
+    logged_messages = ulog.logged_messages
     for m in logged_messages:
         # backwards compatibility: a string message with appended tab is output
         # in addition to an event with the same message so we can ignore those
