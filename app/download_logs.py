@@ -89,7 +89,7 @@ def main():
 
     try:
         # the db_info_api sends a json file with a list of all public database entries
-        db_entries_list = requests.get(url=args.db_info_api).json()
+        db_entries_list = requests.get(url=args.db_info_api, timeout=5*60).json()
     except:
         print("Server request failed.")
         raise
@@ -220,7 +220,8 @@ def main():
 
                         print('downloading {:}/{:} ({:})'.format(i + 1, n_en, entry_id))
                         request = requests.get(url=args.download_api +
-                                               "?log=" + entry_id, stream=True)
+                                               "?log=" + entry_id, stream=True,
+                                               timeout=10*60)
                         with open(file_path, 'wb') as log_file:
                             for chunk in request.iter_content(chunk_size=1024):
                                 if chunk:  # filter out keep-alive new chunks
