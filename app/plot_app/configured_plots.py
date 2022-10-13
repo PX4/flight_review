@@ -841,10 +841,10 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
-    # estimator watchdog
+    # estimator flags
     try:
         data_plot = DataPlot(data, plot_config, 'estimator_status',
-                             y_start=0, title='Estimator Watchdog',
+                             y_start=0, title='Estimator Flags',
                              plot_height='small', changed_params=changed_params,
                              x_range=x_range)
         estimator_status = ulog.get_dataset('estimator_status').data
@@ -884,17 +884,34 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
         print('Error in estimator plot: '+str(error))
 
 
+    # Failsafe flags
+    try:
+        data_plot = DataPlot(data, plot_config, 'vehicle_status',
+                             y_start=0, title='Failsafe Flags',
+                             plot_height='normal', changed_params=changed_params,
+                             x_range=x_range)
+        data_plot.add_graph(['failsafe', 'failsafe_and_user_took_over'], [colors8[0], colors8[1]],
+                            ['In Failsafe', 'User Took Over'])
+        num_graphs = 2
+        skip_if_always_set = ['auto_mission_missing', 'offboard_control_signal_lost']
 
-    # RC Quality
-    data_plot = DataPlot(data, plot_config, 'input_rc',
-                         title='RC Quality', plot_height='small', y_range=Range1d(0, 1),
-                         changed_params=changed_params, x_range=x_range)
-    data_plot.add_graph([lambda data: ('rssi', data['rssi']/100), 'rc_lost'],
-                        colors3[0:2], ['RSSI [0, 1]', 'RC Lost (Indicator)'])
-    data_plot.change_dataset('vehicle_status')
-    data_plot.add_graph(['rc_signal_lost'], colors3[2:3], ['RC Lost (Detected)'])
-    if data_plot.finalize() is not None: plots.append(data_plot)
-
+        data_plot.change_dataset('failsafe_flags')
+        failsafe_flags = data_plot.dataset.data
+        for failsafe_field in failsafe_flags:
+            if failsafe_field == 'timestamp' or failsafe_field.startswith('mode_req_'):
+                continue
+            cur_data = failsafe_flags[failsafe_field]
+            # filter: show only the flags that are set at some point
+            if np.amax(cur_data) >= 1:
+                if failsafe_field in skip_if_always_set and np.amin(cur_data) >= 1:
+                    continue
+                data_plot.add_graph([failsafe_field], [colors8[num_graphs % 8]],
+                                    [failsafe_field.replace('_', ' ')])
+                num_graphs += 1
+        plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
+        if data_plot.finalize() is not None: plots.append(data_plot)
+    except (KeyError, IndexError) as error:
+        print('Error in failsafe plot: '+str(error))
 
 
     # cpu load

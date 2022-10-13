@@ -300,7 +300,7 @@ def load_ulog_file(file_name):
                   'vehicle_global_position', 'actuator_controls_0',
                   'actuator_controls_1', 'actuator_outputs',
                   'vehicle_angular_velocity', 'vehicle_attitude', 'vehicle_attitude_setpoint',
-                  'vehicle_rates_setpoint', 'rc_channels', 'input_rc',
+                  'vehicle_rates_setpoint', 'rc_channels',
                   'position_setpoint_triplet', 'vehicle_attitude_groundtruth',
                   'vehicle_local_position_groundtruth', 'vehicle_visual_odometry',
                   'vehicle_status', 'airspeed', 'airspeed_validated', 'manual_control_setpoint',
@@ -310,7 +310,8 @@ def load_ulog_file(file_name):
                   'sensor_gyro_fifo', 'vehicle_angular_acceleration',
                   'ekf2_timestamps', 'manual_control_switches', 'event',
                   'vehicle_imu_status', 'actuator_motors', 'actuator_servos',
-                  'vehicle_thrust_setpoint', 'vehicle_torque_setpoint']
+                  'vehicle_thrust_setpoint', 'vehicle_torque_setpoint',
+                  'failsafe_flags']
     try:
         ulog = ULog(file_name, msg_filter, disable_str_exceptions=False)
     except FileNotFoundError:
