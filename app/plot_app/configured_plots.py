@@ -896,20 +896,21 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
         skip_if_always_set = ['auto_mission_missing', 'offboard_control_signal_lost']
 
         data_plot.change_dataset('failsafe_flags')
-        failsafe_flags = data_plot.dataset.data
-        for failsafe_field in failsafe_flags:
-            if failsafe_field == 'timestamp' or failsafe_field.startswith('mode_req_'):
-                continue
-            cur_data = failsafe_flags[failsafe_field]
-            # filter: show only the flags that are set at some point
-            if np.amax(cur_data) >= 1:
-                if failsafe_field in skip_if_always_set and np.amin(cur_data) >= 1:
+        if data_plot.dataset is not None:
+            failsafe_flags = data_plot.dataset.data
+            for failsafe_field in failsafe_flags:
+                if failsafe_field == 'timestamp' or failsafe_field.startswith('mode_req_'):
                     continue
-                data_plot.add_graph([failsafe_field], [colors8[num_graphs % 8]],
-                                    [failsafe_field.replace('_', ' ')])
-                num_graphs += 1
-        plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
-        if data_plot.finalize() is not None: plots.append(data_plot)
+                cur_data = failsafe_flags[failsafe_field]
+                # filter: show only the flags that are set at some point
+                if np.amax(cur_data) >= 1:
+                    if failsafe_field in skip_if_always_set and np.amin(cur_data) >= 1:
+                        continue
+                    data_plot.add_graph([failsafe_field], [colors8[num_graphs % 8]],
+                                        [failsafe_field.replace('_', ' ')])
+                    num_graphs += 1
+            plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
+            if data_plot.finalize() is not None: plots.append(data_plot)
     except (KeyError, IndexError) as error:
         print('Error in failsafe plot: '+str(error))
 
