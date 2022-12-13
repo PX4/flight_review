@@ -574,10 +574,15 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
                                  y_range=Range1d(-1, 1), title=plot_name+' Outputs',
                                  plot_height='small', changed_params=changed_params,
                                  x_range=x_range)
-            num_actuator_outputs = 8
+            num_actuator_outputs = 12
             if data_plot.dataset:
                 for i in range(num_actuator_outputs):
-                    output_data = data_plot.dataset.data['control['+str(i)+']']
+                    try:
+                        output_data = data_plot.dataset.data['control['+str(i)+']']
+                    except KeyError:
+                        num_actuator_outputs = i
+                        break
+
                     if np.isnan(output_data).all():
                         num_actuator_outputs = i
                         break
