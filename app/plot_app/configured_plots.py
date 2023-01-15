@@ -643,7 +643,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
                          x_range=x_range, y_start=0)
     data_plot.add_graph(['accel_vibration_metric'], colors3[2:3], ['Accel Vibration Level [m/s^2]'])
     data_plot.add_horizontal_background_boxes(
-        ['green', 'orange', 'red'], [0.02, 0.04])
+        ['green', 'orange', 'red'], [4.0, 8.0])
 
     if data_plot.finalize() is not None: plots.append(data_plot)
 
