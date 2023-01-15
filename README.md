@@ -54,6 +54,9 @@ git clone --recursive https://github.com/PX4/flight_review.git
 cd flight_review/app
 pip install -r requirements.txt
 # Note: preferably use a virtualenv
+
+# Note: if you get an error about "ModuleNotFoundError: No module named 'libevents_parse'" update submodules
+git submodule update --init --recursive
 ```
 
 ### Setup
