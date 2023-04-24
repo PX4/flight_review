@@ -855,7 +855,16 @@ class DataPlotSpec(DataPlot):
             # scale time to microseconds and add start time as offset
             time = time * 1.0e6 + self._cur_dataset.data[timestamp_key][0]
 
-            image = [10 * np.log10(sum_psd)]
+            inner_image = 10 * np.log10(sum_psd)
+            # Bokeh/JSON can't handle -inf.
+            # Replace any -inf values with the smallest finite number in the
+            # dataset. We aren't using something like INT_MIN because we
+            # don't want to mess up scaling too much.
+            if -np.inf in inner_image:
+                finite_min = np.min(np.ma.masked_invalid(inner_image))
+                inner_image[inner_image == -np.inf] = finite_min
+            image = [inner_image]
+
             title = self.title
             for legend in legends:
                 title += " " + legend
