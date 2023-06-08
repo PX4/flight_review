@@ -83,6 +83,7 @@ def add_virtual_fifo_topic_data(ulog, topic_name):
                     xyz_new[j][sample+s] = data_point
             sample += samples[i]
         cur_dataset.data['timestamp'] = t_new
+        cur_dataset.data['timestamp_sample'] = t_new
         cur_dataset.data['x'] = xyz_new[0]
         cur_dataset.data['y'] = xyz_new[1]
         cur_dataset.data['z'] = xyz_new[2]
