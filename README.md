@@ -1,7 +1,5 @@
 # Flight Review
 
-[![Build Status](https://travis-ci.org/PX4/flight_review.svg?branch=master)](https://travis-ci.org/PX4/flight_review)
-
 This is a web application for flight log analysis. It allows users to upload
 ULog flight logs, and analyze them through the browser.
 
