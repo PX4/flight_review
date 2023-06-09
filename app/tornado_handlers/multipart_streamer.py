@@ -171,9 +171,9 @@ class TemporaryFileStreamedPart(StreamedPart):
         This method will first close the temporary file, then move it to the new location.
         """
         if not self.is_finalized:
-            raise Exception("Cannot move temporary file: stream is not finalized yet.")
+            raise RuntimeError("Cannot move temporary file: stream is not finalized yet.")
         if self.is_moved:
-            raise Exception("Cannot move temporary file: it has already been moved.")
+            raise RuntimeError("Cannot move temporary file: it has already been moved.")
         self.f_out.close()
         shutil.move(self.f_out.name, file_path)
         self.is_moved = True
@@ -196,9 +196,9 @@ class TemporaryFileStreamedPart(StreamedPart):
 
         Warning! This will load the entire payload into memory!"""
         if not self.is_finalized:
-            raise Exception("Cannot read temporary file: stream is not finalized yet.")
+            raise RuntimeError("Cannot read temporary file: stream is not finalized yet.")
         if self.is_moved:
-            raise Exception("Cannot read temporary file: it has already been moved.")
+            raise RuntimeError("Cannot read temporary file: it has already been moved.")
         self.f_out.seek(0)
         return self.f_out.read()
 
@@ -206,9 +206,9 @@ class TemporaryFileStreamedPart(StreamedPart):
     def get_payload_partial(self, num_bytes):
         """Load a part of part data from disk and return it. """
         if not self.is_finalized:
-            raise Exception("Cannot read temporary file: stream is not finalized yet.")
+            raise RuntimeError("Cannot read temporary file: stream is not finalized yet.")
         if self.is_moved:
-            raise Exception("Cannot read temporary file: it has already been moved.")
+            raise RuntimeError("Cannot read temporary file: it has already been moved.")
         self.f_out.seek(0)
         return self.f_out.read(num_bytes)
 
