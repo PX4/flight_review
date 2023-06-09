@@ -113,7 +113,7 @@ def plot_parameter_changes(p, plots_height, changed_parameters):
         i += 1
 
     if len(names) > 0:
-        source = ColumnDataSource(data=dict(x=timestamps, names=names, y=y_values))
+        source = ColumnDataSource(data={'x': timestamps, 'names': names, 'y': y_values})
 
         # plot as text with a fixed screen-space y offset
         labels = LabelSet(x='x', y='y', text='names',
@@ -164,8 +164,8 @@ def plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states=Non
     # plot flight mode names as labels
     # they're only visible when the mouse is over the plot
     if len(labels_text) > 0:
-        source = ColumnDataSource(data=dict(x=labels_x_pos, text=labels_text,
-                                            y=labels_y_pos, textcolor=labels_color))
+        source = ColumnDataSource(data={'x': labels_x_pos, 'text': labels_text,
+                                        'y': labels_y_pos, 'textcolor': labels_color})
         labels = LabelSet(x='x', y='y', text='text',
                           y_units='screen', level='underlay',
                           source=source, render_mode='canvas',
@@ -181,7 +181,7 @@ def plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states=Non
         code = """
         labels.visible = cb_obj.event_name == "mouseenter";
         """
-        callback = CustomJS(args=dict(labels=labels), code=code)
+        callback = CustomJS(args={'labels': labels}, code=code)
         p.js_on_event(events.MouseEnter, callback)
         p.js_on_event(events.MouseLeave, callback)
 
@@ -272,7 +272,7 @@ def plot_map(ulog, config, map_type='plain', api_key=None, setpoints=False,
 
 
         if map_type == 'google':
-            data_source = ColumnDataSource(data=dict(lat=lat, lon=lon))
+            data_source = ColumnDataSource(data={'lat': lat, 'lon': lon})
 
             lon_center = (np.amin(lon) + np.amax(lon)) / 2
             lat_center = (np.amin(lat) + np.amax(lat)) / 2
@@ -300,7 +300,7 @@ def plot_map(ulog, config, map_type='plain', api_key=None, setpoints=False,
 
             # transform coordinates
             lon, lat = WGS84_to_mercator(lon, lat)
-            data_source = ColumnDataSource(data=dict(lat=lat, lon=lon))
+            data_source = ColumnDataSource(data={'lat': lat, 'lon': lon})
 
             p = figure(tools=TOOLS, active_scroll=ACTIVE_SCROLL_TOOLS)
             p.plot_width = plots_width
@@ -360,7 +360,7 @@ def plot_map(ulog, config, map_type='plain', api_key=None, setpoints=False,
 
 
             lat, lon = map_projection(lat, lon, anchor_lat, anchor_lon)
-            data_source = ColumnDataSource(data=dict(lat=lat, lon=lon))
+            data_source = ColumnDataSource(data={'lat': lat, 'lon': lon})
 
             if bokeh_plot is None:
                 p = figure(tools=TOOLS, active_scroll=ACTIVE_SCROLL_TOOLS,
@@ -391,7 +391,7 @@ def plot_map(ulog, config, map_type='plain', api_key=None, setpoints=False,
                     lon = np.deg2rad(lon)
                     lat, lon = map_projection(lat, lon, anchor_lat, anchor_lon)
 
-                data_source = ColumnDataSource(data=dict(lat=lat, lon=lon))
+                data_source = ColumnDataSource(data={'lat': lat, 'lon': lon})
 
                 p.circle(x='lon', y='lat', source=data_source,
                          line_width=2, size=6, line_color=config['mission_setpoint_color'],
@@ -547,8 +547,8 @@ class DataPlot:
                     y_values = [30] * len(nan_timestamps)
                     # NaN label: add a space to separate it from the line
                     names = [' NaN'] * len(nan_timestamps)
-                    source = ColumnDataSource(data=dict(x=np.array(list(nan_timestamps)),
-                                                        names=names, y=y_values))
+                    source = ColumnDataSource(data={'x': np.array(list(nan_timestamps)),
+                                                    'names': names, 'y': y_values})
                     # plot as text with a fixed screen-space y offset
                     labels = LabelSet(x='x', y='y', text='names',
                                       y_units='screen', level='glyph', text_color=nan_color,
@@ -716,7 +716,7 @@ class DataPlot:
                         ret_val = ret_val + "." + pad(ms, 3);
                     }
                     return ret_val;
-                ''', args={'x_range' : p.x_range})
+                ''', args={'x_range': p.x_range})
 
         # make it possible to hide graphs by clicking on the label
         p.legend.click_policy = "hide"
@@ -765,7 +765,7 @@ class DataPlot2D(DataPlot):
                 if np.count_nonzero(x) == 0 and np.count_nonzero(y) == 0:
                     raise ValueError()
 
-            data_source = ColumnDataSource(data=dict(x=x, y=y))
+            data_source = ColumnDataSource(data={'x': x, 'y': y})
 
             p.line(x="x", y="y", source=data_source, line_width=2,
                    line_color=color, legend_label=legend)
