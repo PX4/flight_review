@@ -744,7 +744,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
         if add_virtual_fifo_topic_data(ulog, 'sensor_gyro_fifo', instance):
             # Raw data
             data_plot = DataPlot(data, plot_config, 'sensor_gyro_fifo_virtual',
-                                 y_axis_label='[m/s^2]', title=f'Raw Gyro (FIFO, IMU{instance})',
+                                 y_axis_label='[deg/s]', title=f'Raw Gyro (FIFO, IMU{instance})',
                                  plot_height='small', changed_params=changed_params,
                                  x_range=x_range, topic_instance=instance)
             data_plot.add_graph(['x', 'y', 'z'], colors3, ['X', 'Y', 'Z'])
