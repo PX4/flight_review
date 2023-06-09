@@ -12,7 +12,7 @@ def ulog_to_polyline(ulog, flight_mode_changes):
     """
     def rgb_colors(flight_mode):
         """ flight mode color from a flight mode """
-        if not flight_mode in flight_modes_table: flight_mode = 0
+        if flight_mode not in flight_modes_table: flight_mode = 0
 
         color_str = flight_modes_table[flight_mode][1] # color in form '#ff00aa'
         # increase brightness to match colors with template

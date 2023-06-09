@@ -85,7 +85,7 @@ class DownloadHandler(TornadoRequestHandlerBase):
 
                 def kml_colors(flight_mode):
                     """ flight mode colors for KML file """
-                    if not flight_mode in flight_modes_table: flight_mode = 0
+                    if flight_mode not in flight_modes_table: flight_mode = 0
 
                     color_str = flight_modes_table[flight_mode][1][1:] # color in form 'ff00aa'
 
