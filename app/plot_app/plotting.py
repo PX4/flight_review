@@ -55,14 +55,14 @@ def plot_dropouts(p, dropouts, min_value, show_hover_tooltips=False):
         p.add_tools(HoverTool(tooltips=[('dropout', '@duration ms')],
                               renderers=[quad]))
 
-def add_virtual_fifo_topic_data(ulog, topic_name):
+def add_virtual_fifo_topic_data(ulog, topic_name, instance=0):
     """ adds a virtual topic by expanding the FIFO samples array into individual
         samples, so it can be used for normal plotting.
         new topic name: topic_name+'_virtual'
         :return: True if topic data was added
     """
     try:
-        cur_dataset = copy.deepcopy(ulog.get_dataset(topic_name))
+        cur_dataset = copy.deepcopy(ulog.get_dataset(topic_name, instance))
         cur_dataset.name = topic_name+'_virtual'
         t = cur_dataset.data['timestamp_sample']
         dt = cur_dataset.data['dt']
