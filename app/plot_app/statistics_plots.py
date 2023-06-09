@@ -310,7 +310,7 @@ class StatisticsPlots:
 
 
         # show the release versions as text markers
-        release_dict = dict(dates=[], tags=[], y=[], y_offset=[])
+        release_dict = {'dates': [], 'tags': [], 'y': [], 'y_offset': []}
         max_logs_dates = self._public_logs_dates # defines range limits of the plot
         if len(max_logs_dates) > 0:
             first_date = max_logs_dates[0]
@@ -358,7 +358,7 @@ class StatisticsPlots:
                     source.trigger('change');
                 """
 # FIXME: this is broken on bokeh 0.12.12
-#                p.y_range.callback = CustomJS(args=dict(source=source), code=jscode)
+#                p.y_range.callback = CustomJS(args={'source': source}, code=jscode)
 
         self._setup_plot(p, 'large')
 

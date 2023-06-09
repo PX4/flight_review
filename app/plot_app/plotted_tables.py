@@ -504,14 +504,15 @@ def get_changed_parameters(ulog, plot_width):
                 param_colors.append('black' if is_airframe_default else plot_color_red)
         except Exception as error:
             print(type(error), error)
-    param_data = dict(
-        names=param_names,
-        values=param_values,
-        defaults=param_defaults,
-        mins=param_mins,
-        maxs=param_maxs,
-        descriptions=param_descriptions,
-        colors=param_colors)
+    param_data = {
+        'names': param_names,
+        'values': param_values,
+        'defaults': param_defaults,
+        'mins': param_mins,
+        'maxs': param_maxs,
+        'descriptions': param_descriptions,
+        'colors': param_colors
+        }
     source = ColumnDataSource(param_data)
     formatter = HTMLTemplateFormatter(template='<font color="<%= colors %>"><%= value %></font>')
     columns = [
@@ -561,10 +562,11 @@ def get_logged_messages(ulog, plot_width):
 
     log_times, log_times_str, log_levels, log_messages = \
         zip(*messages) if len(messages) > 0 else ([],[],[],[])
-    log_data = dict(
-        times=log_times_str,
-        levels=log_levels,
-        messages=log_messages)
+    log_data = {
+        'times': log_times_str,
+        'levels': log_levels,
+        'messages': log_messages
+        }
     source = ColumnDataSource(log_data)
     columns = [
         TableColumn(field="times", title="Time",

@@ -57,15 +57,15 @@ plot_width = 840
 plot_color_blue = '#2877a2' # or: #3539e0
 plot_color_red = '#e0212d'
 
-plot_config = dict(
-    maps_line_color = plot_color_blue,
-    plot_width = plot_width,
-    plot_height = dict(
-        normal = int(plot_width / 2.1),
-        small = int(plot_width / 2.5),
-        large = int(plot_width / 1.61803398874989484), # used for the gps map
-        ),
-    )
+plot_config = {
+    'maps_line_color': plot_color_blue,
+    'plot_width': plot_width,
+    'plot_height': {
+        'normal': int(plot_width / 2.1),
+        'small': int(plot_width / 2.5),
+        'large': int(plot_width / 1.61803398874989484), # used for the gps map
+        },
+    }
 
 colors3 = [plot_color_red, '#208900', plot_color_blue]
 colors2 = [colors3[0], colors3[1]] # for data to express: 'what it is' and 'what it should be'
