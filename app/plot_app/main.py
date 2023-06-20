@@ -51,27 +51,27 @@ if GET_arguments is not None and 'stats' in GET_arguments:
                    (statistics.num_logs_ci(), statistics.num_logs_total()))
     plots.append(column(div_info))
 
-    div = Div(text="<br/><h4>Flight Report Logs "
-              "<small class='text-muted'>(Public Logs only)</small></h4>")
-    div_info = Div(text="Total Flight Hours over all versions: %.1f"%
-                   statistics.total_public_flight_duration())
-    div_info_release = Div(text="Total Flight Hours for the latest major" \
-            " release %s (starting from the first RC candidate): %.1f"%
-                           (statistics.latest_major_release()+'.x',
-                            statistics.total_public_flight_duration_latest_release()))
-    plots.append(column([div, div_info, div_info_release]))
-
-    p = statistics.plot_public_airframe_statistics()
-    plots.append(p)
-
-    p = statistics.plot_public_boards_statistics()
-    plots.append(p)
-
-    p = statistics.plot_public_boards_num_flights_statistics()
-    plots.append(p)
-
-    p = statistics.plot_public_flight_mode_statistics()
-    plots.append(p)
+    # div = Div(text="<br/><h4>Flight Report Logs "
+    #           "<small class='text-muted'>(Public Logs only)</small></h4>")
+    # div_info = Div(text="Total Flight Hours over all versions: %.1f"%
+    #                statistics.total_public_flight_duration())
+    # div_info_release = Div(text="Total Flight Hours for the latest major" \
+    #         " release %s (starting from the first RC candidate): %.1f"%
+    #                        (statistics.latest_major_release()+'.x',
+    #                         statistics.total_public_flight_duration_latest_release()))
+    # plots.append(column([div, div_info, div_info_release]))
+    #
+    # p = statistics.plot_public_airframe_statistics()
+    # plots.append(p)
+    #
+    # p = statistics.plot_public_boards_statistics()
+    # plots.append(p)
+    #
+    # p = statistics.plot_public_boards_num_flights_statistics()
+    # plots.append(p)
+    #
+    # p = statistics.plot_public_flight_mode_statistics()
+    # plots.append(p)
 
     # TODO: add a rating pie chart (something like
     # http://bokeh.pydata.org/en/latest/docs/gallery/donut_chart.html ?)
