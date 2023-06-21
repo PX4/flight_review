@@ -58,7 +58,7 @@ pip install -r requirements.txt
 
 ### Setup
 
-Initialize the Database like following:
+Initialize the Database as following:
 
 ```bash
 ./app/setup_db.py
