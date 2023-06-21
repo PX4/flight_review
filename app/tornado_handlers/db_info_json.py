@@ -37,8 +37,8 @@ class DBInfoHandler(tornado.web.RequestHandler):
         db_tuples = cur.fetchall()
         vehicle_table = {db_tuple[0]: db_tuple[1] for db_tuple in db_tuples}
 
-        cur.execute('select Id, Date, Description, WindSpeed, Rating, VideoUrl, ErrorLabels, '
-                    'Source, Feedback, Type from Logs where Public = 1')
+        cur.execute('SELECT Id, Date, Description, WindSpeed, Rating, VideoUrl, ErrorLabels, '
+                    'Source, Feedback, Type FROM Logs WHERE Public = 1 AND NOT Source = "CI"')
         # need to fetch all here, because we will do more SQL calls while
         # iterating (having multiple cursor's does not seem to work)
         db_tuples = cur.fetchall()
