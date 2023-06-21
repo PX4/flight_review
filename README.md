@@ -61,8 +61,7 @@ pip install -r requirements.txt
 Initialize the Database like following:
 
 ```bash
-cd app
-./setup_db.py
+./app/setup_db.py
 ```
 
 **Note:** `setup_db.py` can also be used to upgrade the database tables, for instance when new entries are added (it automatically detects that).
