@@ -59,15 +59,21 @@ git submodule update --init --recursive
 
 ### Setup
 
+Initialize the Database as following:
+
+```bash
+./app/setup_db.py
+```
+
+**Note:** `setup_db.py` can also be used to upgrade the database tables, for instance when new entries are added (it automatically detects that).
+
+#### Settings
+
 - By default the app will load `config_default.ini` configuration file
 - You can override any setting from `config_default.ini` with a user config file
   `config_user.ini` (untracked)
 - Any setting on `config_user.ini` has priority over
   `config_default.ini`
-- Run `setup_db.py` to initialize the database.
-
-**Note:** `setup_db.py` can also be used to upgrade the database tables, for
-  instance when new entries are added (it automatically detects that).
 
 ## Usage
 
