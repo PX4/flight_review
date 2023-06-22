@@ -14,6 +14,7 @@ import uuid
 
 from pyulog import *
 from pyulog.px4 import *
+from scipy.interpolate import interp1d
 
 from config_tables import *
 from config import get_log_filepath, get_airframes_filename, get_airframes_url, \
@@ -355,6 +356,18 @@ class ActuatorControls:
                         thrust_sp.data['xyz[1]']**2 + thrust_sp.data['xyz[2]']**2)
                 self._thrust_x = thrust_sp.data['xyz[0]']
                 self._thrust_z_neg = -thrust_sp.data['xyz[2]']
+                if instance != 0: # We must resample thrust to the desired instance
+                    def _resample(time_array, data, desired_time):
+                        """ resample data at a given time to a vector of desired_time """
+                        data_f = interp1d(time_array, data, fill_value='extrapolate')
+                        return data_f(desired_time)
+                    thrust_sp_instance = ulog.get_dataset('vehicle_thrust_setpoint', instance)
+                    self._thrust = _resample(thrust_sp.data['timestamp'], self._thrust,
+                                             thrust_sp_instance.data['timestamp'])
+                    self._thrust_x = _resample(thrust_sp.data['timestamp'], self._thrust_x,
+                                               thrust_sp_instance.data['timestamp'])
+                    self._thrust_z_neg = _resample(thrust_sp.data['timestamp'], self._thrust_z_neg,
+                                                   thrust_sp_instance.data['timestamp'])
             except:
                 self._thrust = None
         else:
