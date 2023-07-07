@@ -22,7 +22,7 @@ import pyfftw
 
 from downsampling import DynamicDownsample
 from helper import (
-    map_projection, WGS84_to_mercator, flight_modes_table, vtol_modes_table
+    map_projection, WGS84_to_mercator, flight_modes_table, vtol_modes_table, get_lat_lon_alt_deg
     )
 
 
@@ -258,9 +258,7 @@ def plot_map(ulog, config, map_type='plain', api_key=None, setpoints=False,
         t = cur_dataset.data['timestamp']
         indices = cur_dataset.data['fix_type'] > 2 # use only data with a fix
         t = t[indices]
-        lon = cur_dataset.data['lon'][indices] / 1e7 # degrees
-        lat = cur_dataset.data['lat'][indices] / 1e7
-        altitude = cur_dataset.data['alt'][indices] / 1e3 # meters
+        lat, lon, _ = get_lat_lon_alt_deg(ulog, cur_dataset)
 
         plots_width = config['plot_width']
         plots_height = config['plot_height']['large']
