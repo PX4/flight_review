@@ -40,6 +40,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
         magnetometer_ga_topic = 'sensor_combined'
     manual_control_sp_controls = ['roll', 'pitch', 'yaw', 'throttle']
     manual_control_sp_throttle_range = '[-1, 1]'
+    vehicle_gps_position_altitude = None
     for topic in data:
         if topic.name == 'system_power':
             # COMPATIBILITY: rename fields to new format
@@ -49,13 +50,18 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
                 topic.data['sensors3v3[0]'] = topic.data.pop('voltage3V3_v')
             if 'voltage3v3_v' in topic.data:
                 topic.data['sensors3v3[0]'] = topic.data.pop('voltage3v3_v')
-        if topic.name == 'tecs_status':
+        elif topic.name == 'tecs_status':
             if 'airspeed_sp' in topic.data: # old (prior to PX4-Autopilot/pull/16585)
                 topic.data['true_airspeed_sp'] = topic.data.pop('airspeed_sp')
-        if topic.name == 'manual_control_setpoint':
+        elif topic.name == 'manual_control_setpoint':
             if 'throttle' not in topic.data: # old (prior to PX4-Autopilot/pull/15949)
                 manual_control_sp_controls = ['y', 'x', 'r', 'z']
                 manual_control_sp_throttle_range = '[0, 1]'
+        elif topic.name == 'vehicle_gps_position':
+            if ulog.msg_info_dict.get('ver_data_format', 0) >= 2:
+                vehicle_gps_position_altitude = topic.data['altitude_msl_m']
+            else: # COMPATIBILITY
+                vehicle_gps_position_altitude = topic.data['alt'] * 0.001
 
     if any(elem.name == 'vehicle_angular_velocity' for elem in data):
         rate_estimated_topic_name = 'vehicle_angular_velocity'
@@ -180,8 +186,8 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
     data_plot = DataPlot(data, plot_config, 'vehicle_gps_position',
                          y_axis_label='[m]', title='Altitude Estimate',
                          changed_params=changed_params, x_range=x_range)
-    data_plot.add_graph([lambda data: ('alt', data['alt']*0.001)],
-                        colors8[0:1], ['GPS Altitude'])
+    data_plot.add_graph([lambda data: ('alt', vehicle_gps_position_altitude)],
+                        colors8[0:1], ['GPS Altitude (MSL)'])
     data_plot.change_dataset(baro_alt_meter_topic)
     data_plot.add_graph(['baro_alt_meter'], colors8[1:2], ['Barometer Altitude'])
     data_plot.change_dataset('vehicle_global_position')

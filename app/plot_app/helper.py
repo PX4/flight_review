@@ -422,6 +422,21 @@ class ActuatorControls:
         return self._thrust_z_neg
 
 
+def get_lat_lon_alt_deg(ulog: ULog, vehicle_gps_position_dataset: ULog.Data):
+    """
+    Get (lat, lon, alt) tuple in degrees and altitude in meters
+    """
+    if ulog.msg_info_dict.get('ver_data_format', 0) >= 2:
+        lat = vehicle_gps_position_dataset.data['latitude_deg']
+        lon = vehicle_gps_position_dataset.data['longitude_deg']
+        alt = vehicle_gps_position_dataset.data['altitude_msl_m']
+    else: # COMPATIBILITY
+        lat = vehicle_gps_position_dataset.data['lat'] / 1e7
+        lon = vehicle_gps_position_dataset.data['lon'] / 1e7
+        alt = vehicle_gps_position_dataset.data['alt'] / 1e3
+    return lat, lon, alt
+
+
 def get_airframe_name(ulog, multi_line=False):
     """
     get the airframe name and autostart ID.
