@@ -55,10 +55,11 @@
 			<a class="nav-link" data-toggle="dropdown" href="javascript:;">Download <i class="fa fa-angle-down"></i></a>
 			<div class="dropdown-menu">
 				<a class="dropdown-item" href="download?log={{ log_id }}">Log File</a>
-				<a class="dropdown-item" href="download?log={{ log_id }}&type=1" target="_blank">Parameters</a>
+				<a class="dropdown-item" href="download?log={{ log_id }}&type=1" target="_blank">Parameters (.params)</a>
+				<a class="dropdown-item" href="download?log={{ log_id }}&type=2" target="_blank">Parameters (.txt)</a>
 				<a class="dropdown-item" href="download?log={{ log_id }}&type=3" target="_blank">Parameters (non-default)</a>
 {% if has_position_data %}
-				<a class="dropdown-item" href="download?log={{ log_id }}&type=2" target="_blank">KML Track</a>
+				<a class="dropdown-item" href="download?log={{ log_id }}&type=4" target="_blank">KML Track</a>
 {% endif %}
 			</div>
 		</li>
@@ -111,4 +112,3 @@
 </nav>
 
     <div class="content">
-
