@@ -68,11 +68,24 @@ class DownloadHandler(TornadoRequestHandlerBase):
             self.set_header("Content-Type", "text/plain")
             self.set_header('Content-Disposition', 'inline; filename=params.txt')
 
-            delimiter = ', '
+            delimiter = '	'
             for param_key in param_keys:
+                self.write("1")
+                self.write(delimiter)
+                self.write("1")
+                self.write(delimiter)
                 self.write(param_key)
                 self.write(delimiter)
                 self.write(str(ulog.initial_parameters[param_key]))
+
+                #if the value is an int write a 6, if not write a 9
+                if(type(ulog.initial_parameters[param_key]) == int):
+                    self.write(delimiter)
+                    self.write("6")
+                else:
+                    self.write(delimiter)
+                    self.write("9")
+
                 self.write('\n')
 
         elif download_type == '2': # download the kml file
