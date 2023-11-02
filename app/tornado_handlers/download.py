@@ -209,10 +209,10 @@ class DownloadHandler(TornadoRequestHandlerBase):
                             self.write(delimiter)
                             self.write(param_key)
                             self.write(delimiter)
-                            self.write(str(ulog.initial_parameters[param_key]))
+                            self.write(str(param_value))
 
                             #if the value is an int write a 6, if not write a 9
-                            if(type(ulog.initial_parameters[param_key]) == int):
+                            if(type(param_value) == int):
                                 self.write(delimiter)
                                 self.write("6")
                             else:
