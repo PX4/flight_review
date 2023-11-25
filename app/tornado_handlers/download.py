@@ -64,14 +64,28 @@ class DownloadHandler(TornadoRequestHandlerBase):
             ulog = load_ulog_file(log_file_name)
             param_keys = sorted(ulog.initial_parameters.keys())
 
-            self.set_header("Content-Type", "text/plain")
-            self.set_header('Content-Disposition', 'inline; filename=params.txt')
+            self.set_header('Content-Type', 'application/octet-stream')
+            self.set_header("Content-Description", "File Transfer")
+            self.set_header('Content-Disposition', 'attachment; filename=vehicle.params')
 
-            delimiter = ', '
+            delimiter = '	'
             for param_key in param_keys:
+                self.write("1") #sysid
+                self.write(delimiter)
+                self.write("1") #compid
+                self.write(delimiter)
                 self.write(param_key)
                 self.write(delimiter)
                 self.write(str(ulog.initial_parameters[param_key]))
+
+                #if the value is an int write a 6, if not write a 9
+                if(type(ulog.initial_parameters[param_key]) == int):
+                    self.write(delimiter)
+                    self.write("6")
+                else:
+                    self.write(delimiter)
+                    self.write("9")
+
                 self.write('\n')
 
         elif download_type == '2': # download the kml file
@@ -129,64 +143,9 @@ class DownloadHandler(TornadoRequestHandlerBase):
             ulog = load_ulog_file(log_file_name)
             param_keys = sorted(ulog.initial_parameters.keys())
 
-            self.set_header("Content-Type", "text/plain")
-            self.set_header('Content-Disposition', 'inline; filename=params.txt')
-            delimiter = ', '
-
-            # Use defaults from log if available
-            if ulog.has_default_parameters:
-                system_defaults = ulog.get_default_parameters(0)
-                airframe_defaults = ulog.get_default_parameters(1)
-                for param_key in param_keys:
-                    try:
-                        param_value = ulog.initial_parameters[param_key]
-                        is_default = True
-                        if param_key in airframe_defaults:
-                            is_default = param_value == airframe_defaults[param_key]
-                        elif param_key in system_defaults:
-                            is_default = param_value == system_defaults[param_key]
-
-                        if not is_default:
-                            self.write(param_key)
-                            self.write(delimiter)
-                            self.write(str(param_value))
-                            self.write('\n')
-                    except:
-                        pass
-
-        elif download_type == '4': # download QGC parameters
-            ulog = load_ulog_file(log_file_name)
-            param_keys = sorted(ulog.initial_parameters.keys())
-
-            self.set_header("Content-Type", "text/plain")
-            self.set_header('Content-Disposition', 'inline; filename=vehicle.params')
-
-            delimiter = '	'
-            for param_key in param_keys:
-                self.write("1")
-                self.write(delimiter)
-                self.write("1")
-                self.write(delimiter)
-                self.write(param_key)
-                self.write(delimiter)
-                self.write(str(ulog.initial_parameters[param_key]))
-
-                #if the value is an int write a 6, if not write a 9
-                if(type(ulog.initial_parameters[param_key]) == int):
-                    self.write(delimiter)
-                    self.write("6")
-                else:
-                    self.write(delimiter)
-                    self.write("9")
-
-                self.write('\n')
-
-        elif download_type == '5': # download non-default parameters for QGC
-            ulog = load_ulog_file(log_file_name)
-            param_keys = sorted(ulog.initial_parameters.keys())
-
-            self.set_header("Content-Type", "text/plain")
-            self.set_header('Content-Disposition', 'inline; filename=vehicle-nondefault.params')
+            self.set_header('Content-Type', 'application/octet-stream')
+            self.set_header("Content-Description", "File Transfer")
+            self.set_header('Content-Disposition', 'attachment; filename=non-default.params')
             delimiter = '	'
 
             # Use defaults from log if available
