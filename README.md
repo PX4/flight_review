@@ -208,3 +208,5 @@ chmod u+x init-letsencrypt.sh
 ## Contributing
 Contributions are welcome! Just open a pull request with detailed description
 why the changes are needed, or open an issue for bugs, feature requests, etc...
+
+Feel free to run `./run_pylint.sh` before PR to ensure CICD checks pass on your code. 
