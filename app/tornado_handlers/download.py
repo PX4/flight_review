@@ -162,9 +162,9 @@ class DownloadHandler(TornadoRequestHandlerBase):
                             is_default = param_value == system_defaults[param_key]
 
                         if not is_default:
-                            self.write("1")
+                            self.write("1") # sysid
                             self.write(delimiter)
-                            self.write("1")
+                            self.write("1") # compid
                             self.write(delimiter)
                             self.write(param_key)
                             self.write(delimiter)
@@ -199,9 +199,22 @@ class DownloadHandler(TornadoRequestHandlerBase):
                                 is_default = int(default_param['default']) == int(param_value)
 
                         if not is_default:
+                            self.write("1") # sysid
+                            self.write(delimiter)
+                            self.write("1") # compid
+                            self.write(delimiter)
                             self.write(param_key)
                             self.write(delimiter)
                             self.write(param_value)
+
+                            #if the value is an int write a 6, if not write a 9
+                            if isinstance(param_value, int):
+                                self.write(delimiter)
+                                self.write("6")
+                            else:
+                                self.write(delimiter)
+                                self.write("9")
+
                             self.write('\n')
                     except:
                         pass
