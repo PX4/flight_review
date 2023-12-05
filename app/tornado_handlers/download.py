@@ -60,19 +60,32 @@ class DownloadHandler(TornadoRequestHandlerBase):
                 print("DB access failed:", sys.exc_info()[0], sys.exc_info()[1])
             return default_value
 
-
         if download_type == '1': # download the parameters
             ulog = load_ulog_file(log_file_name)
             param_keys = sorted(ulog.initial_parameters.keys())
 
-            self.set_header("Content-Type", "text/plain")
-            self.set_header('Content-Disposition', 'inline; filename=params.txt')
+            self.set_header('Content-Type', 'application/octet-stream')
+            self.set_header("Content-Description", "File Transfer")
+            self.set_header('Content-Disposition', 'attachment; filename=vehicle.params')
 
-            delimiter = ', '
+            delimiter = '	'
             for param_key in param_keys:
+                self.write("1") #sysid
+                self.write(delimiter)
+                self.write("1") #compid
+                self.write(delimiter)
                 self.write(param_key)
                 self.write(delimiter)
                 self.write(str(ulog.initial_parameters[param_key]))
+
+                #if the value is an int write a 6, if not write a 9
+                if isinstance(ulog.initial_parameters[param_key], int):
+                    self.write(delimiter)
+                    self.write("6")
+                else:
+                    self.write(delimiter)
+                    self.write("9")
+
                 self.write('\n')
 
         elif download_type == '2': # download the kml file
@@ -130,9 +143,10 @@ class DownloadHandler(TornadoRequestHandlerBase):
             ulog = load_ulog_file(log_file_name)
             param_keys = sorted(ulog.initial_parameters.keys())
 
-            self.set_header("Content-Type", "text/plain")
-            self.set_header('Content-Disposition', 'inline; filename=params.txt')
-            delimiter = ', '
+            self.set_header('Content-Type', 'application/octet-stream')
+            self.set_header("Content-Description", "File Transfer")
+            self.set_header('Content-Disposition', 'attachment; filename=non-default.params')
+            delimiter = '	'
 
             # Use defaults from log if available
             if ulog.has_default_parameters:
@@ -148,9 +162,22 @@ class DownloadHandler(TornadoRequestHandlerBase):
                             is_default = param_value == system_defaults[param_key]
 
                         if not is_default:
+                            self.write("1")
+                            self.write(delimiter)
+                            self.write("1")
+                            self.write(delimiter)
                             self.write(param_key)
                             self.write(delimiter)
                             self.write(str(param_value))
+
+                            #if the value is an int write a 6, if not write a 9
+                            if isinstance(param_value, int):
+                                self.write(delimiter)
+                                self.write("6")
+                            else:
+                                self.write(delimiter)
+                                self.write("9")
+
                             self.write('\n')
                     except:
                         pass
