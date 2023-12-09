@@ -1,18 +1,12 @@
 
-$.fn.scrollView = function () {
-    return this.each(function () {
-        $('html, body').animate({
-            scrollTop: $(this).offset().top
-        }, 500);
-    });
-}
-
 
 var do_not_scroll = false;
 function navigate(fragment) {
 	// jump to the fragment and handle the sticky header properly
 	do_not_scroll = true;
 	window.location.hash = fragment;
+
+	fragment_elements.get(fragment).scrollIntoView();
 
 	setTimeout(function() {
 		//hide sticky header
@@ -86,6 +80,8 @@ $(function() { //on startup
     init_error_labels({{cur_err_ids}});
 });
 
+var fragment_elements = new Map(); // Map with {"fragment-id", dom-element} items
+
 function setupPlots() {
 	// do necessary setup after plots are loaded
 
@@ -106,9 +102,9 @@ function setupPlots() {
 
 	// add fragment anchor links to each plot (placement via CSS)
 	function foreach_plot_view(view, fn) {
-		if (view.model instanceof Bokeh.Models("Plot")) {
+		if (view.model instanceof Bokeh.Models.get("Plot")) {
 			fn(view);
-		} else if (view.model instanceof Bokeh.Models("LayoutDOM")) {
+		} else if (view.model instanceof Bokeh.Models.get("LayoutDOM")) {
 			for (var id in view.child_views) {
 				foreach_plot_view(view.child_views[id], fn);
 			}
@@ -119,9 +115,10 @@ function setupPlots() {
 		index_of = plot_ids.indexOf(plot_view.model.id)
 		if (index_of >= 0) {
 			var a = $('<a id="'+plot_fragments[index_of]+'" '+
-					'class="fragment bk-plot-layout"' +
+					'style="position: absolute;z-index: 100;color: black;text-decoration-line: none;"' +
 					' href="#'+plot_fragments[index_of]+'"><big>&para;</big></a>');
 			$(plot_view.canvas_view.el).before(a);
+			fragment_elements.set(plot_fragments[index_of], a[0])
 		}
 	});
 
@@ -138,7 +135,7 @@ function setupPlots() {
 	// fragments does not work on page load, so we do it manually
 	var cur_frag = window.location.hash.substr(1);
 	if (cur_frag.length > 0) {
-		window.setTimeout(function() { $('#'+cur_frag).scrollView(); }, 1000);
+		window.setTimeout(function() { fragment_elements.get(cur_frag).scrollIntoView(); }, 1000);
 	}
 }
 

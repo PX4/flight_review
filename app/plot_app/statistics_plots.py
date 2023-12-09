@@ -9,7 +9,7 @@ import numpy as np
 from bokeh.plotting import figure
 from bokeh.palettes import viridis # alternatives: magma, inferno
 from bokeh.models import (
-    DatetimeTickFormatter, FixedTicker, FuncTickFormatter,
+    DatetimeTickFormatter, FixedTicker, CustomJSTickFormatter,
     HoverTool, ColumnDataSource, LabelSet #, CustomJS
     )
 
@@ -549,7 +549,7 @@ class StatisticsPlots:
         if area.legend:
             area.legend[0].items.reverse()
 
-        area.xaxis.formatter = FuncTickFormatter(code="""
+        area.xaxis.formatter = CustomJSTickFormatter(code="""
             var versions = """ + str(versions_spaced) + """;
             return versions[Math.floor(tick)]
         """)
@@ -569,8 +569,8 @@ class StatisticsPlots:
 
         plots_width = self._config['plot_width']
         plots_height = self._config['plot_height'][plot_height]
-        p.plot_width = plots_width
-        p.plot_height = plots_height
+        p.width = plots_width
+        p.height = plots_height
 
         p.xgrid.grid_line_color = 'navy'
         p.xgrid.grid_line_alpha = 0.13

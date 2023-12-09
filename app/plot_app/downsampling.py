@@ -48,7 +48,7 @@ class DynamicDownsample:
             self.cur_data[k] = data[k]
 
         # first downsampling
-        self.downsample(self.cur_data, self.bokeh_plot.plot_width *
+        self.downsample(self.cur_data, self.bokeh_plot.width *
                         self.startup_density)
         self.data_source = ColumnDataSource(data=self.cur_data)
 
@@ -64,7 +64,7 @@ class DynamicDownsample:
         new_range = [self.bokeh_plot.x_range.start, self.bokeh_plot.x_range.end]
         if None in new_range:
             return
-        plot_width = self.bokeh_plot.plot_width
+        plot_width = self.bokeh_plot.width
         init_x = self.init_data[self.x_key]
         cur_x = self.cur_data[self.x_key]
         cur_range = [cur_x[0], cur_x[-1]]
