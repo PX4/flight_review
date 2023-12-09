@@ -92,7 +92,8 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
         if np.amax(cur_dataset.data['is_vtol']) == 1:
             is_vtol = True
             # check if is tailsitter
-            is_vtol_tailsitter = np.amax(cur_dataset.data['is_vtol_tailsitter']) == 1
+            is_vtol_tailsitter = ('is_vtol_tailsitter' in cur_dataset.data and
+                                  np.amax(cur_dataset.data['is_vtol_tailsitter']) == 1)
             # find mode after transitions (states: 1=transition, 2=FW, 3=MC)
             if 'vehicle_type' in cur_dataset.data:
                 vehicle_type_field = 'vehicle_type'
