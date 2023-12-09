@@ -71,9 +71,6 @@ A new flight report just got uploaded:
 
 Description: {description}
 Feedback: {feedback}
-Rating: {rating_description}
-Wind Speed: {wind_speed}
-Uploader: {uploader_email}
 
 Vehicle type: {type}
 Airframe: {airframe}
