@@ -178,12 +178,6 @@ class UploadHandler(TornadoRequestHandlerBase):
                 header_len = len(ULog.HEADER_BYTES)
                 if (file_obj.get_payload_partial(header_len) !=
                         ULog.HEADER_BYTES):
-                    if upload_file_name[-7:].lower() == '.px4log':
-                        raise CustomHTTPError(
-                            400,
-                            'Invalid File. This seems to be a px4log file. '
-                            'Upload it to <a href="http://logs.uaventure.com" '
-                            'target="_blank">logs.uaventure.com</a>.')
                     raise CustomHTTPError(400, 'Invalid File')
 
                 print('Moving uploaded file to', new_file_name)
