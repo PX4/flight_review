@@ -5,7 +5,7 @@ from bokeh.plotting import figure
 #pylint: disable=line-too-long, arguments-differ, unused-import
 from bokeh.models import (
     ColumnDataSource, Range1d, DataRange1d, DatetimeAxis,
-    TickFormatter, DatetimeTickFormatter, FuncTickFormatter,
+    TickFormatter, DatetimeTickFormatter, CustomJSTickFormatter,
     Grid, Legend, Plot, BoxAnnotation, Span, CustomJS, Rect, Circle, Line,
     HoverTool, BoxZoomTool, PanTool, WheelZoomTool, ResetTool, SaveTool,
     WMTSTileSource, GMapPlot, GMapOptions,
@@ -118,7 +118,7 @@ def plot_parameter_changes(p, plots_height, changed_parameters):
         # plot as text with a fixed screen-space y offset
         labels = LabelSet(x='x', y='y', text='names',
                           y_units='screen', level='glyph', #text_alpha=0.9, text_color='black',
-                          source=source, render_mode='canvas', text_font_size='8pt')
+                          source=source, text_font_size='8pt')
         p.add_layout(labels)
         return labels
     return None
@@ -168,7 +168,7 @@ def plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states=Non
                                         'y': labels_y_pos, 'textcolor': labels_color})
         labels = LabelSet(x='x', y='y', text='text',
                           y_units='screen', level='underlay',
-                          source=source, render_mode='canvas',
+                          source=source,
                           text_font_size='10pt',
                           text_color='textcolor', text_alpha=0.85,
                           background_fill_color='white',
@@ -223,7 +223,7 @@ def plot_set_equal_aspect_ratio(p, x, y, zoom_out_factor=1.3, min_range=5):
     y_center = (y_range[0]+y_range[1])/2
 
     # keep same aspect ratio as the plot
-    aspect = p.plot_width / p.plot_height
+    aspect = p.width / p.height
     if aspect > x_diff / y_diff:
         x_diff = y_diff * aspect
     else:
@@ -281,7 +281,7 @@ def plot_map(ulog, config, map_type='plain', api_key=None, setpoints=False,
 
             p = GMapPlot(
                 x_range=Range1d(), y_range=Range1d(), map_options=map_options,
-                api_key=api_key, plot_width=plots_width, plot_height=plots_height
+                api_key=api_key, width=plots_width, height=plots_height
             )
 
             pan = PanTool()
@@ -301,8 +301,8 @@ def plot_map(ulog, config, map_type='plain', api_key=None, setpoints=False,
             data_source = ColumnDataSource(data={'lat': lat, 'lon': lon})
 
             p = figure(tools=TOOLS, active_scroll=ACTIVE_SCROLL_TOOLS)
-            p.plot_width = plots_width
-            p.plot_height = plots_height
+            p.width = plots_width
+            p.height = plots_height
 
             plot_set_equal_aspect_ratio(p, lon, lat)
 
@@ -363,8 +363,8 @@ def plot_map(ulog, config, map_type='plain', api_key=None, setpoints=False,
             if bokeh_plot is None:
                 p = figure(tools=TOOLS, active_scroll=ACTIVE_SCROLL_TOOLS,
                            x_axis_label='[m]', y_axis_label='[m]')
-                p.plot_width = plots_width
-                p.plot_height = plots_height
+                p.width = plots_width
+                p.height = plots_height
 
                 plot_set_equal_aspect_ratio(p, lon, lat)
             else:
@@ -550,7 +550,7 @@ class DataPlot:
                     # plot as text with a fixed screen-space y offset
                     labels = LabelSet(x='x', y='y', text='names',
                                       y_units='screen', level='glyph', text_color=nan_color,
-                                      source=source, render_mode='canvas')
+                                      source=source)
                     p.add_layout(labels)
 
 
@@ -668,8 +668,8 @@ class DataPlot:
         plots_height = self.plot_height
         p = self._p
 
-        p.plot_width = plots_width
-        p.plot_height = plots_height
+        p.width = plots_width
+        p.height = plots_height
 
         # -> other attributes are set via theme.yaml
 
@@ -688,7 +688,7 @@ class DataPlot:
 
         # axis labels: format time
         if self._use_time_formatter:
-            p.xaxis[0].formatter = FuncTickFormatter(code='''
+            p.xaxis[0].formatter = CustomJSTickFormatter(code='''
                     //func arguments: ticks, x_range
                     // assume us ticks
                     var ms = Math.round(tick / 1000);
@@ -717,7 +717,8 @@ class DataPlot:
                 ''', args={'x_range': p.x_range})
 
         # make it possible to hide graphs by clicking on the label
-        p.legend.click_policy = "hide"
+        if len(p.legend) > 0:
+            p.legend.click_policy = "hide"
 
 
 class DataPlot2D(DataPlot):
@@ -739,8 +740,8 @@ class DataPlot2D(DataPlot):
         self._equal_aspect = equal_aspect
         self._is_first_graph = True
 
-        self._p.plot_width = self._config['plot_width']
-        self._p.plot_height = self._config['plot_height'][self._plot_height_name]
+        self._p.width = self._config['plot_width']
+        self._p.height = self._config['plot_height'][self._plot_height_name]
 
 
     def add_graph(self, dataset_x, dataset_y, color, legend, check_if_all_zero=False):
@@ -1002,7 +1003,6 @@ class DataPlotFFT(DataPlot):
         # plot as text with a fixed screen-space y offset
         label = Label(x=frequency, y=self.plot_height/2-10-y_screen_offset,
                       text=label, y_units='screen', level='glyph',
-                      text_font_size='8pt', text_color=mark_color,
-                      render_mode='canvas')
+                      text_font_size='8pt', text_color=mark_color)
         p.add_layout(label)
 
