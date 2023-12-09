@@ -20,6 +20,7 @@ import scipy
 import scipy.signal
 import pyfftw
 
+from config import debug_verbose_output
 from downsampling import DynamicDownsample
 from helper import (
     map_projection, WGS84_to_mercator, flight_modes_table, vtol_modes_table, get_lat_lon_alt_deg
@@ -91,7 +92,8 @@ def add_virtual_fifo_topic_data(ulog, topic_name, instance=0):
         return True
     except (KeyError, IndexError, ValueError) as error:
         # log does not contain the value we are looking for
-        print(type(error), "(fifo data):", error)
+        if debug_verbose_output():
+            print(type(error), "(fifo data):", error)
         return False
 
 
@@ -399,7 +401,8 @@ def plot_map(ulog, config, map_type='plain', api_key=None, setpoints=False,
 
     except (KeyError, IndexError, ValueError) as error:
         # log does not contain the value we are looking for
-        print(type(error), "(vehicle_gps_position):", error)
+        if debug_verbose_output():
+            print(type(error), "(vehicle_gps_position):", error)
         return None
     p.toolbar.logo = None
     # make it possible to hide graphs by clicking on the label
@@ -453,7 +456,8 @@ class DataPlot:
                                y=y_start, size=0, alpha=0)
 
         except (KeyError, IndexError, ValueError) as error:
-            print(type(error), "("+self._data_name+"):", error)
+            if debug_verbose_output():
+                print(type(error), "("+self._data_name+"):", error)
             self._had_error = True
 
     @property
@@ -501,7 +505,8 @@ class DataPlot:
             self._cur_dataset = [elem for elem in self._data
                                  if elem.name == data_name and elem.multi_id == topic_instance][0]
         except (KeyError, IndexError, ValueError) as error:
-            print(type(error), "("+self._data_name+"):", error)
+            if debug_verbose_output():
+                print(type(error), "("+self._data_name+"):", error)
             self._had_error = True
             self._cur_dataset = None
 
@@ -573,7 +578,8 @@ class DataPlot:
                            legend_label=legend, line_width=2, line_color=color)
 
         except (KeyError, IndexError, ValueError) as error:
-            print(type(error), "("+self._data_name+"):", error)
+            if debug_verbose_output():
+                print(type(error), "("+self._data_name+"):", error)
             self._had_error = True
 
     def add_circle(self, field_names, colors, legends):
@@ -595,7 +601,8 @@ class DataPlot:
                          fill_color=None)
 
         except (KeyError, IndexError, ValueError) as error:
-            print(type(error), "("+self._data_name+"):", error)
+            if debug_verbose_output():
+                print(type(error), "("+self._data_name+"):", error)
             self._had_error = True
 
 
@@ -630,7 +637,8 @@ class DataPlot:
                 self._p.add_layout(data_span)
 
         except (KeyError, IndexError, ValueError) as error:
-            print(type(error), "("+self._data_name+"):", error)
+            if debug_verbose_output():
+                print(type(error), "("+self._data_name+"):", error)
             self._had_error = True
 
     def add_horizontal_background_boxes(self, colors, limits):
@@ -775,7 +783,8 @@ class DataPlot2D(DataPlot):
                     plot_set_equal_aspect_ratio(p, x, y)
 
         except (KeyError, IndexError, ValueError) as error:
-            print(type(error), "("+self._data_name+"):", error)
+            if debug_verbose_output():
+                print(type(error), "("+self._data_name+"):", error)
             self._had_error = True
 
 
@@ -897,7 +906,8 @@ class DataPlotSpec(DataPlot):
             self._p.toolbar.active_scroll = wheel_zoom
 
         except (KeyError, IndexError, ValueError, ZeroDivisionError) as error:
-            print(type(error), "(" + self._data_name + "):", error)
+            if debug_verbose_output():
+                print(type(error), "(" + self._data_name + "):", error)
             self._had_error = True
 
 class DataPlotFFT(DataPlot):
@@ -985,7 +995,8 @@ class DataPlotFFT(DataPlot):
                              line_color=color, line_width=2, legend_label=legend)
 
         except (KeyError, IndexError, ValueError, ZeroDivisionError) as error:
-            print(type(error), "(" + self._data_name + "):", error)
+            if debug_verbose_output():
+                print(type(error), "(" + self._data_name + "):", error)
             self._had_error = True
 
     def mark_frequency(self, frequency, label, y_screen_offset=0):
