@@ -10,203 +10,125 @@ You can browse through public log files on <a href="/browse">this page</a>.
 
 
 
-<ul class="nav nav-tabs">
-	<li class="nav-item active">
-		<a class="nav-link active" data-toggle="tab" href="#personal">Personal</a>
-	</li>
-	<li class="nav-item">
-		<a class="nav-link" data-toggle="tab" href="#flightreport">Flight Report</a>
-	</li>
-</ul>
-
-<div class="tab-content">
-	<div id="personal" class="tab-pane in active">
-
-		<!-- Personal Tab -->
-		<table class="spaced">
-			<form enctype="multipart/form-data" action="/upload" method="post">
-				<tr>
-					<td colspan="2">Personal and private uploads:
-						others will only see the log if you share the link.</td>
-				</tr>
-				<tr>
-					<td></td><td>
-						<input type="hidden" name="type" value="personal">
-					</td>
-				</tr>
-				<tr>
-					<td class="left">Description <small>(optional)</small>:</td>
-					<td>
-						<input class="form-control" placeholder="" name="description" type="text">
-					</td>
-				</tr>
-				<tr>
-					<td class="left">Additional Feedback <small>(optional)</small>:</td>
-					<td>
-						<textarea class="form-control" cols="20" rows="3" name="feedback"></textarea>
-					</td>
-				</tr>
-				<tr>
-					<td class="left">E-Mail <small>(optional)</small>:</td>
-					<td>
-						<input class="form-control" type="text" name="email" />
-					</td>
-				</tr>
-				<tr>
-					<td colspan="2"><small>Will only be used to send you a link to
-							the uploaded file and is not stored on the server.</small></td>
-				</tr>
-				<tr>
-					<td colspan="2">
-						<div class="custom-control custom-checkbox">
-							<input class="custom-control-input" name="allowForAnalysis"
-							id="allowForAnalysis" type="checkbox" value="true">
-							<label class="custom-control-label" for="allowForAnalysis">Allow
-							this log file to be used for statistical analysis.</label>
-						</div>
-					</td>
-				</tr>
-				<!--
-				<tr>
-				<td colspan="2">
-						<div class="custom-control custom-checkbox">
-							<input class="custom-control-input" name="obfuscated"
-							id="obfuscated" type="checkbox" value="true">
-							<label class="custom-control-label" for="obfuscated">
-							Obfuscate location information in the log.</label>
-						</div>
-				</td>
-				</tr>
-				-->
-				<tr>
-					<td class="left">ULog File:</td>
-					<td>
-						<input type="file" name="filearg" class="filestyle"
-							data-text="Choose File..."
-							data-btnClass="btn-outline-primary align-right"
-							>
-					</td>
-				</tr>
-				<tr>
-					<td></td><td><br/><input class="btn btn-primary align-right"
-						 id="upload-button" type="submit" value="Upload" /></td>
-				</tr>
-			</form>
-		</table>
-
-	</div>
-	<div id="flightreport" class="tab-pane fade">
-
-		<!-- Flight Report Tab -->
-		<table class="spaced">
-			<form enctype="multipart/form-data" action="/upload" method="post">
-				<tr>
-					<td colspan="2">Flight report (public) uploads:
-						provide a log with additional infos so that the PX4
-						community can use it to improve the flight
-						stack.</td>
-				</tr>
-				<tr>
-					<td></td><td>
-						<input type="hidden" name="type" value="flightreport">
-					</td>
-				</tr>
-				<tr>
-					<td class="left">Test Description:</td>
-					<td>
-						<input class="form-control" placeholder="" name="description" type="text">
-					</td>
-				</tr>
-				<tr>
-					<td class="left">Additional Feedback:</td>
-					<td>
-						<textarea class="form-control" cols="20" rows="3" name="feedback"></textarea>
-					</td>
-				</tr>
-				<tr>
-					<td class="left">Vehicle Name <small>(optional)</small>:
-					<td>
-						<input class="form-control" placeholder="" name="vehicleName" type="text">
-					</td>
-				</tr>
-				<tr>
-					<td class="left">E-Mail:</td>
-					<td>
-						<input class="form-control" type="text" name="email" />
-					</td>
-				</tr>
-				<tr>
-					<td colspan="2"><small>May be used to request additional information.</small></td>
-				</tr>
-				<tr>
-					<td class="left">Wind Speed:</td><td>
-						<select class="custom-select" name=windSpeed>
-							<option value="-1" selected="selected">Please select</option>
-							<!-- Beafort Scale -->
-							<option value="0">Calm</option>
-							<option value="5">Breeze</option>
-							<option value="8">Gale</option>
-							<option value="10">Storm</option>
-						</select>
-					</td>
-				</tr>
-				<tr>
-					<td class="left">Flight Rating:</td>
-					<td>
-						<select class="custom-select" name="rating">
-							<option value="notset" selected="selected">Please select</option>
-							<option value="crash_pilot">Crashed (Pilot error)</option>
-							<option value="crash_sw_hw">Crashed (Software or Hardware issue)</option>
-							<option value="unsatisfactory">Unsatisfactory</option>
-							<option value="good">Good</option>
-							<option value="great">Great!</option>
-						</select>
-					</td>
-				</tr>
-				<tr>
-					<td class="left">Video Url:</td>
-					<td>
-						<input class="form-control" type="text" name="videoUrl" />
-					</td>
-				</tr>
-				<tr>
-					<td colspan="2">
-						<div class="custom-control custom-checkbox">
-							<input class="custom-control-input" name="public"
-							id="public" checked="checked" type="checkbox" value="true">
-							<label class="custom-control-label" for="public">
-								Make this log publicly available (on <a href="browse">this page</a>).</label>
-						</div>
-					</td>
-				</tr>
-				<tr>
-					<td class="left">ULog File:</td>
-					<td>
-						<input type="file" name="filearg" class="filestyle"
-							data-text="Choose File..."
-							data-btnClass="btn-outline-primary align-right"
-							>
-					</td>
-				</tr>
-				<tr>
-					<td></td><td><br/><input class="btn btn-primary align-right"
-						 id="upload-button" type="submit" value="Upload" /></td>
-				</tr>
-			</form>
-		</table>
-
-	</div>
-</div>
-
-
-<p>
-<b>Important</b>: The log may contain location data. By uploading a log,
-you agree that this information is stored on the server. Should you choose to
-share the link, it will be accessible to others as well.
-</p>
+<table class="spaced">
+	<form enctype="multipart/form-data" action="/upload" method="post">
+		<tr>
+			<td width="30%" class="left">Description <small>(optional)</small>:</td>
+			<td width="70%">
+				<input class="form-control" placeholder="" name="description" type="text">
+			</td>
+		</tr>
+		<tr>
+			<td class="left">Additional Feedback <small>(optional)</small>:</td>
+			<td>
+				<textarea class="form-control" cols="20" rows="3" name="feedback"></textarea>
+			</td>
+		</tr>
+		<!--
+		<tr>
+			<td class="left">Vehicle Name <small>(optional)</small>:
+			<td>
+				<input class="form-control" placeholder="" name="vehicleName" type="text">
+			</td>
+		</tr>
+		<tr>
+			<td class="left">Wind Speed:</td><td>
+			<select class="custom-select" name=windSpeed>
+				<option value="-1" selected="selected">Please select</option>
+				<option value="0">Calm</option>
+				<option value="5">Breeze</option>
+				<option value="8">Gale</option>
+				<option value="10">Storm</option>
+			</select>
+		</td>
+		</tr>
+		<tr>
+			<td class="left">Flight Rating:</td>
+			<td>
+				<select class="custom-select" name="rating">
+					<option value="notset" selected="selected">Please select</option>
+					<option value="crash_pilot">Crashed (Pilot error)</option>
+					<option value="crash_sw_hw">Crashed (Software or Hardware issue)</option>
+					<option value="unsatisfactory">Unsatisfactory</option>
+					<option value="good">Good</option>
+					<option value="great">Great!</option>
+				</select>
+			</td>
+		</tr>
+		<tr>
+			<td class="left">Video Url:</td>
+			<td>
+				<input class="form-control" type="text" name="videoUrl" />
+			</td>
+		</tr>
+		-->
+		<tr>
+			<td class="left">E-Mail:</td>
+			<td>
+				<input class="form-control" type="text" name="email" id="email"/>
+			</td>
+		</tr>
+		<tr>
+			<td colspan="2"><small>Will only be used to send you a link to
+					the uploaded file (including a link to delete) and is not stored on the server.</small></td>
+		</tr>
+		<tr>
+			<td class="left">Access to the log:</td>
+			<td>
+				<select class="custom-select" name="type" id="access" onChange="updateAccess()">
+					<option value="notset" selected="selected">Please select</option>
+					<option value="flightreport">Public</option>
+					<option value="personal">Share by Link</option>
+				</select>
+			</td>
+		</tr>
+		<tr id="flightreport" style="display: none;">
+			<td class="left"></td>
+			<td>
+				Make this log publicly available (on <a href="browse">this page</a>).
+				The PX4 community can use it to improve the flight stack.
+			</td>
+		</tr>
+		<tr id="personal" style="display: none;">
+			<td class="left"></td>
+			<td>
+				The log can only be accessed with the link you'll receive after uploading.
+				</br>
+				<b>Note</b>: The log may contain location data and if you
+				share the link, it will be accessible to others as well.
+			</td>
+		</tr>
+		<tr>
+			<td colspan="2">
+				<!-- automatically set depending on the "access" value -->
+				<input type="hidden" class="custom-control-input" name="public"
+					   id="public" value="false">
+			</td>
+		</tr>
+		<tr>
+			<td class="left">ULog File:</td>
+			<td>
+				<input type="file" name="filearg" id="file" class="filestyle"
+					data-text="Choose File..."
+					data-btnClass="btn-outline-primary align-right"
+					>
+			</td>
+		</tr>
+		<tr>
+			<td id="feedback" colspan="2">
+			</td>
+		</tr>
+		<tr>
+			<td></td><td><br/><input class="btn btn-primary align-right"
+				 id="upload-button" type="submit" value="Upload" onclick="return validateForm();" /></td>
+		</tr>
+	</form>
+</table>
 
 
 {% include 'footer.html' %}
+
+<script type="text/javascript" src="plot_app/static/js/upload.js"></script>
 
 </body>
 </html>

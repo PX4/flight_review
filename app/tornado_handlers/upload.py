@@ -145,17 +145,19 @@ class UploadHandler(TornadoRequestHandlerBase):
                 error_labels = ''
 
                 if upload_type == 'flightreport':
-                    try:
-                        wind_speed = int(escape(form_data['windSpeed'].decode("utf-8")))
-                    except ValueError:
-                        wind_speed = -1
-                    rating = escape(form_data['rating'].decode("utf-8"))
-                    if rating == 'notset': rating = ''
-                    stored_email = email
+                    if 'windSpeed' in form_data:
+                        try:
+                            wind_speed = int(escape(form_data['windSpeed'].decode("utf-8")))
+                        except ValueError:
+                            wind_speed = -1
+                    if 'rating' in form_data:
+                        rating = escape(form_data['rating'].decode("utf-8"))
+                        if rating == 'notset': rating = ''
                     # get video url & check if valid
-                    video_url = escape(form_data['videoUrl'].decode("utf-8"), quote=True)
-                    if not validate_url(video_url):
-                        video_url = ''
+                    if 'videoUrl' in form_data:
+                        video_url = escape(form_data['videoUrl'].decode("utf-8"), quote=True)
+                        if not validate_url(video_url):
+                            video_url = ''
                     if 'vehicleName' in form_data:
                         vehicle_name = escape(form_data['vehicleName'].decode("utf-8"))
 
@@ -273,7 +275,7 @@ class UploadHandler(TornadoRequestHandlerBase):
                         full_plot_url,
                         DBData.rating_str_static(rating),
                         DBData.wind_speed_str_static(wind_speed), delete_url,
-                        stored_email, info)
+                        email, info)
 
                     # also generate the additional DB entry
                     # (we may have the log already loaded in 'ulog', however the
