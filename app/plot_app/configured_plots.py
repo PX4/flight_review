@@ -1,5 +1,6 @@
 """ This contains the list of all drawn plots on the log plotting page """
 
+import re
 from html import escape
 
 from bokeh.layouts import column
@@ -1009,6 +1010,12 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
     param_changes_button.on_click(param_changes_button_clicked)
 
 
+    user_agent = curdoc().session_context.request.headers.get("User-Agent", "")
+    is_mobile = re.search(r'Mobile|iP(hone|od|ad)|Android|BlackBerry|'
+            r'IEMobile|Kindle|NetFront|Silk-Accelerated|(hpw|web)OS|Fennec|'
+            r'Minimo|Opera M(obi|ini)|Blazer|Dolfin|'
+            r'Dolphin|Skyfire|Zune', user_agent)
+
     jinja_plot_data = []
     for i in range(len(plots)):
         if plots[i] is None:
@@ -1027,6 +1034,9 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
                 'fragment': fragment,
                 'title': plot_title
                 })
+        if is_mobile is not None and hasattr(plots[i], 'toolbar'):
+            # Disable panning on mobile by default
+            plots[i].toolbar.active_drag = None
 
 
     # changed parameters
