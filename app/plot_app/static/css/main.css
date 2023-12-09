@@ -19,16 +19,25 @@ body {
 h1 {
     margin: 2em 0 0 0;
     color: #2e484c;
-    font-family: 'Titillium Web', sans-serif;
+    font-family: 'Play', sans-serif;
     font-size: 23px;
-	font-weight: 700;
+    font-weight: 400;
     text-transform: uppercase;
 }
+h1 img {
+    vertical-align: top;
+}
 h1 .name {
-    color: #444;
-    font-size: 26px;
+    color: #e3e3e3;
+    font-size: 32px;
     text-transform: none;
-	padding-left: 3px;
+	padding-left: 8px;
+	padding-top: 15px;
+	display: inline-block;
+}
+
+.bg-blue {
+    background-color: #06465c !important;
 }
 
 /* bootstrap buttons */
