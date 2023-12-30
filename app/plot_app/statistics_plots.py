@@ -353,21 +353,6 @@ order by new_date
                                   text_font_size="10pt")
                 p.add_layout(labels)
 
-                # fixate the y position within the graph (screen coordinates).
-                # the y_units='screen' does not work for p.scatter
-                jscode = """
-                    var data = source.get('data');
-                    var start = cb_obj.get('start');
-                    var end = cb_obj.get('end');
-                    data_start = start + (end - start) * 0.05;
-                    for (var i = 0; i < data['y'].length; ++i) {
-                        data['y'][i] = data_start;
-                    }
-                    source.trigger('change');
-                """
-# FIXME: this is broken on bokeh 0.12.12
-#                p.y_range.callback = CustomJS(args={'source': source}, code=jscode)
-
         self._setup_plot(p, 'large')
 
         return p
