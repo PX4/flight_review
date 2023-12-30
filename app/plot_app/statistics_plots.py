@@ -108,11 +108,8 @@ class StatisticsPlots:
 
         self._verbose_output = verbose_output
 
-        # lists of dates when a _log was uploaded, one list per type
-        self._public_logs_dates = []
-        self._private_logs_dates = []
-        self._ci_logs_dates = []
-        self._all_logs_dates = []
+        self._num_logs_total = 0
+        self._num_logs_ci = 0
 
         self._public_logs = []
 
@@ -121,34 +118,51 @@ class StatisticsPlots:
         with con:
             cur = con.cursor()
 
-            cur.execute('select Id, Date, Source, Public, Rating from Logs')
+            cur.execute("select count(Id) from Logs")
+            db_tuple = cur.fetchone()
+            if db_tuple is not None:
+                self._num_logs_total = db_tuple[0]
 
+            cur.execute("select count(Id) from Logs where Source = 'CI'")
+            db_tuple = cur.fetchone()
+            if db_tuple is not None:
+                self._num_logs_ci = db_tuple[0]
+
+            # Get all log dates of specific types within 6 hour intervals
+            cur.execute('''
+select
+    Date,
+    count(*) cnt,
+    datetime((strftime('%s', Date) / (6 * 60 * 60)) * 6 * 60 * 60, 'unixepoch') new_date
+from Logs
+where Public = 1
+group by new_date
+order by new_date
+''')
+            self._public_log_dates_intervals = cur.fetchall()
+            cur.execute('''
+select
+    Date,
+    count(*) cnt,
+    datetime((strftime('%s', Date) / (6 * 60 * 60)) * 6 * 60 * 60, 'unixepoch') new_date
+from Logs
+where Public = 0
+group by new_date
+order by new_date
+''')
+            self._private_log_dates_intervals = cur.fetchall()
+
+            cur.execute("select Id, Date, Source, Public, Rating from Logs where Public = 1 and Source != 'CI'")
             db_tuples = cur.fetchall()
             for db_tuple in db_tuples:
                 log = _Log(db_tuple)
-
-                self._all_logs_dates.append(log.date)
-                if log.is_public == 1:
-                    if log.source == 'CI':
-                        self._ci_logs_dates.append(log.date)
-                    else:
-                        self._public_logs_dates.append(log.date)
-                else:
-                    if log.source == 'CI':
-                        self._ci_logs_dates.append(log.date)
-                    else:
-                        self._private_logs_dates.append(log.date)
-
-
-                # LogsGenerated: public only
-                if log.is_public != 1 or log.source == 'CI':
-                    continue
 
                 cur.execute('select * from LogsGenerated where Id = ?', [log.log_id])
                 db_tuple = cur.fetchone()
 
                 if db_tuple is None:
-                    print("Error: no generated data")
+                    if self._verbose_output:
+                        print("Error: no generated data")
                     continue
 
                 log.set_generated(db_tuple)
@@ -171,14 +185,16 @@ class StatisticsPlots:
                     continue
 
                 if log.autostart_id == 0:
-                    print('Warning: %s with autostart_id=0' % log.log_id)
+                    if self._verbose_output:
+                        print('Warning: %s with autostart_id=0' % log.log_id)
                     continue
 
                 try:
                     ver_major = int(log.sw_version[1:].split('.')[0])
                     if ver_major >= 2 or ver_major == 0:
-                        print('Warning: %s with large/small version %s' %
-                              (log.log_id, log.sw_version))
+                        if self._verbose_output:
+                            print('Warning: %s with large/small version %s' %
+                                  (log.log_id, log.sw_version))
                         continue
                 except:
                     continue
@@ -249,11 +265,11 @@ class StatisticsPlots:
 
     def num_logs_total(self):
         """ get the total number of logs on the server """
-        return len(self._all_logs_dates)
+        return self._num_logs_total
 
     def num_logs_ci(self):
         """ get the total number of CI logs on the server """
-        return len(self._ci_logs_dates)
+        return self._num_logs_ci
 
     def plot_log_upload_statistics(self, colors):
         """
@@ -267,20 +283,17 @@ class StatisticsPlots:
                    y_axis_label=None, tools=TOOLS,
                    active_scroll=ACTIVE_SCROLL_TOOLS)
 
-        def plot_dates(p, dates_list, last_date, legend, color):
+        def plot_dates(p, data_points, last_date, legend, color):
             """ plot a single line from a list of dates """
-            counts = np.arange(1, len(dates_list)+1)
 
             # subsample
             dates_list_subsampled = []
             counts_subsampled = []
-            previous_timestamp = 0
-            for date, count in zip(dates_list, counts):
-                t = int(date.timestamp()/(3600*4)) # use a granularity of 4 hours
-                if t != previous_timestamp:
-                    previous_timestamp = t
-                    dates_list_subsampled.append(date)
-                    counts_subsampled.append(count)
+            count_total = 0
+            for date, count, _ in data_points:
+                dates_list_subsampled.append(date)
+                count_total += count
+                counts_subsampled.append(count_total)
 
             if len(counts_subsampled) > 0:
                 if dates_list_subsampled[-1] < last_date:
@@ -291,15 +304,10 @@ class StatisticsPlots:
                 p.line(dates_list_subsampled, counts_subsampled,
                        legend_label=legend, line_width=2, line_color=color)
 
-        if len(self._all_logs_dates) > 0:
-            last_date = self._all_logs_dates[-1]
-            # compared to the others, there are many more CI logs, making it hard to
-            # see the others
-            #plot_dates(p, self._all_logs_dates, last_date, 'Total', colors[0])
-            #plot_dates(p, self._ci_logs_dates, last_date,
-            #           'Continuous Integration (Simulation Tests)', colors[1])
-            plot_dates(p, self._private_logs_dates, last_date, 'Private', colors[2])
-            plot_dates(p, self._public_logs_dates, last_date, 'Public', colors[4])
+        if len(self._public_log_dates_intervals) > 0:
+            last_date = self._public_log_dates_intervals[-1][0]
+            plot_dates(p, self._private_log_dates_intervals, last_date, 'Private', colors[2])
+            plot_dates(p, self._public_log_dates_intervals, last_date, 'Public', colors[4])
 
         p.xaxis.formatter = DatetimeTickFormatter(
             hours=["%d %b %Y %H:%M"],
@@ -311,10 +319,10 @@ class StatisticsPlots:
 
         # show the release versions as text markers
         release_dict = {'dates': [], 'tags': [], 'y': [], 'y_offset': []}
-        max_logs_dates = self._public_logs_dates # defines range limits of the plot
+        max_logs_dates = self._public_log_dates_intervals # defines range limits of the plot
         if len(max_logs_dates) > 0:
-            first_date = max_logs_dates[0]
-            y_max = max(len(max_logs_dates), len(self._private_logs_dates))
+            first_date = max_logs_dates[0][0]
+            y_max = max(sum(x[1] for x in max_logs_dates), sum(x[1] for x in self._private_log_dates_intervals))
             y_pos = -y_max*0.08
 
             releases = get_sw_releases()
