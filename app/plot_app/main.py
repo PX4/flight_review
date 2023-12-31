@@ -37,10 +37,10 @@ if GET_arguments is not None and 'stats' in GET_arguments:
 
 
     # title
-    div = Div(text="<h3>Statistics</h3>")
+    div = Div(text="<h2>Statistics</h2>")
     plots.append(column(div))
 
-    div = Div(text="<h4>All Logs</h4>")
+    div = Div(text="<h3>All Logs</h3>")
     plots.append(column(div))
 
     p = statistics.plot_log_upload_statistics([colors8[0], colors8[1], colors8[3],
@@ -51,30 +51,28 @@ if GET_arguments is not None and 'stats' in GET_arguments:
                    (statistics.num_logs_ci(), statistics.num_logs_total()))
     plots.append(column(div_info))
 
-    # div = Div(text="<br/><h4>Flight Report Logs "
-    #           "<small class='text-muted'>(Public Logs only)</small></h4>")
-    # div_info = Div(text="Total Flight Hours over all versions: %.1f"%
-    #                statistics.total_public_flight_duration())
-    # div_info_release = Div(text="Total Flight Hours for the latest major" \
-    #         " release %s (starting from the first RC candidate): %.1f"%
-    #                        (statistics.latest_major_release()+'.x',
-    #                         statistics.total_public_flight_duration_latest_release()))
-    # plots.append(column([div, div_info, div_info_release]))
-    #
-    # p = statistics.plot_public_airframe_statistics()
-    # plots.append(p)
-    #
-    # p = statistics.plot_public_boards_statistics()
-    # plots.append(p)
-    #
-    # p = statistics.plot_public_boards_num_flights_statistics()
-    # plots.append(p)
-    #
-    # p = statistics.plot_public_flight_mode_statistics()
-    # plots.append(p)
+    div = Div(text="<br/><h3>Public Logs</h3>")
+    div_info = Div(text="Total Flight Hours: %.1f"%
+                   statistics.total_public_flight_duration())
+    plots.append(column([div, div_info]))
 
-    # TODO: add a rating pie chart (something like
-    # http://bokeh.pydata.org/en/latest/docs/gallery/donut_chart.html ?)
+    p = statistics.plot_public_board_hours_statistics()
+    plots.append(p)
+
+    p = statistics.plot_public_board_flights_statistics()
+    plots.append(p)
+
+    p = statistics.plot_public_unique_boards_statistics()
+    plots.append(p)
+
+    p = statistics.plot_public_airframe_statistics()
+    plots.append(p)
+
+    p = statistics.plot_public_version_flights_statistics()
+    plots.append(p)
+
+    p = statistics.plot_public_flight_mode_statistics()
+    plots.append(p)
 
     print_timing("Plotting Stats", start_time)
 
