@@ -212,7 +212,6 @@ else:
                 {'name': 'Acro', 'color': HTML_color_to_RGB(flight_modes_table[10][1])},
                 {'name': 'Stabilized', 'color': HTML_color_to_RGB(flight_modes_table[15][1])},
                 {'name': 'Offboard', 'color': HTML_color_to_RGB(flight_modes_table[14][1])},
-                {'name': 'Rattitude', 'color': HTML_color_to_RGB(flight_modes_table[16][1])},
                 {'name': 'Auto (Mission, RTL, Follow, ...)',
                  'color': HTML_color_to_RGB(flight_modes_table[3][1])}
                 ]
