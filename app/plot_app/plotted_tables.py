@@ -159,8 +159,8 @@ SDLOG_UTC_OFFSET: {}'''.format(utctimestamp.strftime('%d-%m-%Y %H:%M'), utc_offs
                 'title="'+tooltip+'" '
             table_text_left.append(
                 ('Logging Start '+
-                 '<i '+tooltip+' class="fa fa-question" aria-hidden="true" '+
-                 'style="font-size: larger; color:#666"></i>',
+                 '<i '+tooltip+' class="fa-solid fa-question" aria-hidden="true" '+
+                 'style="color:#666"></i>',
                  '<span style="display:none" id="logging-start-element">'+
                  str(logging_start_time)+'</span>'))
     except:
