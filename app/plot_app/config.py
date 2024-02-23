@@ -20,9 +20,9 @@ email_config = dict(_conf.items('email'))
 
 email_notifications_config = dict(_conf.items('email_notifications'))
 email_notifications_config['public_flightreport'] = \
-    [ s.strip() for s in email_notifications_config['public_flightreport'].split(',')]
+    [ s.strip() for s in email_notifications_config['public_flightreport'].split(',') if s]
 email_notifications_config['public_flightreport_bad'] = \
-    [ s.strip() for s in email_notifications_config['public_flightreport_bad'].split(',')]
+    [ s.strip() for s in email_notifications_config['public_flightreport_bad'].split(',') if s]
 
 __DOMAIN_NAME = _conf.get('general', 'domain_name')
 __HTTP_PROTOCOL = _conf.get('general', 'http_protocol')
