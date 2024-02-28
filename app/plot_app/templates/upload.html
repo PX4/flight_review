@@ -11,7 +11,7 @@ You can browse through public log files on <a href="/browse">this page</a>.
 
 
 <table class="spaced">
-	<form enctype="multipart/form-data" action="/upload" method="post">
+	<form enctype="multipart/form-data" id="upload-form">
 		<tr>
 			<td width="30%" class="left">Description <small>(optional)</small>:</td>
 			<td width="70%">
@@ -102,6 +102,9 @@ You can browse through public log files on <a href="/browse">this page</a>.
 				<!-- automatically set depending on the "access" value -->
 				<input type="hidden" class="custom-control-input" name="public"
 					   id="public" value="false">
+				<!-- instruct server not to redirect, but return the URL instead -->
+				<input type="hidden" class="custom-control-input" name="redirect"
+					   id="redirect" value="false">
 			</td>
 		</tr>
 		<tr>
@@ -120,6 +123,16 @@ You can browse through public log files on <a href="/browse">this page</a>.
 		<tr>
 			<td></td><td><br/><input class="btn btn-primary align-right"
 				 id="upload-button" type="submit" value="Upload" onclick="return validateForm();" /></td>
+		</tr>
+		<tr>
+			<td colspan="2">
+				<div class="progress mt-3" style="height: 20px; display: none;">
+					<div class="progress-bar progress-bar-striped" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+				</div>
+				<div id="upload-failure" class="align-right" style="display: none;">
+					<b>File upload failed.</b>
+				</div>
+			</td>
 		</tr>
 	</form>
 </table>
