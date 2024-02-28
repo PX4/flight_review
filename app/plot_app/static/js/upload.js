@@ -75,5 +75,50 @@ $(function() { // on startup
 	restoreSetting('email');
 	restoreSetting('access');
 	updateAccess();
+
+    // Ajax file upload with progress updates
+    $("#upload-form").on('submit', function (e) {
+        e.preventDefault();
+        var form_data = new FormData(this);
+        var progress_bar = $('.progress');
+        progress_bar.show();
+        var upload_button = $('#upload-button');
+        upload_button.hide();
+
+        $.ajax({
+            xhr: function () {
+                var xhr = new window.XMLHttpRequest();
+                xhr.upload.addEventListener("progress", function (evt) {
+                    if (evt.lengthComputable) {
+                        var percent_complete = (evt.loaded / evt.total) * 99; // max to 99, as the redirect will take time too
+                        progress_bar.find('.progress-bar').width(percent_complete + '%');
+                        progress_bar.find('.progress-bar').html(percent_complete.toFixed(0) + '%');
+                    }
+                }, false);
+                return xhr;
+            },
+            type: 'POST',
+            url: '/upload',
+            data: form_data,
+            cache: false,
+            contentType: false,
+            processData: false,
+            success: function (data) {
+                // Handle the response from the server
+                console.log(data);
+                var json_response = JSON.parse(data);
+                window.location.href = json_response.url
+            },
+            error: function (data, textStatus) {
+                // Handle errors, if any
+                console.error('Error uploading file.');
+                console.error(textStatus);
+                var progress_bar = $('.progress');
+                progress_bar.hide();
+                var upload_failure = $('#upload-failure');
+                upload_failure.show();
+            }
+        });
+    });
 });
 

@@ -4,6 +4,7 @@ Tornado handler for the upload page
 
 from __future__ import print_function
 import datetime
+import json
 import os
 from html import escape
 import sys
@@ -115,7 +116,7 @@ class UploadHandler(TornadoRequestHandlerBase):
                     ['description', 'email',
                      'allowForAnalysis', 'obfuscated', 'source', 'type',
                      'feedback', 'windSpeed', 'rating', 'videoUrl', 'public',
-                     'vehicleName'])
+                     'vehicleName', 'redirect'])
                 description = escape(form_data['description'].decode("utf-8"))
                 email = form_data['email'].decode("utf-8")
                 upload_type = 'personal'
@@ -136,6 +137,9 @@ class UploadHandler(TornadoRequestHandlerBase):
                 feedback = ''
                 if 'feedback' in form_data:
                     feedback = escape(form_data['feedback'].decode("utf-8"))
+                should_redirect = source != 'QGroundControl'
+                if 'redirect' in form_data:
+                    should_redirect = form_data['redirect'].decode("utf-8") == 'true'
                 wind_speed = -1
                 rating = ''
                 stored_email = ''
@@ -291,9 +295,11 @@ class UploadHandler(TornadoRequestHandlerBase):
                 # send notification emails
                 send_notification_email(email, full_plot_url, delete_url, info)
 
-                # do not redirect for QGC
-                if source != 'QGroundControl':
+                if should_redirect:
                     self.redirect(url)
+                else:
+                    # Return plot url as json
+                    self.write(json.dumps({"url": url}))
 
             except CustomHTTPError:
                 raise
