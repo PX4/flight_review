@@ -464,8 +464,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
                              changed_params=changed_params, x_range=x_range)
         num_rc_channels = 8
         if data_plot.dataset:
-            max_channels = np.amax(data_plot.dataset.data['channel_count'])
-            if max_channels < num_rc_channels: num_rc_channels = max_channels
+            num_rc_channels = min(np.amax(data_plot.dataset.data['channel_count']), num_rc_channels)
         legends = []
         for i in range(num_rc_channels):
             channel_names = px4_ulog.get_configured_rc_input_names(i)
@@ -618,8 +617,8 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
             # only plot if at least one of the outputs is not constant
             all_constant = True
             if data_plot.dataset:
-                max_outputs = np.amax(data_plot.dataset.data['noutputs'])
-                if max_outputs < num_actuator_outputs: num_actuator_outputs = max_outputs
+                num_actuator_outputs = min(np.amax(data_plot.dataset.data['noutputs']),
+                                           num_actuator_outputs)
 
                 for i in range(num_actuator_outputs):
                     output_data = data_plot.dataset.data['output['+str(i)+']']
