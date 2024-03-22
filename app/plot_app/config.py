@@ -46,7 +46,6 @@ __AIRFRAMES_FILENAME = os.path.join(__CACHE_FILE_PATH, 'airframes.xml')
 __PARAMETERS_FILENAME = os.path.join(__CACHE_FILE_PATH, 'parameters.xml')
 __EVENTS_FILENAME = os.path.join(__CACHE_FILE_PATH, 'events.json.xz')
 __RELEASES_FILENAME = os.path.join(__CACHE_FILE_PATH, 'releases.json')
-__METADATA_CACHE_PATH = os.path.join(__CACHE_FILE_PATH, 'metadata')
 
 __PRINT_TIMING = int(_conf.get('debug', 'print_timing'))
 __VERBOSE_OUTPUT = int(_conf.get('debug', 'verbose_output'))
@@ -125,10 +124,6 @@ def get_events_url():
 def get_releases_filename():
     """ get configured releases file name """
     return __RELEASES_FILENAME
-
-def get_metadata_cache_path():
-    """ get configured metadata cache path """
-    return __METADATA_CACHE_PATH
 
 def get_parameters_filename():
     """ get configured parameters file name """
