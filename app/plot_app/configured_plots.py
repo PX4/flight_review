@@ -248,18 +248,12 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
                              plot_height='small', changed_params=changed_params,
                              x_range=x_range)
         if is_vtol_tailsitter:
-            # if tailsitter_rates[axis] is not None:
-            #     data_plot.add_graph([lambda data: (axis+'_q',
-            #                                        np.rad2deg(tailsitter_rates[axis]))],
-            #                         colors3[0:1], [axis_name+' Rate Estimated'], mark_nan=True)
-            #     data_plot.add_graph([lambda data: (axis, np.rad2deg(tailsitter_rates_setpoint[axis]))],
-            #                         colors3[1:2], [axis_name+' Rate Setpoint'],
-            #                         mark_nan=True, use_step_lines=True)
-            data_plot.add_graph([lambda data: (axis+'_q',
+            if tailsitter_rates[axis] is not None:
+                data_plot.add_graph([lambda data: (axis+'_q',
                                 np.rad2deg(tailsitter_rates[axis]))],
                                 colors3[0:1], [axis_name+' Rate Estimated'], mark_nan=True)
-            data_plot.change_dataset('vehicle_rates_setpoint')
-            data_plot.add_graph([lambda data: (axis, np.rad2deg(tailsitter_rates_setpoint[axis]))],
+                data_plot.change_dataset('vehicle_rates_setpoint')
+                data_plot.add_graph([lambda data: (axis, np.rad2deg(tailsitter_rates_setpoint[axis]))],
                                 colors3[1:2], [axis_name+' Rate Setpoint'],
                                 mark_nan=True, use_step_lines=True)
         else:
