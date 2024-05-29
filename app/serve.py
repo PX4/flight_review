@@ -100,6 +100,7 @@ server_kwargs['http_server_kwargs'] = {'max_buffer_size': 300 * 1024 * 1024}
 show_ulog_file = False
 show_3d_page = False
 show_pid_analysis_page = False
+ulog_file = ''
 if args.file is not None:
     ulog_file = os.path.abspath(args.file)
     show_ulog_file = True
