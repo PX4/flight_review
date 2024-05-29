@@ -207,7 +207,8 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
 
     # VTOL tailistter orientation conversion, if relevant
     if is_vtol_tailsitter:
-        [tailsitter_attitude, tailsitter_rates] = tailsitter_orientation(ulog, vtol_states)
+        [tailsitter_attitude, tailsitter_rates, tailsitter_rates_setpoint] = tailsitter_orientation(
+            ulog, vtol_states)
 
     # Roll/Pitch/Yaw angle & angular rate
     for index, axis in enumerate(['roll', 'pitch', 'yaw']):
@@ -250,16 +251,21 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
         if is_vtol_tailsitter:
             if tailsitter_rates[axis] is not None:
                 data_plot.add_graph([lambda data: (axis+'_q',
-                                                   np.rad2deg(tailsitter_rates[axis]))],
-                                    colors3[0:1], [axis_name+' Rate Estimated'], mark_nan=True)
+                                np.rad2deg(tailsitter_rates[axis]))],
+                                colors3[0:1], [axis_name+' Rate Estimated'], mark_nan=True)
+                data_plot.change_dataset('vehicle_rates_setpoint')
+                data_plot.add_graph([lambda data: (axis, np.rad2deg(
+                                tailsitter_rates_setpoint[axis]))],
+                                colors3[1:2], [axis_name+' Rate Setpoint'],
+                                mark_nan=True, use_step_lines=True)
         else:
             data_plot.add_graph([lambda data: (axis+'speed',
                                                np.rad2deg(data[rate_field_names[index]]))],
                                 colors3[0:1], [axis_name+' Rate Estimated'], mark_nan=True)
-        data_plot.change_dataset('vehicle_rates_setpoint')
-        data_plot.add_graph([lambda data: (axis, np.rad2deg(data[axis]))],
-                            colors3[1:2], [axis_name+' Rate Setpoint'],
-                            mark_nan=True, use_step_lines=True)
+            data_plot.change_dataset('vehicle_rates_setpoint')
+            data_plot.add_graph([lambda data: (axis, np.rad2deg(data[axis]))],
+                                colors3[1:2], [axis_name+' Rate Setpoint'],
+                                mark_nan=True, use_step_lines=True)
         axis_letter = axis[0].upper()
         rate_int_limit = '(*100)'
         # this param is MC/VTOL only (it will not exist on FW)

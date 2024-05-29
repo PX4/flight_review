@@ -81,7 +81,7 @@ def tailsitter_orientation(ulog, vtol_states):
         w_y = cur_dataset.data['xyz[2]']
         w_t = cur_dataset.data['timestamp']
 
-        # fw rates (roll and yaw swap, roll is negative axis)
+        # fw rates and setpoints(roll and yaw swap, roll is negative axis)
         w_r_fw = w_y*-1
         w_y_fw = w_r*1 # *1 to get python to copy not reference
         # temporary variables for storing VTOL states
@@ -112,5 +112,51 @@ def tailsitter_orientation(ulog, vtol_states):
 
     except (KeyError, IndexError) as error:
         vtol_rates = {'roll': None, 'pitch': None, 'yaw': None}
+        print("ERROR: Tailsitter rate ")
 
-    return [vtol_attitude, vtol_rates]
+     # correct rates setpoint for VTOL tailsitter in FW mode
+    try:
+
+        setp_dataset = ulog.get_dataset('vehicle_rates_setpoint')
+        setp_r = setp_dataset.data['roll']
+        setp_p = setp_dataset.data['pitch']
+        setp_y = setp_dataset.data['yaw']
+        w_t = setp_dataset.data['timestamp']
+
+        # fw setpoints(roll and yaw swap, roll is negative axis)
+
+        setp_r_fw = setp_y*-1
+        setp_y_fw = setp_r*1
+        # temporary variables for storing VTOL states
+
+        is_vtol_fw = False
+        fw_start = np.nan
+        fw_end = np.nan
+
+        for i in vtol_states:
+        # states: 1=transition, 2=FW, 3=MC
+        # if in FW mode then used FW conversions
+            if is_vtol_fw:
+                fw_end = i[0]
+                setp_r[np.logical_and(w_t > fw_start, w_t < fw_end)] = \
+                                setp_r_fw[np.logical_and(w_t > fw_start, w_t < fw_end)]
+                setp_y[np.logical_and(w_t > fw_start, w_t < fw_end)] = \
+                                setp_y_fw[np.logical_and(w_t > fw_start, w_t < fw_end)]
+                is_vtol_fw = False
+            if i[1] == 2:
+                fw_start = i[0]
+                is_vtol_fw = True
+
+        # if flight ended as FW, convert the final data segment to FW
+        if is_vtol_fw:
+            setp_r[quat_t > fw_start] = setp_r_fw[quat_t > fw_start]
+            setp_y[quat_t > fw_start] = setp_y_fw[quat_t > fw_start]
+
+        vtol_rates_setpoint = {'roll': setp_r, 'pitch': setp_p, 'yaw': setp_y}
+
+    except (KeyError, IndexError) as error:
+        vtol_rates_setpoint = {'roll': None, 'pitch': None, 'yaw': None}
+        print("ERROR: Tailsitter rate setpoint")
+
+
+    return [vtol_attitude, vtol_rates, vtol_rates_setpoint]
