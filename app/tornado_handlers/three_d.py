@@ -119,6 +119,7 @@ class ThreeDHandler(TornadoRequestHandlerBase):
         # - altitude requires an offset (to match the GPS data)
         # - it's worse for some logs where the estimation is bad -> acro flights
         #   (-> add both: user-selectable between GPS & estimated trajectory?)
+        start_timestamp = 0
         for i in range(len(gps_pos.data['timestamp'])):
             t = gps_pos.data['timestamp'][i] + utc_offset
             utctimestamp = datetime.datetime.utcfromtimestamp(t/1.e6).replace(
