@@ -667,7 +667,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
 
     data_plot.change_dataset('vehicle_imu_status', 3)
     data_plot.add_graph(['accel_vibration_metric'], colors8[3:4],
-                            ['Accel 3 Vibration Level [rad/s]'])
+                            ['Accel 3 Vibration Level [m/s^2]'])
 
     data_plot.add_horizontal_background_boxes(
         ['green', 'orange', 'red'], [4.905, 9.81])
