@@ -806,8 +806,11 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
                          title='GPS Uncertainty', y_range=Range1d(0, 40),
                          plot_height='small', changed_params=changed_params,
                          x_range=x_range)
-    data_plot.add_graph(['eph', 'epv', 'satellites_used', 'fix_type'], colors8[::2],
-                        ['Horizontal position accuracy [m]', 'Vertical position accuracy [m]',
+    data_plot.add_graph(['eph', 'epv', 'hdop', 'vdop', 's_variance_m_s',
+                         'satellites_used', 'fix_type'], colors8,
+                         ['Horizontal position accuracy [m]',
+                         'Vertical position accuracy [m]', 'Horizontal dilution of precision [m]',
+                         'Vertical dilution of precision [m]', 'Speed accuracy [m/s]',
                          'Num Satellites used', 'GPS Fix'])
     if data_plot.finalize() is not None: plots.append(data_plot)
 
