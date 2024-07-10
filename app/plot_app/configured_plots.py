@@ -795,6 +795,11 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
                          x_range=x_range)
     data_plot.add_graph(['current_distance', 'variance'], colors3[0:2],
                         ['Distance', 'Variance'])
+
+    # dist_bottom from estimator
+    data_plot.change_dataset('vehicle_local_position')
+    data_plot.add_graph(['dist_bottom', 'dist_bottom_valid'], colors8[2:4],
+                            ['Estimated Distance Bottom [m]', 'Dist Bottom Valid'])
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
