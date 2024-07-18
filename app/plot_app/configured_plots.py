@@ -194,13 +194,9 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
     data_plot.add_graph(['baro_alt_meter'], colors8[1:2], ['Barometer Altitude'])
     data_plot.change_dataset('vehicle_global_position')
     data_plot.add_graph(['alt'], colors8[2:3], ['Fused Altitude Estimation'])
-    # If there is no altitude setpoint and we don't check, the Y axis always starts at 0.
     data_plot.change_dataset('position_setpoint_triplet')
-    if 'position_setpoint_triplet' in data and 'current' in data['position_setpoint_triplet']:
-        current = data['position_setpoint_triplet']['current']
-        if 'alt' in current and current['alt'] is not None:
-            data_plot.add_circle(['current.alt'], [plot_config['mission_setpoint_color']],
-                                ['Altitude Setpoint'])
+    data_plot.add_circle(['current.alt'], [plot_config['mission_setpoint_color']],
+                        ['Altitude Setpoint'])
     plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
 
     if data_plot.finalize() is not None: plots.append(data_plot)
