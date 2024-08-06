@@ -53,8 +53,8 @@ __VERBOSE_OUTPUT = int(_conf.get('debug', 'verbose_output'))
 # general configuration variables for plotting
 plot_width = 840
 
-plot_color_blue = '#2877a2' # or: #3539e0
-plot_color_red = '#e0212d'
+plot_color_blue = '#56b4e9'
+plot_color_red = '#d55e00'
 
 plot_config = {
     'maps_line_color': plot_color_blue,
@@ -66,13 +66,12 @@ plot_config = {
         },
     }
 
-colors3 = [plot_color_red, '#208900', plot_color_blue]
-colors2 = [colors3[0], colors3[1]] # for data to express: 'what it is' and 'what it should be'
-colors8 = [colors3[0], colors3[1], colors3[2], '#333333', '#999999', '#e58C33',
-           '#33e5e5', '#e533e5']
+colors8 = ['#d55e00','#009e73','#55b4e9','#000000','#e69f00','#0072b2','#cc79a7','#f0e442']
+colors3 = [colors8[0], colors8[1], colors8[2]]
+colors2 = [colors8[0], colors8[1]]  # for data to express: 'what it is' and 'what it should be'
 color_gray = '#464646'
 
-plot_config['mission_setpoint_color'] = colors8[5]
+plot_config['mission_setpoint_color'] = colors8[6]
 
 
 def get_domain_name():
