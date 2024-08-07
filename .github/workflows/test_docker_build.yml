@@ -14,5 +14,5 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build the stack
-        run: docker-compose build --no-cache
+        run: docker compose build --no-cache
    
