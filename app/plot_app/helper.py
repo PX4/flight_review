@@ -314,7 +314,7 @@ def load_ulog_file(file_name):
                   'vehicle_thrust_setpoint', 'vehicle_torque_setpoint',
                   'failsafe_flags']
     try:
-        ulog = ULog(file_name, msg_filter, disable_str_exceptions=False)
+        ulog = ULog(file_name, msg_filter, disable_str_exceptions=True)
     except FileNotFoundError:
         print("Error: file %s not found" % file_name)
         raise
