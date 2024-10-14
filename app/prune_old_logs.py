@@ -17,11 +17,13 @@ from plot_app.helper import get_log_filename
 parser = argparse.ArgumentParser(description='Remove old log files & DB entries')
 
 parser.add_argument('--max-age', action='store', type=int, default=30,
-        help='maximum age in days (delete logs older than this, default=30)')
+                    help='maximum age in days (delete logs older than this, default=30)')
 parser.add_argument('--source', action='store', default='CI',
-        help='Source DB entry tag to match (empty=all, default=CI)')
+                    help='Source DB entry tag to match (empty=all, default=CI)')
 parser.add_argument('--interactive', '-i', action='store_true', default=False,
-        help='Interative mode: ask whether to delete the entries')
+                    help='Interative mode: ask whether to delete the entries')
+parser.add_argument('--private', action='store_true', default=False,
+                    help='Select private logs only')
 
 args = parser.parse_args()
 
@@ -29,16 +31,23 @@ args = parser.parse_args()
 max_age = args.max_age
 source = args.source
 interactive = args.interactive
+private = args.private
 
 con = sqlite3.connect(get_db_filename(), detect_types=sqlite3.PARSE_DECLTYPES)
 with con:
     cur = con.cursor()
     log_ids_to_remove = []
 
+    private_filter = ''
+
     if len(source) == 0:
-        cur.execute('select Id, Date, Description from Logs')
+        if private:
+            private_filter = 'where public = 0'
+        cur.execute(f'select Id, Date, Description from Logs {private_filter}')
     else:
-        cur.execute('select Id, Date, Description from Logs where Source = ?', [source])
+        if private:
+            private_filter = 'and public = 0'
+        cur.execute(f'select Id, Date, Description from Logs where Source = ? {private_filter}', [source])
 
     db_tuples = cur.fetchall()
     print('will delete the following:')
