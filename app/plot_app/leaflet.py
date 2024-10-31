@@ -41,7 +41,7 @@ def ulog_to_polyline(ulog, flight_mode_changes):
     for i in range(len(pos_lon)):
         curr_t = pos_t[i]
         if (curr_t - last_t) / 1e6 > minimum_interval_s:
-            pos_datas.append([pos_lat[i], pos_lon[i]])
+            pos_datas.append([float(pos_lat[i]), float(pos_lon[i])])
             last_t = curr_t
             while current_flight_mode_idx < len(flight_mode_changes) - 1 and \
                     flight_mode_changes[current_flight_mode_idx][0] <= curr_t:
