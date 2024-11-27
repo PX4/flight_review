@@ -170,6 +170,11 @@ viewer.timeline.zoomTo(start, stop);
 
 function computePositionProperty(altitude_offset) {
     var property = new Cesium.SampledPositionProperty();
+    property.setInterpolationOptions({
+            interpolationDegree : 2,
+            interpolationAlgorithm : Cesium.HermitePolynomialApproximation
+        });
+
 	var position;
     
     for (var i = 0; i < position_data.length; ++i) {
