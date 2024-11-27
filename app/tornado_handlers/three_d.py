@@ -10,7 +10,7 @@ import numpy as np
 
 # this is needed for the following imports
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../plot_app'))
-from config import get_bing_maps_api_key, get_cesium_api_key
+from config import get_cesium_api_key
 from helper import validate_log_id, get_log_filename, load_ulog_file, \
     get_flight_mode_changes, flight_modes_table, get_lat_lon_alt_deg
 
@@ -191,6 +191,5 @@ class ThreeDHandler(TornadoRequestHandlerBase):
             model_scale_factor=model_scale_factor,
             model_uri=model_uri,
             log_id=log_id,
-            bing_api_key=get_bing_maps_api_key(),
             cesium_api_key=get_cesium_api_key()))
 
