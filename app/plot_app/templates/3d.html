@@ -106,30 +106,25 @@
   <script>
 
 
-{% if bing_api_key != '' %}
-Cesium.BingMapsApi.defaultKey = "{{ bing_api_key }}";
-{% endif %}
-
 {% if cesium_api_key != '' %}
 Cesium.Ion.defaultAccessToken = "{{ cesium_api_key }}";
 {% endif %}
 
+var terrain = Cesium.Terrain.fromWorldTerrain({
+	 requestWaterMask: true,
+	 requestVertexNormals: true
+});
 var viewer = new Cesium.Viewer('cesiumContainer', {
     terrainProviderViewModels : [], //Disable terrain changing
     infoBox : false, //Disable InfoBox widget
     selectionIndicator : false, //Disable selection indicator
-	navigationInstructionsInitiallyVisible : false
+	navigationInstructionsInitiallyVisible : false,
+	terrain : terrain
 });
 var scene = viewer.scene;
 
 //Lighting based on sun/moon positions
 scene.globe.enableLighting = false; // generally a bit too dark when enabled
-
-//Terrain
-viewer.terrainProvider = Cesium.createWorldTerrain({
-    requestWaterMask: true,
-    requestVertexNormals: true
-});
 
 //Enable depth testing so things behind the terrain disappear.
 scene.globe.depthTestAgainstTerrain = true;
@@ -215,22 +210,24 @@ function computeOrientationProperty() {
     var rotation_matrix = new Cesium.Matrix3();
     Cesium.Matrix4.getRotation(transform_matrix, rotation_matrix);
 
-    // rotate by 90 deg to point towards north (instead of east)
-    var m = Cesium.Matrix3.fromRotationZ(Cesium.Math.toRadians(90.0));
-    rotation_matrix = Cesium.Matrix3.multiply(rotation_matrix, m, new Cesium.Matrix3());
     // rotation quaterion from ENU to ECEF
     var q_enu_to_ecef = Cesium.Quaternion.fromRotationMatrix(rotation_matrix);
 
-	
-    
+    var kHalfSqrt2 = 0.7071067811865476;
+    var q_ned_to_enu = new Cesium.Quaternion(kHalfSqrt2, kHalfSqrt2, 0.0, 0.0); // 180 deg along X, -90 deg along Z (intrinsic)
+    var q_ned_to_enu_inv = new Cesium.Quaternion();
+    Cesium.Quaternion.inverse(q_ned_to_enu, q_ned_to_enu_inv);
+    var tmp = new Cesium.Quaternion();
+
     for (i = 0; i < attitude_data.length; ++i) {
         var cur_attitude = attitude_data[i];
         var time_att = Cesium.JulianDate.fromIso8601(cur_attitude[0]);
-        // we need to swap the y & z axis: in NED the body-frame y-axis points to the right
-        // and the z axis down, whereas in ECEF the y-axis points to the left and the z-axis
-        // upwards (x-axis points forward in both coordinate systems)
-        var q = new Cesium.Quaternion(cur_attitude[1], -cur_attitude[2],
-                                               -cur_attitude[3], cur_attitude[4]);
+        var q = new Cesium.Quaternion(cur_attitude[1], cur_attitude[2], cur_attitude[3], cur_attitude[4]);
+
+        // Convert NED to ENU
+        Cesium.Quaternion.multiply(q_ned_to_enu, q, tmp);
+        Cesium.Quaternion.multiply(tmp, q_ned_to_enu_inv, q);
+
         var orientation = new Cesium.Quaternion();
         Cesium.Quaternion.multiply(q_enu_to_ecef, q, orientation);
         //orientationProperty.addSample(time_att, orientation); // this uses interpolation
@@ -331,14 +328,16 @@ var entity = viewer.entities.add({
 
 // sample the ground height at takeoff position to get the offset (there can be
 // an offset of several meters)
-var promise = Cesium.sampleTerrainMostDetailed(viewer.terrainProvider, [ takeoff_position ]);
-Cesium.when(promise, function(updatedPositions) {
-	var ground_offset = takeoff_position.height - takeoff_altitude;
-    console.log('Ground Offset in meters: ' + ground_offset);
-	// re-compute the positions taking the ground offset into account.
-	// add 2 meters more to allow for inaccuracies
-	var positionProperty = computePositionProperty(ground_offset + 2);
-	entity.position = positionProperty;
+terrain.readyEvent.addEventListener(provider => {
+	var promise = Cesium.sampleTerrainMostDetailed(provider, [ takeoff_position ]);
+	promise.then((updatedPositions) => {
+		var ground_offset = takeoff_position.height - takeoff_altitude;
+		console.log('Ground Offset in meters: ' + ground_offset);
+		// re-compute the positions taking the ground offset into account.
+		// add 2 meters more to allow for inaccuracies
+		var positionProperty = computePositionProperty(ground_offset + 2);
+		entity.position = positionProperty;
+	});
 });
 
 

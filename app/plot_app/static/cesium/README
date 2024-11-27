@@ -1,9 +1,9 @@
 Cesium.js
 ---------
-version: 1.58
+version: 1.123
 
 /Build:
- This directory contains the Cesium release from https://cesiumjs.org/downloads/
+ This directory contains the Cesium release from https://cesium.com/downloads/
  (deleted CesiumUnminified & Documentation)
 /SampleData:
  from Apps/SampleData
