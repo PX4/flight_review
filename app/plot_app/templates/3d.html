@@ -146,6 +146,7 @@ var start = Cesium.JulianDate.fromIso8601({{ start_timestamp }});
 var boot_timestamp = Cesium.JulianDate.fromIso8601({{ boot_timestamp }});
 var stop = Cesium.JulianDate.fromIso8601({{ end_timestamp }});
 var attitude_data = {{ attitude_data }};
+attitude_data[0][0] = {{ start_timestamp }}; // Prevent initial attitude jump if the first sample is a bit later
 
 var model_scale_factor = {{ model_scale_factor }}; // model-specific scale factor
 var model_uri = "{{ model_uri }}";
