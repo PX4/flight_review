@@ -91,7 +91,8 @@ with con:
 
         # and the log file
         ulog_file_name = get_log_filename(log_id)
-        os.unlink(ulog_file_name)
+        if os.path.exists(ulog_file_name):
+            os.unlink(ulog_file_name)
         #and preview image if exist
         preview_image_filename=os.path.join(get_overview_img_filepath(), log_id+'.png')
         if os.path.exists(preview_image_filename):
