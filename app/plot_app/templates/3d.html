@@ -450,6 +450,33 @@ viewer.clock.onTick.addEventListener(function(clock) {
 
 	 radio_controller.redraw();
 });
+// Mouse dragging
+var radio_controller_offset = [0, 0];
+var radio_controller_element = document.getElementById("radio-controller");
+var is_mouse_down = false;
+radio_controller_element.addEventListener('mousedown', function(e) {
+    is_mouse_down = true;
+    radio_controller_offset = [
+        radio_controller_element.offsetLeft - e.clientX,
+        radio_controller_element.offsetTop - e.clientY,
+    ];
+}, true);
+document.addEventListener('mouseup', function() {
+    is_mouse_down = false;
+}, true);
+document.addEventListener('mousemove', function(e) {
+    event.preventDefault();
+    if (is_mouse_down) {
+        var margin_left = parseInt(window.getComputedStyle(radio_controller_element).marginLeft);
+        var margin_top = parseInt(window.getComputedStyle(radio_controller_element).marginTop);
+        var x = (e.clientX + radio_controller_offset[0]);
+        var y = (e.clientY + radio_controller_offset[1]);
+        x = Math.max(0, Math.min(window.innerWidth - radio_controller_element.clientWidth, x));
+        y = Math.max(0, Math.min(window.innerHeight - radio_controller_element.clientHeight, y));
+        radio_controller_element.style.left = (x - margin_left) + 'px';
+        radio_controller_element.style.top  = (y - margin_top) + 'px';
+    }
+}, true);
 
 
 // additional keyboard handling
