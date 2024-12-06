@@ -95,6 +95,25 @@
 				  </td>
 			  </tr>
 			  <tr>
+				  <td>Flight Path Width</td>
+				  <td>
+					  <input type="range" min="1" max="30" step="1" data-bind="value: path_width, valueUpdate: 'input'">
+					  <input type="text" size="2" data-bind="value: path_width">
+				  </td>
+			  </tr>
+			  <tr>
+				  <td>Flight Path Color</td>
+				  <td>
+					  <input type="color" value="#f6b73c" data-bind="value: path_color, valueUpdate: 'input'">
+				  </td>
+			  </tr>
+			  <tr>
+				  <td>Show Radio</td>
+				  <td>
+					  <input type="checkbox" value="true" data-bind="checked: radio_visible, valueUpdate: 'input'">
+				  </td>
+			  </tr>
+			  <tr>
 				  <td>Camera Tracks Vehicle</td>
 				  <td>
 					  <input type="checkbox" value="false" data-bind="checked: track_vehicle, valueUpdate: 'input'">
@@ -456,7 +475,10 @@ document.addEventListener('keyup', function(e) {
 // UI: configuration
 var viewModel = {
     size : default_model_scale,
+    path_width : 10,
+    path_color : '#FFFF00',
     path_visible : true,
+    radio_visible : true,
     track_vehicle : false,
 };
 // Convert the viewModel members into knockout observables.
@@ -471,9 +493,30 @@ Cesium.knockout.getObservable(viewModel, 'size').subscribe(
 		entity.model.scale = newValue * model_scale_factor;
     }
 );
+Cesium.knockout.getObservable(viewModel, 'path_width').subscribe(
+    function(newValue) {
+		entity.path.width = newValue;
+    }
+);
+Cesium.knockout.getObservable(viewModel, 'path_color').subscribe(
+    function(newValue) {
+        var color = new Cesium.Color();
+        Cesium.Color.fromCssColorString(newValue, color);
+        entity.path.material.color = color;
+    }
+);
 Cesium.knockout.getObservable(viewModel, 'path_visible').subscribe(
     function(newValue) {
 		entity.path.show = newValue;
+    }
+);
+Cesium.knockout.getObservable(viewModel, 'radio_visible').subscribe(
+    function(newValue) {
+		if (newValue) {
+			document.getElementById('radio-controller').style.display = 'block';
+		} else {
+			document.getElementById('radio-controller').style.display = 'none';
+		}
     }
 );
 Cesium.knockout.getObservable(viewModel, 'track_vehicle').subscribe(
