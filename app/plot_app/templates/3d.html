@@ -29,10 +29,9 @@
 	  }
 	  #toolbar {
 		  background: rgba(42, 42, 42, 0.8);
-		  padding: 4px;
 		  border-radius: 4px;
 		  margin: 5px;
-		  padding: 2px 5px;
+		  padding: 6px 5px;
 		  position: absolute;
 		  top: 0;
 		  left: 0;
@@ -42,7 +41,7 @@
 		  padding-top: 2px;
 		  padding-bottom: 2px;
 	  }
-	  #toolbar td:not(.noalign) {
+	  #toolbar td {
 		  text-align: right;
 	  }
 	  #toolbar .header {
@@ -69,6 +68,28 @@
 		  margin-left: -320px;
 		  margin-top: -300px;
       }
+
+      .collapsible {
+          background-color: #777;
+          color: white;
+          cursor: pointer;
+          padding: 5px;
+          width: 100%;
+          border: none;
+          text-align: center;
+          outline: none;
+		  border-radius: 4px;
+		  margin-top: 6px;
+      }
+      .active, .collapsible:hover {
+          background-color: #555;
+      }
+      .content {
+          padding: 0 18px;
+          max-height: 0;
+          overflow: hidden;
+          transition: max-height 0.2s ease-out;
+      }
   </style>
 </head>
 <body>
@@ -76,11 +97,10 @@
   <div id="radio-controller"></div>
 
   <div id="toolbar">
+	  <a href="plot_app?log={{ log_id }}">Open Plot Page</a>
+	  <button class="collapsible">Configure</button>
+	  <div class="content">
 	  <table><tbody>
-			  <tr>
-				  <td class="noalign" colspan="2"><a href="plot_app?log={{ log_id }}">Open Plot Page</a></td>
-			  </tr>
-			  <!-- <tr><td class="header">Options</td></tr> -->
 			  <tr>
 				  <td>Model Size</td>
 				  <td>
@@ -120,6 +140,7 @@
 				  </td>
 			  </tr>
 		  </tbody></table>
+	  </div>
   </div>
 
   <script>
@@ -561,6 +582,19 @@ Cesium.knockout.getObservable(viewModel, 'track_vehicle').subscribe(
 viewer.zoomTo(entity, new Cesium.HeadingPitchRange(0,
 	Cesium.Math.toRadians(-90), 200));
 
+
+var coll = document.getElementsByClassName("collapsible");
+for (var i = 0; i < coll.length; i++) {
+  coll[i].addEventListener("click", function() {
+    this.classList.toggle("active");
+    var content = this.nextElementSibling;
+    if (content.style.maxHeight){
+      content.style.maxHeight = null;
+    } else {
+      content.style.maxHeight = content.scrollHeight + "px";
+    }
+  });
+}
   </script>
 </body>
 </html>
