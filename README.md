@@ -25,7 +25,7 @@ Flight Review is deployed at https://review.px4.io.
 #### Ubuntu
 
 ```bash
-sudo apt-get install sqlite3 fftw3 libfftw3-dev
+sudo apt-get install sqlite3 libfftw3-bin libfftw3-dev
 ```
 
 **Note:** Under some Ubuntu and Debian environments you might have to
