@@ -7,6 +7,7 @@ from bokeh.layouts import column
 from bokeh.models import Range1d
 from bokeh.models.widgets import Button
 from bokeh.io import curdoc
+from bokeh.themes import Theme
 
 from config import *
 from helper import *
@@ -31,6 +32,13 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
 
     plots = []
     data = ulog.data_list
+
+    # Helper function to style specific plots
+    def style_plot(bokeh_plot):
+        bokeh_plot.border_fill_color = '#FFF8DC'  # Light pale gold
+        bokeh_plot.background_fill_color = '#FFFFFF'  # White
+        bokeh_plot.outline_line_color = '#444444'
+        return bokeh_plot
 
     # COMPATIBILITY support for old logs
     if any(elem.name in ('vehicle_air_data', 'vehicle_magnetometer') for elem in data):
@@ -161,7 +169,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
                  bokeh_plot=data_plot.bokeh_plot)
         if data_plot.finalize() is not None:
             plots.append(data_plot.bokeh_plot)
-
+            
     if any(elem.name == 'vehicle_gps_position' for elem in ulog.data_list):
         # Leaflet Map
         try:
@@ -183,6 +191,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
 
     x_range_offset = (ulog.last_timestamp - ulog.start_timestamp) * 0.05
     x_range = Range1d(ulog.start_timestamp - x_range_offset, ulog.last_timestamp + x_range_offset)
+
 
     # Altitude estimate
     data_plot = DataPlot(data, plot_config, 'vehicle_gps_position',
@@ -1000,7 +1009,263 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
     except:
         pass
 
+    # Local RSSI and Remote RSSI
+    try:
+        data_plot = DataPlot(data, plot_config, 'radio_status',
+                             y_axis_label='[RSSI]',
+                             title='Local RSSI and Remote RSSI', plot_height='small', x_range=x_range)
+        radio_status = ulog.get_dataset('radio_status').data
+        sampling_diff = np.diff(radio_status['timestamp'])
+        min_sampling_diff = np.amin(sampling_diff)
 
+        plot_dropouts(data_plot.bokeh_plot, ulog.dropouts, min_sampling_diff)
+
+        data_plot.add_graph(['rssi', 'remote_rssi'], colors3[0:2], 
+                           ['Local RSSI', 'Remote RSSI'])
+        
+        # Set plot ranges to fit data after adding graphs
+        data_plot.bokeh_plot.x_range.start = min(radio_status['timestamp'])
+        data_plot.bokeh_plot.x_range.end = max(radio_status['timestamp'])
+        data_plot.bokeh_plot.y_range.start = min(min(radio_status['rssi']), min(radio_status['remote_rssi']))
+        data_plot.bokeh_plot.y_range.end = max(max(radio_status['rssi']), max(radio_status['remote_rssi']))
+        plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
+        if data_plot.finalize() is not None: 
+            style_plot(data_plot.bokeh_plot)
+            plots.append(data_plot)
+    except:
+        pass
+    
+    # Local Noise and Remote Noise
+    try:
+        data_plot = DataPlot(data, plot_config, 'radio_status',
+                             y_axis_label='[Noise]',
+                             title='Local Noise and Remote Noise', plot_height='small', x_range=x_range)
+        radio_status = ulog.get_dataset('radio_status').data
+        sampling_diff = np.diff(radio_status['timestamp'])
+        min_sampling_diff = np.amin(sampling_diff)
+
+        plot_dropouts(data_plot.bokeh_plot, ulog.dropouts, min_sampling_diff)
+
+        data_plot.add_graph(['noise', 'remote_noise'], colors3[0:2], 
+                           ['Local Noise', 'Remote Noise'])
+        
+        # Set plot ranges to fit data after adding graphs
+        data_plot.bokeh_plot.x_range.start = min(radio_status['timestamp'])
+        data_plot.bokeh_plot.x_range.end = max(radio_status['timestamp'])
+        data_plot.bokeh_plot.y_range.start = min(min(radio_status['noise']), min(radio_status['remote_noise']))
+        data_plot.bokeh_plot.y_range.end = max(max(radio_status['noise']), max(radio_status['remote_noise']))
+        plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
+        if data_plot.finalize() is not None: 
+            style_plot(data_plot.bokeh_plot)
+            plots.append(data_plot)    
+    except:
+        pass
+
+    # TxBuffer Percent Remaining
+    try:
+        data_plot = DataPlot(data, plot_config, 'radio_status',
+                             y_axis_label='[TxBuf]',
+                             title='TxBuffer Percent Remaining', plot_height='small', x_range=x_range)
+        radio_status = ulog.get_dataset('radio_status').data
+        sampling_diff = np.diff(radio_status['timestamp'])
+        min_sampling_diff = np.amin(sampling_diff)
+
+        plot_dropouts(data_plot.bokeh_plot, ulog.dropouts, min_sampling_diff)
+
+        data_plot.add_graph(['txbuf'], colors3[0:1], ['TX Buffer'])
+        
+        # Set plot ranges to fit data after adding graphs
+        data_plot.bokeh_plot.x_range.start = min(radio_status['timestamp'])
+        data_plot.bokeh_plot.x_range.end = max(radio_status['timestamp'])
+        data_plot.bokeh_plot.y_range.start = min(min(radio_status['noise']), min(radio_status['remote_noise']))
+        data_plot.bokeh_plot.y_range.end = max(max(radio_status['noise']), max(radio_status['remote_noise']))
+        plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
+        if data_plot.finalize() is not None: 
+            style_plot(data_plot.bokeh_plot)
+            plots.append(data_plot)    
+    except:
+        pass
+
+    # Number of Rx Errors
+    try:
+        data_plot = DataPlot(data, plot_config, 'radio_status',
+                             y_axis_label='[errors/s]',
+                             title='Rate of Rx Errors (30s rolling average)', plot_height='small', x_range=x_range)
+        radio_status = ulog.get_dataset('radio_status').data
+        sampling_diff = np.diff(radio_status['timestamp'])
+        min_sampling_diff = np.amin(sampling_diff)
+
+        plot_dropouts(data_plot.bokeh_plot, ulog.dropouts, min_sampling_diff)
+
+        # Calculate rolling average error rate over 30 second window
+        window = 30 * 1e6 # 30 seconds in microseconds
+        timestamps = radio_status['timestamp']
+        error_rates = []
+        
+        for i in range(len(timestamps)):
+            window_start = timestamps[i] - window
+            window_end = timestamps[i]
+            window_mask = (timestamps >= window_start) & (timestamps <= window_end)
+            if i > 0:
+                error_delta = radio_status['rxerrors'][i] - radio_status['rxerrors'][i-1]
+                time_delta = (timestamps[i] - timestamps[i-1]) / 1e6 # convert to seconds
+                error_rate = error_delta / time_delta if time_delta > 0 else 0
+            else:
+                error_rate = 0
+            error_rates.append(error_rate)
+
+        radio_status['error_rate'] = error_rates
+        data_plot.add_graph(['error_rate'], colors3[0:1], ['RX Error Rate'])
+        
+        # Set plot ranges to fit data
+        data_plot.bokeh_plot.x_range.start = min(timestamps)
+        data_plot.bokeh_plot.x_range.end = max(timestamps)
+        data_plot.bokeh_plot.y_range.start = 0
+        data_plot.bokeh_plot.y_range.end = max(error_rates) * 1.1
+        
+        plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
+        if data_plot.finalize() is not None: 
+            style_plot(data_plot.bokeh_plot)
+            plots.append(data_plot)    
+    except:
+        pass
+
+    # Signal to Noise Ratio
+    try:
+        data_plot = DataPlot(data, plot_config, 'radio_status',
+                             y_axis_label='[dB]',
+                             title='Signal to Noise Ratio', plot_height='small', x_range=x_range)
+        radio_status = ulog.get_dataset('radio_status').data
+        sampling_diff = np.diff(radio_status['timestamp'])
+        min_sampling_diff = np.amin(sampling_diff)
+
+        plot_dropouts(data_plot.bokeh_plot, ulog.dropouts, min_sampling_diff)
+
+        data_plot.add_graph([lambda data: ('local_snr', data['rssi'] - data['noise'])], 
+                           colors3[0:1], ['Local SNR'])
+        data_plot.add_graph([lambda data: ('remote_snr', data['remote_rssi'] - data['remote_noise'])],
+                           colors3[1:2], ['Remote SNR'])
+        
+        # Set plot ranges to fit data after adding graphs
+        data_plot.bokeh_plot.x_range.start = min(radio_status['timestamp'])
+        data_plot.bokeh_plot.x_range.end = max(radio_status['timestamp'])
+        data_plot.bokeh_plot.y_range.start = min(min(radio_status['rssi'] - radio_status['noise']), 
+                                                min(radio_status['remote_rssi'] - radio_status['remote_noise']))
+        data_plot.bokeh_plot.y_range.end = max(max(radio_status['rssi'] - radio_status['noise']),
+                                              max(radio_status['remote_rssi'] - radio_status['remote_noise']))
+        plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
+        if data_plot.finalize() is not None: 
+            style_plot(data_plot.bokeh_plot)
+            plots.append(data_plot)    
+    except:
+        pass
+    
+    # Windspeed
+    try:
+        data_plot = DataPlot(data, plot_config, 'wind',
+                             y_axis_label='[m/s]',
+                             title='Wind Speed', plot_height='small', x_range=x_range)
+        wind_data = ulog.get_dataset('wind').data
+        sampling_diff = np.diff(wind_data['timestamp'])
+        min_sampling_diff = np.amin(sampling_diff)
+
+        plot_dropouts(data_plot.bokeh_plot, ulog.dropouts, min_sampling_diff)
+
+        data_plot.add_graph(['windspeed_north'], colors3[0:1], ['Wind Speed North'])
+        data_plot.add_graph(['windspeed_east'], colors3[1:2], ['Wind Speed East'])
+        
+        # Set plot ranges to fit data after adding graphs
+        data_plot.bokeh_plot.x_range.start = min(wind_data['timestamp'])
+        data_plot.bokeh_plot.x_range.end = max(wind_data['timestamp'])
+        data_plot.bokeh_plot.y_range.start = min(min(wind_data['windspeed_north']), 
+                                                min(wind_data['windspeed_east']))
+        data_plot.bokeh_plot.y_range.end = max(max(wind_data['windspeed_north']),
+                                              max(wind_data['windspeed_east']))
+        plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
+        if data_plot.finalize() is not None: 
+            style_plot(data_plot.bokeh_plot)
+            plots.append(data_plot)
+    except:
+        pass
+
+    # Windspeed variance
+    try:
+        data_plot = DataPlot(data, plot_config, 'wind',
+                             y_axis_label='[(m/s)²]',
+                             title='Wind Speed Variance', plot_height='small', x_range=x_range)
+        wind_data = ulog.get_dataset('wind').data
+        sampling_diff = np.diff(wind_data['timestamp'])
+        min_sampling_diff = np.amin(sampling_diff)
+
+        plot_dropouts(data_plot.bokeh_plot, ulog.dropouts, min_sampling_diff)
+
+        data_plot.add_graph(['variance_north'], colors3[0:1], ['Wind Speed North Variance'])
+        data_plot.add_graph(['variance_east'], colors3[1:2], ['Wind Speed East Variance'])
+        
+        # Set plot ranges to fit data after adding graphs
+        data_plot.bokeh_plot.x_range.start = min(wind_data['timestamp'])
+        data_plot.bokeh_plot.x_range.end = max(wind_data['timestamp'])
+        data_plot.bokeh_plot.y_range.start = min(min(wind_data['variance_north']), 
+                                                min(wind_data['variance_east']))
+        data_plot.bokeh_plot.y_range.end = max(max(wind_data['variance_north']),
+                                              max(wind_data['variance_east']))
+        plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
+        if data_plot.finalize() is not None: 
+            style_plot(data_plot.bokeh_plot)
+            plots.append(data_plot)
+    except:
+        pass
+
+    # Windspeed variance
+    try:
+        data_plot = DataPlot(data, plot_config, 'todd_sensor',
+                             y_axis_label='[Pa]',
+                             title='Barometric Pressure', plot_height='small', x_range=x_range)
+        sensor_data = ulog.get_dataset('todd_sensor').data
+        data_plot.add_graph(['baro_pressure_pa'], colors3[0:1], ['Barometric Pressure'])
+        plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
+        if data_plot.finalize() is not None: 
+            style_plot(data_plot.bokeh_plot)
+            plots.append(data_plot)    
+    except:
+        pass
+
+    try:
+        data_plot = DataPlot(data, plot_config, 'todd_sensor',
+                             y_axis_label='[°C]',
+                             title='Temperature Sensors - Todd Sensor', plot_height='small', x_range=x_range)
+        data_plot.add_graph(['sht_temp_celcius'], colors3[1:2], ['SHT Temperature'])
+        data_plot.add_graph(['therm_temp_celcius'], colors3[2:3], ['Thermistor Temperature'])
+        plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
+        if data_plot.finalize() is not None: 
+            style_plot(data_plot.bokeh_plot)
+            plots.append(data_plot)    
+    except:
+        pass
+
+    try:
+        data_plot = DataPlot(data, plot_config, 'todd_sensor',
+                             y_axis_label='[%]',
+                             title='SHT Humidity - Todd Sensor', plot_height='small', x_range=x_range)
+        data_plot.add_graph(['sht_humidity'], colors3[0:1], ['Humidity'])
+        plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
+        if data_plot.finalize() is not None: 
+            style_plot(data_plot.bokeh_plot)
+            plots.append(data_plot)    
+    except:
+        pass
+
+    try:
+        data_plot = DataPlot(data, plot_config, 'todd_sensor',
+                             y_axis_label='[Ω]',
+                             title='Thermistor Resistance - Todd Sensor', plot_height='small', x_range=x_range)
+        data_plot.add_graph(['therm_resistance'], colors3[0:1], ['Resistance'])
+        plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
+        if data_plot.finalize() is not None: 
+            style_plot(data_plot.bokeh_plot)
+            plots.append(data_plot)    
+    except:
+        pass
 
     # exchange all DataPlot's with the bokeh_plot and handle parameter changes
 
