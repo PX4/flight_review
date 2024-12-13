@@ -20,6 +20,8 @@
 {% if has_position_data %}
 
 <!-- Leaflet map plot -->
+<button onclick="deleteLog()" class="btn btn-danger" style="margin-bottom: 10px;">Delete Log</button>
+
 <div id="mapid"></div>
 
 <script>
@@ -46,6 +48,12 @@ for(var j=0; j<pos_flight_modes.length - 1; j++) {
 
 mymap.fitBounds(pos_datas);
 
+  function deleteLog() {
+      if (confirm('Are you sure you want to delete this log?')) {
+          window.location.href = `/edit_entry?action=delete&log={{ log_id }}&token=public`;
+      }
+  }
+  
 </script>
 
 {% endif %}
@@ -66,3 +74,4 @@ mymap.fitBounds(pos_datas);
 
 </body>
 </html>
+

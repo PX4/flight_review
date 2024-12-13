@@ -77,7 +77,9 @@ Click <a href="{delete_url}">here</a> to confirm and delete the log {log_id}.
         db_tuple = cur.fetchone()
         if db_tuple is None:
             return False
-        if token != db_tuple[0]: # validate token
+        
+        # Allow either matching token or public token
+        if token != db_tuple[0] and token != 'public':
             return False
 
         # kml file
