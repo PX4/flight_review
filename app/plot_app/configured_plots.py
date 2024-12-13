@@ -1266,9 +1266,34 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
             plots.append(data_plot)    
     except:
         pass
+    
 
-    # exchange all DataPlot's with the bokeh_plot and handle parameter changes
+    # current vs thrust
+    data_plot = DataPlot(data, plot_config, 'vehicle_local_position',
+                        y_start=0, title='Thrust vs Velocity w/ Ratio (Normalized)', 
+                        plot_height='small', changed_params=changed_params,
+                        x_range=x_range)
 
+    # first dataset: velocity 
+    vel_data = ulog.get_dataset('vehicle_local_position').data['vz']
+    max_vel = np.max(np.abs(vel_data))
+    data_plot.add_graph([lambda data: ('vz', abs(data['vz'])/max_vel * 100)], 
+                        colors3[0:1], ['Z Velocity [%]'])
+
+    # switch to thrust dataset
+    data_plot.change_dataset(actuator_controls_0.thrust_sp_topic)
+    data_plot.add_graph([lambda data: ('thrust', actuator_controls_0.thrust * 100)],
+                        colors3[1:2], ['Thrust [%]'])
+    
+    # add GPS altitude
+    data_plot.change_dataset('vehicle_gps_position')
+    data_plot.add_graph([lambda data: ('alt', vehicle_gps_position_altitude/np.max(np.abs(vehicle_gps_position_altitude)) * 100)],
+                        colors3[2:3], ['GPS Altitude [%]'])
+    plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
+
+    if data_plot.finalize() is not None: plots.append(data_plot)
+    
+    
     param_changes_button = Button(label="Hide Parameter Changes", width=170)
     param_change_labels = []
     # FIXME: this should be a CustomJS callback, not on the server. However this
