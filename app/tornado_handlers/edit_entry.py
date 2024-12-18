@@ -57,12 +57,110 @@ Failed to delete the log file.
 Click <a href="{delete_url}">here</a> to confirm and delete the log {log_id}.
 </p>
 """.format(delete_url=delete_url, log_id=log_id)
+        elif action == 'edit':
+            # Get log details from database
+            con = sqlite3.connect(get_db_filename(), detect_types=sqlite3.PARSE_DECLTYPES)
+            cur = con.cursor()
+            cur.execute('SELECT Description, Rating, VideoUrl, Feedback FROM Logs WHERE Id = ?', (log_id,))
+            db_tuple = cur.fetchone()
+            cur.close()
+            con.close()
+
+            if db_tuple is None:
+                raise tornado.web.HTTPError(404, 'Log not found')
+
+            description, rating, video_url, feedback = db_tuple
+            
+            content = f"""
+<h3>Edit Log {escape(log_id)}</h3>
+<form method="POST" action="/edit_entry">
+    <input type="hidden" name="log" value="{escape(log_id)}">
+    <input type="hidden" name="token" value="{escape(token)}">
+    <input type="hidden" name="action" value="edit">
+    
+    <div class="form-group">
+        <label for="description">Description:</label>
+        <textarea class="form-control" id="description" name="description" rows="3">{escape(description or '')}</textarea>
+    </div>
+    
+    <div class="form-group">
+        <label for="feedback">Feedback:</label>
+        <textarea class="form-control" id="feedback" name="feedback" rows="3">{escape(feedback or '')}</textarea>
+    </div>
+    
+    <div class="form-group">
+        <label for="video_url">Video URL:</label>
+        <input type="url" class="form-control" id="video_url" name="video_url" value="{escape(video_url or '')}">
+    </div>
+    
+    <div class="form-group">
+        <label for="rating">Rating:</label>
+        <select class="form-control" id="rating" name="rating">
+            <option value="0" {' selected' if rating == 0 else ''}>Unrated</option>
+            <option value="1" {' selected' if rating == 1 else ''}>Good</option>
+            <option value="2" {' selected' if rating == 2 else ''}>Warning</option>
+            <option value="3" {' selected' if rating == 3 else ''}>Error</option>
+        </select>
+    </div>
+    
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <a href="/plot_app?log={escape(log_id)}" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
+"""
         else:
             raise tornado.web.HTTPError(400, 'Invalid Parameter')
 
         template = get_jinja_env().get_template(EDIT_TEMPLATE)
         self.write(template.render(content=content))
 
+    def post(self, *args, **kwargs):
+        """Handle POST request for editing log details"""
+        log_id = escape(self.get_argument('log'))
+        token = escape(self.get_argument('token'))
+        action = self.get_argument('action')
+
+        if action != 'edit':
+            raise tornado.web.HTTPError(400, 'Invalid Action')
+
+        # Verify token
+        con = sqlite3.connect(get_db_filename(), detect_types=sqlite3.PARSE_DECLTYPES)
+        cur = con.cursor()
+        cur.execute('select Token from Logs where Id = ?', (log_id,))
+        db_tuple = cur.fetchone()
+        
+        if db_tuple is None:
+            cur.close()
+            con.close()
+            raise tornado.web.HTTPError(404, 'Log not found')
+            
+        if token != db_tuple[0] and token != 'public':
+            cur.close()
+            con.close()
+            raise tornado.web.HTTPError(403, 'Invalid token')
+
+        # Update log details
+        description = self.get_argument('description', '')
+        video_url = self.get_argument('video_url', '')
+        rating = int(self.get_argument('rating', '0'))
+        feedback = self.get_argument('feedback', '')
+
+        cur.execute('''UPDATE Logs 
+                      SET Description = ?, VideoUrl = ?, Rating = ?, Feedback = ?
+                      WHERE Id = ?''', 
+                   (description, video_url, rating, feedback, log_id))
+        con.commit()
+        cur.close()
+        con.close()
+
+        content = f"""
+<h3>Log Updated</h3>
+<p>Successfully updated the log details.</p>
+<p><a href="/plot_app?log={escape(log_id)}">Return to log</a></p>
+"""
+        template = get_jinja_env().get_template(EDIT_TEMPLATE)
+        self.write(template.render(content=content))
 
     @staticmethod
     def delete_log_entry(log_id, token):
