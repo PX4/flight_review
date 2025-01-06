@@ -190,6 +190,7 @@ attitude_data[0][0] = {{ start_timestamp }}; // Prevent initial attitude jump if
 
 var model_scale_factor = {{ model_scale_factor }}; // model-specific scale factor
 var model_uri = "{{ model_uri }}";
+var model_heading_rotation_deg = "{{ model_heading_rotation_deg }}";
 
 //Make sure viewer is at the desired time.
 viewer.clock.startTime = start.clone();
@@ -242,7 +243,7 @@ function computePositionProperty(altitude_offset) {
     return property;
 }
 
-function computeOrientationProperty() {
+function computeOrientationProperty(heading_rotation_deg) {
 	//var orientationProperty = new Cesium.SampledProperty(Cesium.Quaternion);
 	var orientationProperty = new Cesium.TimeIntervalCollectionProperty();
 
@@ -256,6 +257,9 @@ function computeOrientationProperty() {
     var rotation_matrix = new Cesium.Matrix3();
     Cesium.Matrix4.getRotation(transform_matrix, rotation_matrix);
 
+    // Rotate the model to point east
+    var m = Cesium.Matrix3.fromRotationZ(Cesium.Math.toRadians(heading_rotation_deg));
+    rotation_matrix = Cesium.Matrix3.multiply(rotation_matrix, m, new Cesium.Matrix3());
     // rotation quaterion from ENU to ECEF
     var q_enu_to_ecef = Cesium.Quaternion.fromRotationMatrix(rotation_matrix);
 
@@ -299,7 +303,7 @@ function computeOrientationProperty() {
 
 //Compute the entity position & orientation properties
 var positionProperty = computePositionProperty(0);
-var orientationProperty = computeOrientationProperty();
+var orientationProperty = computeOrientationProperty(model_heading_rotation_deg);
 
 // flight modes
 var flightModesProperty = new Cesium.TimeIntervalCollectionProperty();

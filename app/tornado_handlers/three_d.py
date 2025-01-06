@@ -156,9 +156,11 @@ class ThreeDHandler(TornadoRequestHandlerBase):
         # the model_scale_factor should scale the different models to make them
         # equal in size (in proportion)
         mav_type = ulog.initial_parameters.get('MAV_TYPE', None)
+        model_heading_rotation_deg = 0
         if mav_type == 1: # fixed wing
             model_scale_factor = 0.06
             model_uri = 'plot_app/static/cesium/SampleData/models/CesiumAir/Cesium_Air.glb'
+            model_heading_rotation_deg = 90
         elif mav_type == 7: # Airship, controlled
             model_scale_factor = 0.1
             model_uri = 'plot_app/static/cesium/SampleData/models/CesiumBalloon/CesiumBalloon.glb'
@@ -172,6 +174,7 @@ class ThreeDHandler(TornadoRequestHandlerBase):
             # TODO: use the delta-quad model
             model_scale_factor = 0.06
             model_uri = 'plot_app/static/cesium/SampleData/models/CesiumAir/Cesium_Air.glb'
+            model_heading_rotation_deg = 90
         else: # TODO: handle more types
             model_scale_factor = 1
             model_uri = 'plot_app/static/cesium/models/iris/iris.glb'
@@ -190,6 +193,7 @@ class ThreeDHandler(TornadoRequestHandlerBase):
             attitude_data=attitude_data,
             model_scale_factor=model_scale_factor,
             model_uri=model_uri,
+            model_heading_rotation_deg=model_heading_rotation_deg,
             log_id=log_id,
             cesium_api_key=get_cesium_api_key()))
 
