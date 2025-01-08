@@ -259,7 +259,8 @@ function computeOrientationProperty(heading_rotation_deg) {
 
     // Rotate the model to point east
     var m = Cesium.Matrix3.fromRotationZ(Cesium.Math.toRadians(heading_rotation_deg));
-    rotation_matrix = Cesium.Matrix3.multiply(rotation_matrix, m, new Cesium.Matrix3());
+    var q_heading_rotation = Cesium.Quaternion.fromRotationMatrix(m);
+
     // rotation quaterion from ENU to ECEF
     var q_enu_to_ecef = Cesium.Quaternion.fromRotationMatrix(rotation_matrix);
 
@@ -279,7 +280,8 @@ function computeOrientationProperty(heading_rotation_deg) {
         Cesium.Quaternion.multiply(tmp, q_ned_to_enu_inv, q);
 
         var orientation = new Cesium.Quaternion();
-        Cesium.Quaternion.multiply(q_enu_to_ecef, q, orientation);
+        Cesium.Quaternion.multiply(q, q_heading_rotation, orientation);
+        Cesium.Quaternion.multiply(q_enu_to_ecef, orientation, orientation);
         //orientationProperty.addSample(time_att, orientation); // this uses interpolation
         
         // avoid using iterpolation (which causes problems)
