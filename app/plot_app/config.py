@@ -150,3 +150,10 @@ def debug_print_timing():
 def debug_verbose_output():
     """ print verbose output? """
     return __VERBOSE_OUTPUT == 1
+
+def get_ulge_private_key_path():
+    return os.environ.get(
+        "ULGE_PRIVATE_KEY",
+        os.path.join(os.path.dirname(__file__), "../private_key/private_key.pem")
+    )
+

@@ -22,6 +22,11 @@ from config import get_log_filepath, get_airframes_filename, get_airframes_url, 
                    get_log_cache_size, debug_print_timing, \
                    get_releases_filename
 
+from Crypto.Cipher import ChaCha20
+from Crypto.PublicKey import RSA
+from Crypto.Cipher import PKCS1_OAEP
+from Crypto.Hash import SHA256
+
 #pylint: disable=line-too-long, global-variable-not-assigned,invalid-name,global-statement
 
 def print_timing(name, start_time):
@@ -511,3 +516,37 @@ def validate_error_ids(err_ids):
             return False
 
     return True
+
+def decrypt_ulge_payload(payload: bytes, private_key_path: str) -> bytes:
+    """Decrypt an uploaded .ulge file payload and return decrypted .ulg bytes."""
+
+    if not os.path.exists(private_key_path):
+        raise FileNotFoundError(f"Private key not found at {private_key_path}")
+
+    magic = b"ULogEnc"
+    header_size = 22
+
+    if payload[:7] != magic:
+        raise ValueError("Invalid header magic")
+    if payload[7] != 1:
+        raise ValueError("Unsupported header version")
+    if payload[16] != 4:
+        raise ValueError("Unsupported key algorithm")
+
+    key_size = payload[19] << 8 | payload[18]
+    nonce_size = payload[21] << 8 | payload[20]
+
+    cipher_text = payload[header_size:header_size + key_size]
+    nonce = payload[header_size + key_size:header_size + key_size + nonce_size]
+    encrypted_data = payload[header_size + key_size + nonce_size:]
+
+    with open(private_key_path, 'rb') as f:
+        rsa_key = RSA.import_key(f.read())
+        cipher_rsa = PKCS1_OAEP.new(rsa_key, SHA256)
+        try:
+            sym_key = cipher_rsa.decrypt(cipher_text)
+        except ValueError as e:
+            raise ValueError("Decryption failed: possibly incorrect private key or corrupt file.") from e
+
+    cipher = ChaCha20.new(key=sym_key, nonce=nonce)
+    return cipher.decrypt(encrypted_data)
