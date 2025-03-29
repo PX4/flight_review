@@ -636,6 +636,22 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
 
                 if data_plot.finalize() is not None: plots.append(data_plot)
 
+    # ESC RPM
+    data_plot = DataPlot(data, plot_config, 'esc_status',
+                        y_axis_label='RPM', title='Motor RPM',
+                        plot_height='small', changed_params=changed_params,
+                        x_range=x_range)
+    if 'esc_count' in data_plot.dataset.data:
+        esc_count = int(data_plot.dataset.data['esc_count'][0])
+        for i in range(esc_count):
+            if 'esc['+str(i)+'].esc_rpm' in data_plot.dataset.data:
+                esc_rpm = data_plot.dataset.data['esc['+str(i)+'].esc_rpm']
+                if np.amax(esc_rpm) > 0.001:
+                    data_plot.add_graph(['esc['+str(i)+'].esc_rpm'],
+                                        [colors8[i % 8]], ['ESC '+str(i)+' RPM'])
+    plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
+    if data_plot.finalize() is not None: plots.append(data_plot)
+
     # raw acceleration
     data_plot = DataPlot(data, plot_config, 'sensor_combined',
                          y_axis_label='[m/s^2]', title='Raw Acceleration',
@@ -643,6 +659,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
                          x_range=x_range)
     data_plot.add_graph(['accelerometer_m_s2[0]', 'accelerometer_m_s2[1]',
                          'accelerometer_m_s2[2]'], colors3, ['X', 'Y', 'Z'])
+    plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
     if data_plot.finalize() is not None: plots.append(data_plot)
 
     # Vibration Metrics
@@ -710,6 +727,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
         lambda data: ('gyro_rad[1]', np.rad2deg(data['gyro_rad[1]'])),
         lambda data: ('gyro_rad[2]', np.rad2deg(data['gyro_rad[2]']))],
                         colors3, ['X', 'Y', 'Z'])
+    plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
     if data_plot.finalize() is not None: plots.append(data_plot)
 
     # FIFO accel
@@ -781,6 +799,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
     data_plot.add_graph(['magnetometer_ga[0]', 'magnetometer_ga[1]',
                          'magnetometer_ga[2]'], colors3,
                         ['X', 'Y', 'Z'])
+    plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
@@ -796,6 +815,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
     data_plot.change_dataset('vehicle_local_position')
     data_plot.add_graph(['dist_bottom', 'dist_bottom_valid'], colors8[2:4],
                             ['Estimated Distance Bottom [m]', 'Dist Bottom Valid'])
+    plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
@@ -813,6 +833,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
                          'Vertical position accuracy [m]', 'Horizontal dilution of precision [m]',
                          'Vertical dilution of precision [m]', 'Speed accuracy [m/s]',
                          'Num Satellites used', 'GPS Fix'])
+    plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
@@ -823,6 +844,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
                          x_range=x_range)
     data_plot.add_graph(['noise_per_ms', 'jamming_indicator'], colors3[0:2],
                         ['Noise per ms', 'Jamming Indicator'])
+    plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
@@ -844,6 +866,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
         if actuator_controls_1.thrust_x is not None:
             data_plot.add_graph([lambda data: ('thrust', actuator_controls_1.thrust_x)],
                                 colors3[2:3], ['Thrust (Fixed-wing'])
+    plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
@@ -871,12 +894,13 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
         if 'sensors3v3[0]' in data_plot.dataset.data and \
                         np.amax(data_plot.dataset.data['sensors3v3[0]']) > 0.0001:
             data_plot.add_graph(['sensors3v3[0]'], colors8[6:7], ['3.3 V'])
+    plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
     #Temperature
     data_plot = DataPlot(data, plot_config, 'sensor_baro',
-                         y_start=0, y_axis_label='[C]', title='Temperature',
+                         y_axis_label='[C]', title='Temperature',
                          plot_height='small', changed_params=changed_params,
                          x_range=x_range)
     data_plot.add_graph(['temperature'], colors8[0:1],
@@ -890,6 +914,17 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
     data_plot.change_dataset('battery_status')
     data_plot.add_graph(['temperature'], colors8[6:7],
                         ['Battery temperature'])
+    data_plot.change_dataset('esc_status')
+    if data_plot.dataset:
+        if 'esc_count' in data_plot.dataset.data:
+            esc_count = int(data_plot.dataset.data['esc_count'][0])
+            for i in range(esc_count):
+                if 'esc['+str(i)+'].esc_temperature' in data_plot.dataset.data:
+                    esc_temp = data_plot.dataset.data['esc['+str(i)+'].esc_temperature']
+                    if np.amax(esc_temp) > 0.001:
+                        data_plot.add_graph(['esc['+str(i)+'].esc_temperature'],
+                                            [colors8[i % 8]], ['ESC '+str(i)+' temperature'])
+    plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
@@ -996,6 +1031,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
         data_plot.change_dataset('estimator_status')
         data_plot.add_graph([lambda data: ('time_slip', data['time_slip']*1e6)],
                             [colors3[1]], ['Estimator time slip (cumulative)'])
+        plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
         if data_plot.finalize() is not None: plots.append(data_plot)
     except:
         pass
