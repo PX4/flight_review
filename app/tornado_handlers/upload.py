@@ -107,6 +107,15 @@ class UploadHandler(TornadoRequestHandlerBase):
         """ GET request callback """
         template = get_jinja_env().get_template(UPLOAD_TEMPLATE)
         self.write(template.render())
+    
+    def _generate_unique_log_filename(self):
+        """Generate a unique log filename that does not exist yet."""
+        while True:
+            log_id = str(uuid.uuid4())
+            new_file_name = get_log_filename(log_id)
+            if not os.path.exists(new_file_name):
+                return log_id, new_file_name
+
 
     def post(self, *args, **kwargs):
         """ POST request callback """
@@ -175,10 +184,12 @@ class UploadHandler(TornadoRequestHandlerBase):
                 file_obj = self.multipart_streamer.get_parts_by_name('filearg')[0]
                 upload_file_name = file_obj.get_filename()
 
-                file_payload = file_obj.get_payload()  # full content as bytes
+                
 
                 # check if the file is encrypted
-                if upload_file_name.endswith('.ulge'):
+                ulge_key_path = get_ulge_private_key_path()
+                if ulge_key_path and upload_file_name.lower().endswith('.ulge'):
+                    file_payload = file_obj.get_payload()  # full content as bytes
                     try:
                         decrypted_data = decrypt_ulge_payload(file_payload, get_ulge_private_key_path())
                     except Exception as e:
@@ -188,11 +199,8 @@ class UploadHandler(TornadoRequestHandlerBase):
                         raise CustomHTTPError(400, "Decrypted file is not a valid ULog")
 
                     # Write decrypted .ulg to disk
-                    while True:
-                        log_id = str(uuid.uuid4())
-                        new_file_name = get_log_filename(log_id)
-                        if not os.path.exists(new_file_name):
-                            break
+                    log_id, new_file_name = self._generate_unique_log_filename()
+
 
                     with open(new_file_name, 'wb') as f:
                         f.write(decrypted_data)
@@ -201,11 +209,7 @@ class UploadHandler(TornadoRequestHandlerBase):
 
                 else:
                     # Regular .ulg file
-                    while True:
-                        log_id = str(uuid.uuid4())
-                        new_file_name = get_log_filename(log_id)
-                        if not os.path.exists(new_file_name):
-                            break
+                    log_id, new_file_name = self._generate_unique_log_filename()
 
                     header_len = len(ULog.HEADER_BYTES)
                     if file_obj.get_payload_partial(header_len) != ULog.HEADER_BYTES:

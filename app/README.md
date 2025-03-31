@@ -1,5 +1,5 @@
 # Encrypted logs
-To be able to handle encrypted logs you need to add/replace the dummy key with your private key in the
+To be able to handle encrypted logs you need to add/replace the dummy key with your private key in the file
   ```bash
    flight_review/app/private_key/private_key.pem
    ```
