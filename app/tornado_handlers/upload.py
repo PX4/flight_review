@@ -107,7 +107,7 @@ class UploadHandler(TornadoRequestHandlerBase):
         """ GET request callback """
         template = get_jinja_env().get_template(UPLOAD_TEMPLATE)
         self.write(template.render())
-    
+
     def _generate_unique_log_filename(self):
         """Generate a unique log filename that does not exist yet."""
         while True:
@@ -184,26 +184,27 @@ class UploadHandler(TornadoRequestHandlerBase):
                 file_obj = self.multipart_streamer.get_parts_by_name('filearg')[0]
                 upload_file_name = file_obj.get_filename()
 
-                
-
                 # check if the file is encrypted
                 ulge_key_path = get_ulge_private_key_path()
                 if ulge_key_path and upload_file_name.lower().endswith('.ulge'):
                     file_payload = file_obj.get_payload()  # full content as bytes
                     try:
-                        decrypted_data = decrypt_ulge_payload(file_payload, get_ulge_private_key_path())
+                        decrypted_data = decrypt_ulge_payload(
+                        file_payload,
+                        get_ulge_private_key_path()
+                    )
+
                     except Exception as e:
-                        raise CustomHTTPError(400, f"Decryption failed: {str(e)}")
-                    
+                        raise CustomHTTPError(400, f"Decryption failed: {str(e)}") from e
+
                     if decrypted_data[:len(ULog.HEADER_BYTES)] != ULog.HEADER_BYTES:
                         raise CustomHTTPError(400, "Decrypted file is not a valid ULog")
 
                     # Write decrypted .ulg to disk
                     log_id, new_file_name = self._generate_unique_log_filename()
 
-
-                    with open(new_file_name, 'wb') as f:
-                        f.write(decrypted_data)
+                    with open(new_file_name, 'wb') as output_file:
+                        output_file.write(decrypted_data)
 
                     print(f"Decryption successful for {upload_file_name}, saved to {new_file_name}")
 
@@ -231,7 +232,6 @@ class UploadHandler(TornadoRequestHandlerBase):
                 if source != 'CI':
                     ulog_file_name = get_log_filename(log_id)
                     ulog = load_ulog_file(ulog_file_name)
-
 
                 # put additional data into a DB
                 con = sqlite3.connect(get_db_filename())
