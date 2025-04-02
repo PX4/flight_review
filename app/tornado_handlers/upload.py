@@ -21,10 +21,11 @@ from pyulog.px4 import PX4ULog
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../plot_app'))
 from db_entry import DBVehicleData, DBData
 from config import get_db_filename, get_http_protocol, get_domain_name, \
-    email_notifications_config
+    email_notifications_config, get_ulge_private_key_path
 from helper import get_total_flight_time, validate_url, get_log_filename, \
-    load_ulog_file, get_airframe_name, ULogException
+    load_ulog_file, get_airframe_name, ULogException, decrypt_ulge_payload
 from overview_generator import generate_overview_img_from_id
+
 
 #pylint: disable=relative-beyond-top-level
 from .common import get_jinja_env, CustomHTTPError, generate_db_data_from_log_file, \
@@ -107,6 +108,15 @@ class UploadHandler(TornadoRequestHandlerBase):
         template = get_jinja_env().get_template(UPLOAD_TEMPLATE)
         self.write(template.render())
 
+    def _generate_unique_log_filename(self):
+        """Generate a unique log filename that does not exist yet."""
+        while True:
+            log_id = str(uuid.uuid4())
+            new_file_name = get_log_filename(log_id)
+            if not os.path.exists(new_file_name):
+                return log_id, new_file_name
+
+
     def post(self, *args, **kwargs):
         """ POST request callback """
         if self.multipart_streamer:
@@ -174,20 +184,40 @@ class UploadHandler(TornadoRequestHandlerBase):
                 file_obj = self.multipart_streamer.get_parts_by_name('filearg')[0]
                 upload_file_name = file_obj.get_filename()
 
-                while True:
-                    log_id = str(uuid.uuid4())
-                    new_file_name = get_log_filename(log_id)
-                    if not os.path.exists(new_file_name):
-                        break
+                # check if the file is encrypted
+                ulge_key_path = get_ulge_private_key_path()
+                if ulge_key_path and upload_file_name.lower().endswith('.ulge'):
+                    file_payload = file_obj.get_payload()  # full content as bytes
+                    try:
+                        decrypted_data = decrypt_ulge_payload(
+                        file_payload,
+                        get_ulge_private_key_path()
+                    )
 
-                # read file header & check if really an ULog file
-                header_len = len(ULog.HEADER_BYTES)
-                if (file_obj.get_payload_partial(header_len) !=
-                        ULog.HEADER_BYTES):
-                    raise CustomHTTPError(400, 'Invalid File')
+                    except Exception as e:
+                        raise CustomHTTPError(400, f"Decryption failed: {str(e)}") from e
 
-                print('Moving uploaded file to', new_file_name)
-                file_obj.move(new_file_name)
+                    if decrypted_data[:len(ULog.HEADER_BYTES)] != ULog.HEADER_BYTES:
+                        raise CustomHTTPError(400, "Decrypted file is not a valid ULog")
+
+                    # Write decrypted .ulg to disk
+                    log_id, new_file_name = self._generate_unique_log_filename()
+
+                    with open(new_file_name, 'wb') as output_file:
+                        output_file.write(decrypted_data)
+
+                    print(f"Decryption successful for {upload_file_name}, saved to {new_file_name}")
+
+                else:
+                    # Regular .ulg file
+                    log_id, new_file_name = self._generate_unique_log_filename()
+
+                    header_len = len(ULog.HEADER_BYTES)
+                    if file_obj.get_payload_partial(header_len) != ULog.HEADER_BYTES:
+                        raise CustomHTTPError(400, 'Invalid File')
+
+                    print('Moving uploaded file to', new_file_name)
+                    file_obj.move(new_file_name)
 
                 if obfuscated == 1:
                     # TODO: randomize gps data, ...
@@ -202,7 +232,6 @@ class UploadHandler(TornadoRequestHandlerBase):
                 if source != 'CI':
                     ulog_file_name = get_log_filename(log_id)
                     ulog = load_ulog_file(ulog_file_name)
-
 
                 # put additional data into a DB
                 con = sqlite3.connect(get_db_filename())

@@ -49,6 +49,10 @@ __RELEASES_FILENAME = os.path.join(__CACHE_FILE_PATH, 'releases.json')
 __PRINT_TIMING = int(_conf.get('debug', 'print_timing'))
 __VERBOSE_OUTPUT = int(_conf.get('debug', 'verbose_output'))
 
+__ENCRYPTION_KEY = _conf.get('general', 'ulge_private_key')
+if __ENCRYPTION_KEY == '':
+    __ENCRYPTION_KEY = None
+
 # general configuration variables for plotting
 plot_width = 840
 
@@ -150,3 +154,14 @@ def debug_print_timing():
 def debug_verbose_output():
     """ print verbose output? """
     return __VERBOSE_OUTPUT == 1
+
+# Get the ULGE private key path
+def get_ulge_private_key_path():
+    """Returns the absolute path to the ULGE private key, or empty string if not set."""
+    if __ENCRYPTION_KEY is None:
+        return ''
+    if not os.path.isabs(__ENCRYPTION_KEY):
+        return os.path.join(_cur_dir, __ENCRYPTION_KEY)
+    return __ENCRYPTION_KEY
+
+
