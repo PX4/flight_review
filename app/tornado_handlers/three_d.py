@@ -70,6 +70,8 @@ class ThreeDHandler(TornadoRequestHandlerBase):
         # calculate UTC time offset (assume there's no drift over the entire log)
         utc_offset = int(gps_pos.data['time_utc_usec'][takeoff_index]) - \
                 int(gps_pos.data['timestamp'][takeoff_index])
+        # Make sure it's not negative, in case 'time_utc_usec' is 0
+        utc_offset = max(utc_offset, 0)
 
         # flight modes
         flight_mode_changes = get_flight_mode_changes(ulog)
