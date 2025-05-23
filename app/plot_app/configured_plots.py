@@ -102,13 +102,47 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
                 vehicle_type = cur_dataset.data['vehicle_type']
                 in_transition_mode = cur_dataset.data['in_transition_mode']
                 vtol_states = []
-                for i in range(len(vehicle_type)):
-                    # a VTOL can change state also w/o in_transition_mode set
-                    # (e.g. in Manual mode)
-                    if i == 0 or in_transition_mode[i-1] != in_transition_mode[i] or \
-                        vehicle_type[i-1] != vehicle_type[i]:
-                        vtol_states.append((cur_dataset.data['timestamp'][i],
-                                            in_transition_mode[i]))
+                # Always add the first state
+                if len(vehicle_type) > 0:
+                    # Map the vehicle_type to the appropriate state
+                    # vehicle_type: 0=MC, 1=FW
+                    # VTOL states:
+                    # VTOL_STATE_UNDEFINED = 0
+                    # VTOL_STATE_TRANSITION_TO_FW = 1
+                    # VTOL_STATE_TRANSITION_TO_MC = 2
+                    # VTOL_STATE_MC = 3
+                    # VTOL_STATE_FW = 4
+                    first_state = 3  # Default to MC
+                    if vehicle_type[0] == 1:
+                        first_state = 4  # FW
+                    vtol_states.append((cur_dataset.data['timestamp'][0], first_state))
+
+                # Then add state changes
+                for i in range(1, len(vehicle_type)):
+                    # Check for transition mode changes
+                    if in_transition_mode[i-1] != in_transition_mode[i]:
+                        if in_transition_mode[i] == 1:
+                            # Entering transition - determine direction
+                            if vehicle_type[i-1] == 0 and vehicle_type[i] == 1:
+                                # MC to FW
+                                vtol_states.append(
+                                    (cur_dataset.data['timestamp'][i], 1))  # TRANSITION_TO_FW
+                            else:
+                                # FW to MC
+                                vtol_states.append(
+                                    (cur_dataset.data['timestamp'][i], 2))  # TRANSITION_TO_MC
+                        else:
+                            # Exiting transition, determine if we're in FW or MC
+                            next_state = 3  # Default to MC
+                            if vehicle_type[i] == 1:
+                                next_state = 4  # FW
+                            vtol_states.append((cur_dataset.data['timestamp'][i], next_state))
+                    # Check for vehicle type changes without transition
+                    elif vehicle_type[i-1] != vehicle_type[i]:
+                        next_state = 3  # Default to MC
+                        if vehicle_type[i] == 1:
+                            next_state = 4  # FW
+                        vtol_states.append((cur_dataset.data['timestamp'][i], next_state))
 
             else: # COMPATIBILITY: old logs (https://github.com/PX4/Firmware/pull/11918)
                 vtol_states = cur_dataset.list_value_changes('in_transition_mode')
