@@ -641,16 +641,17 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
                         y_axis_label='RPM', title='Motor RPM',
                         plot_height='small', changed_params=changed_params,
                         x_range=x_range)
-    if 'esc_count' in data_plot.dataset.data:
-        esc_count = int(data_plot.dataset.data['esc_count'][0])
-        for i in range(esc_count):
-            if 'esc['+str(i)+'].esc_rpm' in data_plot.dataset.data:
-                esc_rpm = data_plot.dataset.data['esc['+str(i)+'].esc_rpm']
-                if np.amax(esc_rpm) > 0.001:
-                    data_plot.add_graph(['esc['+str(i)+'].esc_rpm'],
-                                        [colors8[i % 8]], ['ESC '+str(i)+' RPM'])
-    plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
-    if data_plot.finalize() is not None: plots.append(data_plot)
+    if not data_plot.had_error:
+        if 'esc_count' in data_plot.dataset.data:
+            esc_count = int(data_plot.dataset.data['esc_count'][0])
+            for i in range(esc_count):
+                if 'esc['+str(i)+'].esc_rpm' in data_plot.dataset.data:
+                    esc_rpm = data_plot.dataset.data['esc['+str(i)+'].esc_rpm']
+                    if np.amax(esc_rpm) > 0.001:
+                        data_plot.add_graph(['esc['+str(i)+'].esc_rpm'],
+                                            [colors8[i % 8]], ['ESC '+str(i)+' RPM'])
+        plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
+        if data_plot.finalize() is not None: plots.append(data_plot)
 
     # raw acceleration
     data_plot = DataPlot(data, plot_config, 'sensor_combined',
