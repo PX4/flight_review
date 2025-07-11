@@ -154,12 +154,32 @@ var terrain = Cesium.Terrain.fromWorldTerrain({
 	 requestWaterMask: true,
 	 requestVertexNormals: true
 });
+
+var imageryViewModels = [];
+imageryViewModels.push(new Cesium.ProviderViewModel({
+    name: 'Sentinel-2',
+    iconUrl: Cesium.buildModuleUrl('Widgets/Images/ImageryProviders/sentinel-2.png'),
+    tooltip: 'Sentinel-2 cloudless.',
+    creationFunction: function () {
+        return Cesium.IonImageryProvider.fromAssetId(3954);
+    }
+}));
+imageryViewModels.push(new Cesium.ProviderViewModel({
+    name : 'Bing Maps Aerial',
+    iconUrl : Cesium.buildModuleUrl('Widgets/Images/ImageryProviders/bingAerial.png'),
+    tooltip : 'Bing Maps aerial imagery \nhttp://www.bing.com/maps',
+    creationFunction : function() {
+        return Cesium.IonImageryProvider.fromAssetId(2);
+    }
+}));
+
 var viewer = new Cesium.Viewer('cesiumContainer', {
     terrainProviderViewModels : [], //Disable terrain changing
     infoBox : false, //Disable InfoBox widget
     selectionIndicator : false, //Disable selection indicator
 	navigationInstructionsInitiallyVisible : false,
-	terrain : terrain
+	terrain : terrain,
+	imageryProviderViewModels: imageryViewModels
 });
 var scene = viewer.scene;
 
@@ -586,7 +606,7 @@ Cesium.knockout.getObservable(viewModel, 'track_vehicle').subscribe(
 
 // initial view: show the vehicle from top
 viewer.zoomTo(entity, new Cesium.HeadingPitchRange(0,
-	Cesium.Math.toRadians(-90), 200));
+	Cesium.Math.toRadians(-90), 1200));
 
 
 var coll = document.getElementsByClassName("collapsible");
