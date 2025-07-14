@@ -37,6 +37,7 @@ __PARAMETERS_URL = _conf.get('general', 'parameters_url')
 __EVENTS_URL = _conf.get('general', 'events_url')
 __MAPBOX_API_ACCESS_TOKEN = _conf.get('general', 'mapbox_api_access_token')
 __CESIUM_API_KEY = _conf.get('general', 'cesium_api_key')
+__CESIUM_ENABLE_BING_AERIAL = _conf.get('general', 'cesium_enable_bing_aerial')
 __LOG_CACHE_SIZE = int(_conf.get('general', 'log_cache_size'))
 __DB_FILENAME_CUSTOM = _conf.get('general', 'db_filename')
 
@@ -148,6 +149,10 @@ def get_mapbox_api_access_token():
 def get_cesium_api_key():
     """ get Cesium API key """
     return __CESIUM_API_KEY
+
+def get_cesium_enable_bing_aerial():
+    """ get Cesium bing aerial option """
+    return __CESIUM_ENABLE_BING_AERIAL
 
 def get_log_cache_size():
     """ get maximum number of cached logs in RAM """

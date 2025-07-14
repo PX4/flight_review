@@ -10,7 +10,7 @@ import numpy as np
 
 # this is needed for the following imports
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../plot_app'))
-from config import get_cesium_api_key
+from config import get_cesium_api_key, get_cesium_enable_bing_aerial
 from helper import validate_log_id, get_log_filename, load_ulog_file, \
     get_flight_mode_changes, flight_modes_table, get_lat_lon_alt_deg
 
@@ -197,5 +197,6 @@ class ThreeDHandler(TornadoRequestHandlerBase):
             model_uri=model_uri,
             model_heading_rotation_deg=model_heading_rotation_deg,
             log_id=log_id,
-            cesium_api_key=get_cesium_api_key()))
+            cesium_api_key=get_cesium_api_key(),
+            cesium_enable_bing_aerial=get_cesium_enable_bing_aerial()))
 
