@@ -5,6 +5,7 @@ from __future__ import print_function
 import collections
 import sys
 import os
+import re
 from datetime import datetime
 import json
 import sqlite3
@@ -21,8 +22,15 @@ from .common import get_jinja_env, get_generated_db_data_from_log
 
 BROWSE_TEMPLATE = 'browse.html'
 
-#pylint: disable=abstract-method
+_TAG_PREFIX_RE = re.compile(
+    r"""^v[0-9]+(?:\.[0-9]+){0,2}                   # vMAJOR[.MINOR[.PATCH]]
+        (?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?     # optional -prerelease
+        (?:\+[0-9A-Za-z.-]+)?                       # optional +build
+     """,
+    re.IGNORECASE | re.VERBOSE,
+)
 
+#pylint: disable=abstract-method
 class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
     """ Ajax data retrieval handler """
 
@@ -185,6 +193,27 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
                 flight_modes
             ], search_only_columns)
 
+        def is_hashish(q: str) -> bool:
+            """ return true if the string looks like a hash """
+            if len(q) < 4:
+                return False
+            hex_chars = set('0123456789abcdef')
+            return all(c in hex_chars for c in q)
+
+        def is_tagish(q: str) -> bool:
+            """ return true if the string looks like a tag """
+            if not q or q[0] not in ('v', 'V'):
+                return False
+            return bool(_TAG_PREFIX_RE.match(q))
+
+        def _flatten_strings(maybe_list):
+            """ flatten a list of strings or a single string into a single string list """
+            if not maybe_list:
+                return []
+            if isinstance(maybe_list, (list, tuple)):
+                return [str(x) for x in maybe_list]
+            return [str(maybe_list)]
+
         # need to fetch all here, because we will do more SQL calls while
         # iterating (having multiple cursor's does not seem to work)
         db_tuples = cur.fetchall()
@@ -209,19 +238,36 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
             filtered_counter = len(db_tuples)
         else:
             counter = 1
+            hash_mode = is_hashish(search_str)
+            tag_mode = is_tagish(search_str)
+
             for db_tuple in db_tuples:
                 counter += 1
 
                 columns = get_columns_from_tuple(db_tuple, counter, all_overview_imgs)
+
                 if columns is None:
                     continue
 
-                if any(search_str in str(column).lower() for column in \
-                        (columns.columns, columns.search_only_columns)):
+                visible = _flatten_strings(columns.columns)
+                hidden = _flatten_strings(columns.search_only_columns)
+
+                prefix_hit = False
+                if tag_mode or hash_mode:
+                    for col in hidden:
+                        if col.lower().startswith(search_str):
+                            prefix_hit = True
+                            break
+
+                substring_hit = False
+                if not prefix_hit:
+                    haystack = [s.lower() for s in (visible + hidden)]
+                    substring_hit = any(search_str in s for s in haystack)
+
+                if prefix_hit or substring_hit:
                     if data_start <= filtered_counter < data_start + data_length:
                         json_output['data'].append(columns.columns)
                     filtered_counter += 1
-
 
         cur.close()
         con.close()
