@@ -1150,8 +1150,8 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
     if len(additional_data_html) > 0:
         # hide by default & use a button to expand
         additional_data_html = '''
-<button id="show-additional-data-btn" class="btn btn-secondary" data-toggle="collapse" style="min-width:0;"
- data-target="#show-additional-data">Show additional Data</button>
+<button id="show-additional-data-btn" class="btn btn-secondary" data-bs-toggle="collapse" style="min-width:0;"
+ data-bs-target="#show-additional-data">Show additional Data</button>
 <div id="show-additional-data" class="collapse">
 {:}
 </div>
