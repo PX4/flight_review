@@ -1,106 +1,97 @@
 {% include 'header.html' %}
 
-<h3>Browse public Log Files</h3>
+<div class="row">
+    <div class="col-lg-12">
+        <h3>Browse public Log Files</h3>
 
-<p>
-    Use <a href="https://github.com/PX4/flight_review/blob/main/app/download_logs.py">
-    this script</a> for automated download of public log files
-    (license: <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">CC-BY PX4</a>).
-</p>
+        <p>
+            Use <a href="https://github.com/PX4/flight_review/blob/main/app/download_logs.py">
+            this script</a> for automated download of public log files
+            (license: <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">CC-BY PX4</a>).
+        </p>
 
-<p>
-
-</p>
-
-<table id="logs_table" style="border-collapse: collapse !important"
-    class="table table-sm table-striped table-bordered table-condensed">
-    <thead>
-        <tr>
-            <th>#</th>
-            <th>Upload Date</th>
-            <th>Overview</th>
-            <th>Description</th>
-            <th>Type</th>
-            <th>Airframe</th>
-            <th>Hardware</th>
-            <th>Software</th>
-            <th>Duration</th>
-            <th>Start Time</th>
-            <th>Rating</th>
-            <th>Errors</th>
-            <th>Flight Modes</th>
-        </tr>
-    </thead>
-    <tbody>
-    </tbody>
-</table>
-
+        <table id="logs_table" style="border-collapse: collapse !important"
+            class="table table-sm table-striped table-bordered table-condensed">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Uploaded</th>
+                    <th>Overview</th>
+                    <th>Description</th>
+                    <th>Type</th>
+                    <th>Airframe</th>
+                    <th>Hardware</th>
+                    <th>Software</th>
+                    <th>Duration</th>
+                    <th>Start Time</th>
+                    <th>Rating</th>
+                    <th>Errors</th>
+                    <th>Flight Modes</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+</div>
 
 {% include 'footer.html' %}
 
-
 <!-- include & setup DataTables library (with Bootstrap stylesheets) -->
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.16/css/dataTables.bootstrap4.min.css">
-
-<script type="text/javascript" charset="utf-8" src="//cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
-
-<script type="text/javascript" charset="utf-8"
-    src="https://cdn.datatables.net/1.10.16/js/dataTables.bootstrap4.min.js"></script>
-
+<link href="https://cdn.datatables.net/v/bs5/jq-3.7.0/dt-2.3.4/datatables.min.css" rel="stylesheet" integrity="sha384-wCOnFm+5eFTFshsNmxMEjAg0Lzr8SZ076plN6EMeWa2MXSJVHfdFuWUix5uc/rr2" crossorigin="anonymous">
+<script src="https://cdn.datatables.net/v/bs5/jq-3.7.0/dt-2.3.4/datatables.min.js" integrity="sha384-Ntaqx3XQQQY/+R/Ga/RadT0sniT7Abp5GEzdlCYPZ6x98lObEYVegDox22NdQfdy" crossorigin="anonymous"></script>
+<script src="https://cdn.datatables.net/2.3.4/js/dataTables.bootstrap5.js" crossorigin="anonymous"></script>
 
 <script type="text/javascript">
 
     $(document).ready(function () {
         $('#logs_table').DataTable({
 {% if initial_search %}
-        "search": {
-        "search": {{ initial_search }}
-        },
-        {% endif %}
-        "order": [[1, 'desc']],
-        "ordering": true,
-        "lengthMenu": [10, 25, 50, 75, 100],
+            "search": {
+                "search": {{ initial_search }}
+            },
+{% endif %}
+            "order": [[1, 'desc']],
+            "ordering": true,
+            "lengthMenu": [10, 25, 50, 75, 100],
 
-        "columns": [
-        { "orderable": false }, /* row number */
-        null,
-        { "orderable": false }, /* overview */
-        { "width": "13%" }, /* description */
-        null,
-        { "orderable": false },/* airframe - not from DB */
-        null,
-        null,
-        null,
-        { "width": "10%" }, /* start time */
-        { "orderable": false, "width": "13%" }, /* rating */
-        null,
-        { "orderable": false, "width": "11%" } /* flight modes */
-    ],
-
-        "language": {
-        "infoFiltered": "<br>(filtered from _MAX_ total entries)",
-    },
-
-        "serverSide": true,
-        "ajax": "browse_data_retrieval",
-    });
-    var table = $('#logs_table').DataTable();
-    table.on('xhr', function () {
-        try {
-            var table = $('#logs_table').DataTable();
-            var search_term = table.search();
-            var url = new URL(window.location.href);
-            if (search_term === '') {
-                url.searchParams.delete('search');
-            } else {
-                url.searchParams.set('search', table.search());
+            "columns": [
+                { "orderable": false }, /* row number */
+                null,
+                { "orderable": false }, /* overview */
+                { "width": "13%" }, /* description */
+                null,
+                { "orderable": false },/* airframe - not from DB */
+                null,
+                null,
+                null,
+                { "width": "10%" }, /* start time */
+                { "orderable": false, "width": "13%" }, /* rating */
+                null,
+                { "orderable": false, "width": "11%" } /* flight modes */
+            ],
+            "language": {
+                "infoFiltered": "<br>(filtered from _MAX_ total entries)",
+            },
+            "serverSide": true,
+            "ajax": "browse_data_retrieval",
+        });
+        var table = $('#logs_table').DataTable();
+        table.on('xhr', function () {
+            try {
+                var table = $('#logs_table').DataTable();
+                var search_term = table.search();
+                var url = new URL(window.location.href);
+                if (search_term === '') {
+                    url.searchParams.delete('search');
+                } else {
+                    url.searchParams.set('search', table.search());
+                }
+                window.history.replaceState(null, null, url);
+            } catch (e) {
             }
-            window.history.replaceState(null, null, url);
-        } catch (e) {
-        }
+        });
     });
-
-} );
 
 </script>
 

@@ -1,142 +1,108 @@
 
 {% include 'header.html' %}
 
-<h3>Upload a Log File</h3>
+<div class="row">
+	<div class="col-lg-6 mx-auto">
 
-<p>
-Select and upload a log file for plotting and analysis.
-You can browse through public log files on <a href="/browse">this page</a>.
-</p>
+		<h3>Upload a Log File</h3>
+
+		<p>
+		Select and upload a log file for plotting and analysis.
+		You can browse through public log files on <a href="/browse">this page</a>.
+		</p>
 
 
 
-<table class="spaced">
-	<form enctype="multipart/form-data" id="upload-form">
-		<tr>
-			<td width="30%" class="left">Description <small>(optional)</small>:</td>
-			<td width="70%">
-				<input class="form-control" placeholder="" name="description" type="text">
-			</td>
-		</tr>
-		<tr>
-			<td class="left">Additional Feedback <small>(optional)</small>:</td>
-			<td>
-				<textarea class="form-control" cols="20" rows="3" name="feedback"></textarea>
-			</td>
-		</tr>
-		<!--
-		<tr>
-			<td class="left">Vehicle Name <small>(optional)</small>:
-			<td>
-				<input class="form-control" placeholder="" name="vehicleName" type="text">
-			</td>
-		</tr>
-		<tr>
-			<td class="left">Wind Speed:</td><td>
-			<select class="custom-select" name=windSpeed>
-				<option value="-1" selected="selected">Please select</option>
-				<option value="0">Calm</option>
-				<option value="5">Breeze</option>
-				<option value="8">Gale</option>
-				<option value="10">Storm</option>
-			</select>
-		</td>
-		</tr>
-		<tr>
-			<td class="left">Flight Rating:</td>
-			<td>
-				<select class="custom-select" name="rating">
-					<option value="notset" selected="selected">Please select</option>
-					<option value="crash_pilot">Crashed (Pilot error)</option>
-					<option value="crash_sw_hw">Crashed (Software or Hardware issue)</option>
-					<option value="unsatisfactory">Unsatisfactory</option>
-					<option value="good">Good</option>
-					<option value="great">Great!</option>
-				</select>
-			</td>
-		</tr>
-		<tr>
-			<td class="left">Video Url:</td>
-			<td>
-				<input class="form-control" type="text" name="videoUrl" />
-			</td>
-		</tr>
-		-->
-		<tr>
-			<td class="left">E-Mail:</td>
-			<td>
-				<input class="form-control" type="text" name="email" id="email"/>
-			</td>
-		</tr>
-		<tr>
-			<td colspan="2"><small>Will only be used to send you a link to
-					the uploaded file (including a link to delete) and is not stored on the server.</small></td>
-		</tr>
-		<tr>
-			<td class="left">Access to the log:</td>
-			<td>
-				<select class="custom-select" name="type" id="access" onChange="updateAccess()">
-					<option value="flightreport" selected="selected">Public</option>
-					<option value="personal">Share by Link</option>
-				</select>
-			</td>
-		</tr>
-		<tr id="flightreport" style="display: none;">
-			<td class="left"></td>
-			<td>
-				Make this log <a href="browse">publicly available</a> under <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">CC-BY PX4</a> license.
-				The PX4 community can use it to improve the flight stack.
-			</td>
-		</tr>
-		<tr id="personal" style="display: none;">
-			<td class="left"></td>
-			<td>
-				The log can only be accessed with the link you'll receive after uploading.
-				</br>
-				<b>Note</b>: The log may contain location data and if you
-				share the link, it will be accessible to others as well.
-			</td>
-		</tr>
-		<tr>
-			<td colspan="2">
-				<!-- automatically set depending on the "access" value -->
-				<input type="hidden" class="custom-control-input" name="public"
-					   id="public" value="false">
-				<!-- instruct server not to redirect, but return the URL instead -->
-				<input type="hidden" class="custom-control-input" name="redirect"
-					   id="redirect" value="false">
-			</td>
-		</tr>
-		<tr>
-			<td class="left">ULog File:</td>
-			<td>
-				<input type="file" name="filearg" id="file" class="filestyle"
-					data-text="Choose File..."
-					data-btnClass="btn-outline-primary align-right"
-					>
-			</td>
-		</tr>
-		<tr>
-			<td id="feedback" colspan="2">
-			</td>
-		</tr>
-		<tr>
-			<td></td><td><br/><input class="btn btn-primary align-right"
-				 id="upload-button" type="submit" value="Upload" onclick="return validateForm();" /></td>
-		</tr>
-		<tr>
-			<td colspan="2">
-				<div class="progress mt-3" style="height: 20px; display: none;">
-					<div class="progress-bar progress-bar-striped" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
-				</div>
-				<div id="upload-failure" class="align-right" style="display: none;">
-					<b>File upload failed.</b>
-				</div>
-			</td>
-		</tr>
-	</form>
-</table>
+		<table class="spaced">
+			<form enctype="multipart/form-data" id="upload-form">
+				<tr>
+					<td width="30%" class="left">Description <small>(optional)</small>:</td>
+					<td width="70%">
+						<input class="form-control" placeholder="" name="description" type="text">
+					</td>
+				</tr>
+				<tr>
+					<td class="left">Additional Feedback <small>(optional)</small>:</td>
+					<td>
+						<textarea class="form-control" cols="20" rows="3" name="feedback"></textarea>
+					</td>
+				</tr>
+				<tr>
+					<td class="left">E-Mail:</td>
+					<td>
+						<input class="form-control" type="text" name="email" id="email"/>
+					</td>
+				</tr>
+				<tr>
+					<td colspan="2"><small>Will only be used to send you a link to
+							the uploaded file (including a link to delete) and is not stored on the server.</small></td>
+				</tr>
+				<tr>
+					<td class="left">Access to the log:</td>
+					<td>
+						<select class="form-select w-100" name="type" id="access" onChange="updateAccess()">
+							<option value="flightreport" selected="selected">Public</option>
+							<option value="personal">Share by Link</option>
+						</select>
+					</td>
+				</tr>
+				<tr id="flightreport" style="display: none;">
+					<td class="left"></td>
+					<td>
+						Make this log <a href="browse">publicly available</a> under <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">CC-BY PX4</a> license.
+						The PX4 community can use it to improve the flight stack.
+					</td>
+				</tr>
+				<tr id="personal" style="display: none;">
+					<td class="left"></td>
+					<td>
+						The log can only be accessed with the link you'll receive after uploading.
+						</br>
+						<b>Note</b>: The log may contain location data and if you
+						share the link, it will be accessible to others as well.
+					</td>
+				</tr>
+				<tr>
+					<td colspan="2">
+						<!-- automatically set depending on the "access" value -->
+						<input type="hidden" class="custom-control-input" name="public"
+								id="public" value="false">
+						<!-- instruct server not to redirect, but return the URL instead -->
+						<input type="hidden" class="custom-control-input" name="redirect"
+								id="redirect" value="false">
+					</td>
+				</tr>
+				<tr>
+					<td class="left">ULog File:</td>
+					<td>
+						<div class="input-group flex-row-reverse">
+							<input type="file" name="filearg" id="file" class="form-control">
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td id="feedback" colspan="2">
+					</td>
+				</tr>
+				<tr>
+					<td></td><td><br/><input class="btn btn-primary align-right"
+						id="upload-button" type="submit" value="Upload" onclick="return validateForm();" /></td>
+				</tr>
+				<tr>
+					<td colspan="2">
+						<div class="progress mt-3" style="height: 20px; display: none;">
+							<div class="progress-bar progress-bar-striped" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+						</div>
+						<div id="upload-failure" class="align-right" style="display: none;">
+							<b>File upload failed.</b>
+						</div>
+					</td>
+				</tr>
+			</form>
+		</table>
 
+	</div>
+</div>
 
 {% include 'footer.html' %}
 

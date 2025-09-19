@@ -30,6 +30,23 @@ _TAG_PREFIX_RE = re.compile(
     re.IGNORECASE | re.VERBOSE,
 )
 
+def format_duration(seconds: int) -> str:
+    """ Format duration in seconds to HhMmSs string """
+    if seconds is None:
+        return ""
+    try:
+        seconds = int(seconds)
+    except Exception:
+        return ""
+    h, rem = divmod(seconds, 3600)
+    m, s = divmod(rem, 60)
+    if h > 0:
+        return f"{h}h{m}m{s}s"
+    elif m > 0:
+        return f"{m}m{s}s"
+    else:
+        return f"{s}s"
+
 #pylint: disable=abstract-method
 class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
     """ Ajax data retrieval handler """
@@ -143,9 +160,7 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
                                       for x in db_data.flight_modes if x in
                                       flight_modes_table])
 
-            m, s = divmod(db_data.duration_s, 60)
-            h, m = divmod(m, 60)
-            duration_str = '{:d}:{:02d}:{:02d}'.format(h, m, s)
+            duration_str = format_duration(db_data.duration_s)
 
             start_time_str = 'N/A'
             if db_data.start_time_utc != 0:
@@ -171,11 +186,15 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
             if db_data.vehicle_uuid is not None:
                 search_only_columns.append(db_data.vehicle_uuid)
 
-            image_col = '<div class="no_map_overview"> Not rendered / No GPS </div>'
+            image_col = '<div class="ratio ratio-4x3 bg-body-secondary rounded overflow-hidden" style="width:60px;">'
+            image_col += '<div class="no_map_overview text-warning"></div>'
+            image_col += '</div>'
             overview_image_filename = log_id+'.png'
             if overview_image_filename in all_overview_imgs:
-                image_col = '<img class="map_overview" src="/overview_img/'
-                image_col += log_id+'.png" alt="Overview Image Load Failed" height=50/>'
+                image_col = '<div class="ratio ratio-4x3 bg-body-secondary rounded overflow-hidden" style="width:60px;">'
+                image_col += '<img class="map_overview" src="/overview_img/'
+                image_col += log_id+'.png" class="w-50 h-50 object-fit-cover d-block" loading="lazy" decoding="async" />'
+                image_col += '</div>'
 
             return Columns([
                 counter,

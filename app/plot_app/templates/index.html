@@ -1,6 +1,8 @@
 
 {% include 'header.html' %}
 
+<div class="row">
+  <div class="col-lg-8 mx-auto">
 
 {% if not internal_error %}
 
@@ -61,6 +63,8 @@ mymap.fitBounds(pos_datas);
 
 {% endif %} {# internal_error #}
 
+  </div>
+</div>
 
 {% include 'footer.html' %}
 
