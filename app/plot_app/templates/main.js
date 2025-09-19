@@ -24,7 +24,7 @@ function init_error_labels(error_ids) {
     // initialize error labels
 
     $("#error-label > option").each(function(){
-        if(error_ids.includes(parseInt($(this).attr('data-id')))){
+        if(error_ids.includes(parseInt($(this).attr('data-bs-id')))){
             if(!$(this).prop('selected')){
                 $(this).prop('selected', true)
             }
@@ -64,7 +64,7 @@ $(function() { //on startup
 		var error_ids = [];
         $("#error-label > option").each(function() {
             if($(this).prop('selected')) {
-				var id = parseInt($(this).attr('data-id'));
+				var id = parseInt($(this).attr('data-bs-id'));
 				error_ids.push(id);
             }
         });
@@ -167,7 +167,7 @@ $(function() { //on startup
 
 $(document).ready(function(){
 	// initialize the tooltip's
-	$('[data-toggle="tooltip"]').tooltip({html: true});
+	$('[data-bs-toggle="tooltip"]').tooltip({html: true});
 });
 
 /* resize the plots */

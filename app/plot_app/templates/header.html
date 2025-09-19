@@ -1,105 +1,106 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <title>Flight Review</title>
+	<head>
+		<meta charset="utf-8">
+		<title>Flight Review</title>
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href='https://fonts.googleapis.com/css?family=Play:400' rel='stylesheet' type='text/css'>
-    <link href='https://cdnjs.cloudflare.com/ajax/libs/chosen/1.8.3/chosen.css' rel='stylesheet' type='text/css'>
-    <link href="plot_app/static/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/fontawesome.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/solid.min.css" rel="stylesheet">
-    <link href="plot_app/static/css/animate.min.css" rel="stylesheet">
-    <link href="plot_app/static/css/main.css" rel="stylesheet">
-    <link rel="icon" type="image/x-icon" href="plot_app/static/images/favicon-32x32.png">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link href='https://fonts.googleapis.com/css?family=Play:400' rel='stylesheet' type='text/css'>
+		<link href='https://cdnjs.cloudflare.com/ajax/libs/chosen/1.8.3/chosen.css' rel='stylesheet' type='text/css'>
+		<link href="plot_app/static/css/bootstrap.min.css" rel="stylesheet">
+		<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/fontawesome.min.css" rel="stylesheet">
+		<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/solid.min.css" rel="stylesheet">
+		<link href="plot_app/static/css/animate.min.css" rel="stylesheet">
+		<link href="plot_app/static/css/main.css" rel="stylesheet">
+		<link rel="icon" type="image/x-icon" href="plot_app/static/images/favicon-32x32.png">
 
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css"
-    integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
-    crossorigin=""/>
+		<link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css"
+		integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
+		crossorigin=""/>
 
-    <!-- Make sure you put this AFTER Leaflet's CSS -->
-    <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js"
-    integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA=="
-    crossorigin=""></script>
+		<!-- Make sure you put this AFTER Leaflet's CSS -->
+		<script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js"
+		integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA=="
+		crossorigin=""></script>
 
-    <script src='//api.tiles.mapbox.com/mapbox.js/plugins/leaflet-omnivore/v0.3.1/leaflet-omnivore.min.js'></script>
-	
-    {{ bokeh_css }}
-    {{ bokeh_js }}
-  </head>
-  <body>
+		<script src='//api.tiles.mapbox.com/mapbox.js/plugins/leaflet-omnivore/v0.3.1/leaflet-omnivore.min.js'></script>
 
-<nav id="header" class="navbar navbar-expand-lg navbar-dark bg-blue">
-  <div class="navbar-brand">
-	  <h1>
-		  <a href="http://px4.io">
-			  <img src="plot_app/static/images/logo.png" alt="logo">
-		  </a>
-		  <span class="name">Flight Review</span>
-	  </h1>
-  </div>
-  <button class="navbar-toggler collapsed" type="button" data-toggle="collapse"
-	  data-target="#navbar-collapse" aria-controls="navbar-collapse" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-  </button>
+		{{ bokeh_css }}
+		{{ bokeh_js }}
+	</head>
+	<body>
 
-  <div class="collapse navbar-collapse" id="navbar-collapse">
-    <ul class="navbar-nav ml-auto">
-		<li class="nav-item"><a class="nav-link" href="upload">Upload</a></li>
-{% if not is_plot_page %}
-		<li class="nav-item"><a class="nav-link" href="stats">Statistics</a></li>
-{% endif %}
-		<li class="nav-item"><a class="nav-link" href="browse">Browse</a></li>
-
-{% if is_plot_page %}
-		<li class="nav-item dropdown" id="download-menu">
-			<a class="nav-link" data-toggle="dropdown" href="javascript:;">Download <i class="fa-solid fa-angle-down" style="font-size: smaller"></i></a>
-			<div class="dropdown-menu">
-				<a class="dropdown-item" href="download?log={{ log_id }}">Log File</a>
-				<a class="dropdown-item" href="download?log={{ log_id }}&type=1" target="_blank">Parameters</a>
-				<a class="dropdown-item" href="download?log={{ log_id }}&type=3" target="_blank">Parameters (non-default)</a>
-{% if has_position_data %}
-				<a class="dropdown-item" href="download?log={{ log_id }}&type=2" target="_blank">KML Track</a>
-{% endif %}
+	<nav id="header" class="navbar navbar-expand-lg navbar-dark bg-blue">
+		<div class="container-fluid">
+			<div class="navbar-brand">
+				<h1>
+					<a href="http://px4.io">
+						<img src="plot_app/static/images/logo.png" alt="logo">
+					</a>
+					<span class="name">Flight Review</span>
+				</h1>
 			</div>
-		</li>
-		<li class="nav-item dropdown" id="navigation-menu">
-			<a class="nav-link" data-toggle="dropdown" href="javascript:;">Navigation <i class="fa-solid fa-angle-down" style="font-size: smaller"></i></a>
-			<div class="dropdown-menu dropdown-menu-right" id="ul-fragments">
-{% for cur_plot in plots %}
-{% set cur_title = cur_plot.title %}
-{% set cur_fragment = cur_plot.fragment %}
-				<a class="dropdown-item" href="javascript:navigate('{{ cur_fragment }}');">{{ cur_title }}</a>
-{% endfor %}
+
+			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-collapse" aria-controls="navbar-collapse" aria-expanded="false" aria-label="Toggle navigation">
+				<span class="navbar-toggler-icon"></span>
+			</button>
+
+			<div class="collapse navbar-collapse" id="navbar-collapse">
+				<ul class="navbar-nav ms-auto">
+					<li class="nav-item"><a class="nav-link" href="upload">Upload</a></li>
+			{% if not is_plot_page %}
+					<li class="nav-item"><a class="nav-link" href="stats">Statistics</a></li>
+			{% endif %}
+					<li class="nav-item"><a class="nav-link" href="browse">Browse</a></li>
+
+			{% if is_plot_page %}
+					<li class="nav-item dropdown" id="download-menu">
+						<a class="nav-link" data-bs-toggle="dropdown" href="javascript:;">Download <i class="fa-solid fa-angle-down" style="font-size: smaller"></i></a>
+						<div class="dropdown-menu">
+							<a class="dropdown-item" href="download?log={{ log_id }}">Log File</a>
+							<a class="dropdown-item" href="download?log={{ log_id }}&type=1" target="_blank">Parameters</a>
+							<a class="dropdown-item" href="download?log={{ log_id }}&type=3" target="_blank">Parameters (non-default)</a>
+			{% if has_position_data %}
+							<a class="dropdown-item" href="download?log={{ log_id }}&type=2" target="_blank">KML Track</a>
+			{% endif %}
+						</div>
+					</li>
+					<li class="nav-item dropdown" id="navigation-menu">
+						<a class="nav-link" data-bs-toggle="dropdown" href="javascript:;">Navigation <i class="fa-solid fa-angle-down" style="font-size: smaller"></i></a>
+						<div class="dropdown-menu dropdown-menu-right" id="ul-fragments">
+			{% for cur_plot in plots %}
+			{% set cur_title = cur_plot.title %}
+			{% set cur_fragment = cur_plot.fragment %}
+							<a class="dropdown-item" href="javascript:navigate('{{ cur_fragment }}');">{{ cur_title }}</a>
+			{% endfor %}
+						</div>
+					</li>
+					<li class="nav-item dropdown" id="plot-legend-menu">
+						<a class="nav-link" role="button" data-bs-toggle="dropdown" href="javascript:;">Plot Legend <i class="fa-solid fa-angle-down" style="font-size: smaller"></i></a>
+						<div class="dropdown-menu dropdown-menu-right">
+							<a class="dropdown-item" href="javascript:;"><b>Flight Modes:</b></a>
+			{% for cur_flight_mode in flight_modes %}
+			{% set cur_name = cur_flight_mode.name %}
+			{% set cur_color = cur_flight_mode.color %}
+							<a class="dropdown-item" href="javascript:;">
+									<div class="plot-legend-box"
+						style="border-left-color: rgba({{ cur_color[0] }}, {{ cur_color[1] }}, {{ cur_color[2] }}, 0.2);">{{ cur_name }}</div></a>
+			{% endfor %}
+							<a class="dropdown-item" href="javascript:;"><b>VTOL Modes:</b></a>
+			{% for cur_vtol_mode in vtol_modes %}
+			{% set cur_name = cur_vtol_mode.name %}
+			{% set cur_color = cur_vtol_mode.color %}
+							<a class="dropdown-item" href="javascript:;">
+									<div class="plot-legend-box"
+						style="border-left-color: rgba({{ cur_color[0] }}, {{ cur_color[1] }}, {{ cur_color[2] }}, 0.2);">{{ cur_name }}</div></a>
+			{% endfor %}
+						</div>
+					</li>
+			{% endif %}
+
+				</ul>
 			</div>
-		</li>
-		<li class="nav-item dropdown" id="plot-legend-menu">
-			<a class="nav-link" role="button" data-toggle="dropdown" href="javascript:;">Plot Legend <i class="fa-solid fa-angle-down" style="font-size: smaller"></i></a>
-			<div class="dropdown-menu dropdown-menu-right">
-				<a class="dropdown-item" href="javascript:;"><b>Flight Modes:</b></a>
-{% for cur_flight_mode in flight_modes %}
-{% set cur_name = cur_flight_mode.name %}
-{% set cur_color = cur_flight_mode.color %}
-				<a class="dropdown-item" href="javascript:;">
-						<div class="plot-legend-box"
-		   style="border-left-color: rgba({{ cur_color[0] }}, {{ cur_color[1] }}, {{ cur_color[2] }}, 0.2);">{{ cur_name }}</div></a>
-{% endfor %}
-				<a class="dropdown-item" href="javascript:;"><b>VTOL Modes:</b></a>
-{% for cur_vtol_mode in vtol_modes %}
-{% set cur_name = cur_vtol_mode.name %}
-{% set cur_color = cur_vtol_mode.color %}
-				<a class="dropdown-item" href="javascript:;">
-						<div class="plot-legend-box"
-		   style="border-left-color: rgba({{ cur_color[0] }}, {{ cur_color[1] }}, {{ cur_color[2] }}, 0.2);">{{ cur_name }}</div></a>
-{% endfor %}
-			</div>
-		</li>
-{% endif %}
+		</div>
+	</nav>
 
-    </ul>
-  </div>
-</nav>
-
-    <div class="content">
-
+	<div class="container content">

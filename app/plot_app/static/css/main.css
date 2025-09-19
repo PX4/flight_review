@@ -7,14 +7,9 @@ html {
     font-size: 110%;
 }
 body {
-    min-width: 600px;
-    max-width: 900px;
-    width: 75%;
-    margin: auto;
 }
 .content {
-    margin: 2em;
-    margin-top: 116px;
+  margin-top: 116px;
 }
 h1 {
     margin: 2em 0 0 0;
@@ -248,4 +243,10 @@ table.dataTable td {
   margin-bottom: 0;
 }
 
+/*************************
+*******Browse******
+**************************/
 
+.no_map_overview {
+  text-align: center;
+}

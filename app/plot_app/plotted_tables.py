@@ -155,7 +155,7 @@ def get_info_table_html(ulog, px4_ulog, db_data, vehicle_data, vtol_states):
 Log timezone: {}
 <br />
 SDLOG_UTC_OFFSET: {}'''.format(utctimestamp.strftime('%d-%m-%Y %H:%M'), utc_offset_min)
-            tooltip = 'data-toggle="tooltip" data-delay=\'{"show":0, "hide":100}\' '+ \
+            tooltip = 'data-bs-toggle="tooltip" data-bs-delay=\'{"show":0, "hide":100}\' '+ \
                 'title="'+tooltip+'" '
             table_text_left.append(
                 ('Logging Start '+
@@ -339,8 +339,8 @@ SDLOG_UTC_OFFSET: {}'''.format(utctimestamp.strftime('%d-%m-%Y %H:%M'), utc_offs
         if tooltip is None:
             tooltip = ''
         else:
-            tooltip = 'data-toggle="tooltip" data-placement="left" '+ \
-                'data-delay=\'{"show": 1000, "hide": 100}\' title="'+tooltip+'" '
+            tooltip = 'data-bs-toggle="tooltip" data-bs-placement="left" '+ \
+                'data-bs-delay=\'{"show": 1000, "hide": 100}\' title="'+tooltip+'" '
         table = '<table '+tooltip
         if max_width is not None:
             table += ' style="max-width: '+max_width+';"'
@@ -373,9 +373,9 @@ def get_error_labels_html():
     error_label_select = \
         '<select id="error-label" class="chosen-select" multiple="True" '\
         'style="display: none; " tabindex="-1" ' \
-        'data-placeholder="Add a detected error..." " >'
+        'data-bs-placeholder="Add a detected error..." " >'
     for err_id, err_label in error_labels_table.items():
-        error_label_select += '<option data-id="{:d}">{:s}</option>'.format(err_id, err_label)
+        error_label_select += '<option data-bs-id="{:d}">{:s}</option>'.format(err_id, err_label)
     error_label_select = '<p>' + error_label_select + '</select></p>'
 
     return error_label_select
