@@ -7,14 +7,20 @@ import os
 # load the config
 _conf = configparser.ConfigParser()
 _cur_dir = os.path.dirname(os.path.realpath(__file__))
-_conf.read_file(open(os.path.join(_cur_dir, '../config_default.ini'), encoding='utf-8'))
+
+_default_cfg = os.path.join(_cur_dir, '../config_default.ini')
+with open(_default_cfg, encoding='utf-8') as f:
+    _conf.read_file(f)
+
 _user_config_file = os.path.join(_cur_dir, '../config_user.ini')
 _user_config_file_old = os.path.join(_cur_dir, '../../config_user.ini')
 if os.path.exists(_user_config_file_old) and not os.path.exists(_user_config_file):
     print('moving config file')
     os.rename(_user_config_file_old, _user_config_file)
+
 if os.path.exists(_user_config_file):
-    _conf.read_file(open(_user_config_file, encoding='utf-8'))
+    with open(_user_config_file, encoding='utf-8') as f:
+        _conf.read_file(f)
 
 email_config = dict(_conf.items('email'))
 
