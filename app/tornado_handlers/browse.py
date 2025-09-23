@@ -32,20 +32,16 @@ _TAG_PREFIX_RE = re.compile(
 
 def format_duration(seconds: int) -> str:
     """ Format duration in seconds to HhMmSs string """
-    if seconds is None:
-        return ""
     try:
         seconds = int(seconds)
     except Exception:
         return ""
     h, rem = divmod(seconds, 3600)
     m, s = divmod(rem, 60)
-    if h > 0:
-        return f"{h}h{m}m{s}s"
-    elif m > 0:
-        return f"{m}m{s}s"
-    else:
-        return f"{s}s"
+
+    if h: return f"{h}h{m}m{s}s"
+    if m: return f"{m}m{s}s"
+    return f"{s}s"
 
 #pylint: disable=abstract-method
 class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
@@ -186,19 +182,27 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
             if db_data.vehicle_uuid is not None:
                 search_only_columns.append(db_data.vehicle_uuid)
 
-            image_col = '<div class="ratio ratio-4x3 bg-body-secondary rounded overflow-hidden" style="width:60px;">'
-            image_col += '<div class="no_map_overview text-warning"></div>'
-            image_col += '</div>'
-            overview_image_filename = log_id+'.png'
+            rounded_div_class = "ratio ratio-4x3 bg-body-secondary rounded overflow-hidden"
+            image_col_class = "w-50 h-50 object-fit-cover d-block"
+            overview_image_filename = f"{log_id}.png"
             if overview_image_filename in all_overview_imgs:
-                image_col = '<div class="ratio ratio-4x3 bg-body-secondary rounded overflow-hidden" style="width:60px;">'
-                image_col += '<img class="map_overview" src="/overview_img/'
-                image_col += log_id+'.png" class="w-50 h-50 object-fit-cover d-block" loading="lazy" decoding="async" />'
-                image_col += '</div>'
+                image_col = f"""
+                    <div class="{rounded_div_class}" style="width:60px;">
+                        <img class="map_overview {image_col_class}"
+                            src="/overview_img/{overview_image_filename}"
+                            loading="lazy" decoding="async" />
+                    </div>
+                """
+            else:
+                image_col = f"""
+                    <div class="{rounded_div_class}" style="width:60px;">
+                        <div class="no_map_overview text-warning"></div>
+                    </div>
+                """
 
             return Columns([
                 counter,
-                '<a href="plot_app?log='+log_id+'">'+log_date+'</a>',
+                f'<a href="plot_app?log={log_id}">{log_date}</a>',
                 image_col,
                 description,
                 db_data.mav_type,
