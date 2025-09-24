@@ -884,7 +884,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
                         ['Battery Voltage [V]',
                          'Battery Current [A]', 'Discharged Amount [mAh / 100]',
                          'Battery remaining [0=empty, 10=full]'])
-    if 'internal_resistance_estimate' in data_plot.dataset.data:
+    if data_plot.dataset is not None and 'internal_resistance_estimate' in data_plot.dataset.data:
         data_plot.add_graph(['ocv_estimate', lambda data: ('internal_resistance_estimate',
                               data['internal_resistance_estimate']*1000)],
                             colors8[4:6],
