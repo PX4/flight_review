@@ -107,13 +107,11 @@ table.dataTable td {
 	text-align: left;
 }
 .map_overview {
-   display: block;
-   margin-left: auto;
-   margin-right: auto;
-   margin-top: auto;
-   margin-bottom: auto;
+   width: 70px;
+   height: 70px;
+   object-fit: cover;
+   border-radius: 4px;
    transition: all 0.5s ease-in-out;
-   border:10px;
 }
 .map_overview:hover {
    transform: scale(7);
@@ -249,4 +247,6 @@ table.dataTable td {
 
 .no_map_overview {
   text-align: center;
+  font-size: .8em;
+  padding: 5px;
 }
