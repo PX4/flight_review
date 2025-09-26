@@ -171,12 +171,17 @@ table.dataTable td {
   text-decoration: none;
 }
 
-.dropdown-item {
+.dropdown:hover > .dropdown-menu {
+	/* open submenu when hovering */
+	-webkit-animation: fadeInUp 400ms;
+	animation: fadeInUp 400ms;
+}
+
+#header .dropdown-item {
 	/* reduce menu item size */
 	padding-top: 0.25rem;
 	padding-bottom: 0.25rem;
 }
-
 
 .scaleIn {
   -webkit-animation-name: scaleIn;
@@ -211,18 +216,6 @@ table.dataTable td {
     -ms-transform: scale(1);
     transform: scale(1);
   }
-}
-
-.dropdown:hover > .dropdown-menu {
-	/* open submenu when hovering */
-	display: block;
-	-webkit-animation: fadeInUp 400ms;
-	animation: fadeInUp 400ms;
-}
-
-.dropdown-menu {
-	/* make sure there is no gap between the dropdown menu and the menu item */
-	margin-top: 0;
 }
 
 .fa-angle-down{
