@@ -169,7 +169,8 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
 
             # make sure to break long descriptions w/o spaces (otherwise they
             # mess up the layout)
-            description = html_long_word_force_break(db_data.description)
+            # disabled description on browse page on 2025-09-26
+            # description = html_long_word_force_break(db_data.description)
 
             search_only_columns = []
 
@@ -206,15 +207,12 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
                 counter,
                 f'<a href="plot_app?log={log_id}">{log_date}</a>',
                 image_col,
-                description,
                 db_data.mav_type,
                 airframe,
                 db_data.sys_hw,
                 ver_sw,
                 duration_str,
                 start_time_str,
-                db_data.rating_str(),
-                db_data.num_logged_errors,
                 flight_modes
             ], search_only_columns)
 
