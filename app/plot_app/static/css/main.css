@@ -11,6 +11,9 @@ body {
 .content {
   margin-top: 116px;
 }
+a {
+  text-decoration: none !important;  
+}
 h1 {
     margin: 2em 0 0 0;
     color: #2e484c;
