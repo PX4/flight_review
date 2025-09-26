@@ -17,15 +17,12 @@
                     <th>#</th>
                     <th>Uploaded</th>
                     <th>Overview</th>
-                    <th>Description</th>
                     <th>Type</th>
                     <th>Airframe</th>
                     <th>Hardware</th>
                     <th>Software</th>
                     <th>Duration</th>
                     <th>Start Time</th>
-                    <th>Rating</th>
-                    <th>Errors</th>
                     <th>Flight Modes</th>
                 </tr>
             </thead>
@@ -57,18 +54,15 @@
 
             "columns": [
                 { "orderable": false }, /* row number */
-                null,
-                { "orderable": false }, /* overview */
-                { "width": "13%" }, /* description */
-                null,
+                { "width": "10%" }, /* log date */
+                { "width": "70px", "orderable": false }, /* overview */
+                {  }, /* vehicle type */
                 { "orderable": false },/* airframe - not from DB */
-                null,
-                null,
-                null,
-                { "width": "10%" }, /* start time */
-                { "orderable": false, "width": "13%" }, /* rating */
-                null,
-                { "orderable": false, "width": "11%" } /* flight modes */
+                {  }, /* hardware */
+                { "width": "5%" }, /* version */
+                { "width": "5%" }, /* duration */
+                {  }, /* start time */
+                { "width": "10%", "orderable": false } /* flight modes */
             ],
             "language": {
                 "infoFiltered": "<br>(filtered from _MAX_ total entries)",
