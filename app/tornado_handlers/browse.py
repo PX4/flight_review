@@ -182,12 +182,12 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
             if db_data.vehicle_uuid is not None:
                 search_only_columns.append(db_data.vehicle_uuid)
 
-            rounded_div_class = "ratio ratio-4x3 bg-body-secondary rounded overflow-hidden"
-            image_col_class = "w-50 h-50 object-fit-cover d-block"
+            rounded_div_class = "h-100 w-100 bg-body-secondary rounded overflow-hidden"
+            image_col_class = "object-fit-cover d-block"
             overview_image_filename = f"{log_id}.png"
             if overview_image_filename in all_overview_imgs:
                 image_col = f"""
-                    <div class="{rounded_div_class}" style="width:60px;">
+                    <div class="">
                         <img class="map_overview {image_col_class}"
                             src="/overview_img/{overview_image_filename}"
                             loading="lazy" decoding="async" />
@@ -196,7 +196,9 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
             else:
                 image_col = f"""
                     <div class="{rounded_div_class}" style="width:60px;">
-                        <div class="no_map_overview text-warning"></div>
+                        <div class="no_map_overview text-warning">
+                            No Image Preview
+                        </div>
                     </div>
                 """
 
