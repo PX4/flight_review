@@ -157,7 +157,7 @@ table.dataTable td {
   /* the following makes it sticky */
   width: 100%;
   position: fixed;
-  z-index: 1000;
+  z-index: 1000 !important;
   top: 0;
   /* and expand over the whole page */
   left: 0%;
