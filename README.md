@@ -85,6 +85,13 @@ cd app
 ./serve.py -f <file.ulg>
 ```
 
+To upload one or more logs from command line before displaying the application,
+use [PX4-Autopilot/Tools/upload_log.py](https://github.com/PX4/PX4-Autopilot/blob/main/Tools/upload_log.py)
+```bash
+cd PX4-Autopilot/Tools
+./upload_log.py --quiet --server=https://logs.px4.io <file.ulg>
+```
+
 To start the whole web application:
 ```bash
 cd app
