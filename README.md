@@ -98,6 +98,13 @@ bokeh serve --show main.py`, to start without the html template).
 The whole web application is run with the `serve.py` script. Run `./serve.py -h`
 for further details.
 
+To upload one or more logs from command line, use 
+[`PX4-Autopilot/Tools/upload_log.py`](https://github.com/PX4/PX4-Autopilot/blob/main/Tools/upload_log.py)
+```bash
+cd PX4-Autopilot/Tools
+./upload_log.py --quiet --server=http://localhost:5006 <file.ulg>
+```
+
 ## Interactive Usage
 The plotting can also be used interative using a Jupyter Notebook. It
 requires python knowledge, but provides full control over what and how to plot
