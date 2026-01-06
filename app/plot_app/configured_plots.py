@@ -561,7 +561,8 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
     # (only present on VTOL, Fixed-wing config)
     data_plot = DataPlot(data, plot_config, actuator_controls_1.torque_sp_topic,
                          y_start=0, title='Actuator Controls 1 (VTOL in Fixed-Wing mode)',
-                         plot_height='small', changed_params=changed_params, topic_instance=1,
+                         plot_height='small', changed_params=changed_params, 
+                         topic_instance=actuator_controls_1.topic_instance,
                          x_range=x_range)
     data_plot.add_graph(actuator_controls_1.torque_axes_field_names,
                         colors8[0:3], ['Roll', 'Pitch', 'Yaw'], mark_nan=True)
