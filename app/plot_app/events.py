@@ -8,7 +8,7 @@ from config import get_events_url, get_events_filename
 from pyulog import ULog
 from pyulog.px4_events import PX4Events
 
-# pylint: disable=global-statement
+# pylint: disable=global-statement,invalid-name
 __event_parser: PX4Events = None  # Keep the parser to cache the default event definitions
 
 
