@@ -13,15 +13,20 @@ import requests
 
 from plot_app.config_tables import *
 
+# Rate limiting settings
+DEFAULT_DELAY_SECONDS = 6  # 10 requests/minute = 6 seconds between requests
+DEFAULT_MAX_NUM = 10       # Safe default to prevent accidental bulk downloads
+WARN_THRESHOLD = 100       # Warn user if downloading more than this many files
+
 
 def get_arguments():
     """ Get parsed CLI arguments """
     parser = argparse.ArgumentParser(description='Python script for downloading public logs '
                                                  'from the PX4/flight_review database.',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--max-num', '-n', type=int, default=-1,
+    parser.add_argument('--max-num', '-n', type=int, default=DEFAULT_MAX_NUM,
                         help='Maximum number of files to download that match the search criteria. '
-                             'Default: download all files.')
+                             'Use -1 to download all (requires confirmation for >100 files).')
     parser.add_argument('-d', '--download-folder', type=str, default="data/downloaded/",
                         help='The folder to store the downloaded logfiles.')
     parser.add_argument('--print', action='store_true', dest="print_entries",
@@ -60,6 +65,10 @@ def get_arguments():
                         help='The source of the log upload. e.g. ["webui", "CI"]')
     parser.add_argument('--git-hash', default=None, type=str,
                         help='The git hash of the PX4 Firmware version.')
+    parser.add_argument('--delay', type=float, default=DEFAULT_DELAY_SECONDS,
+                        help='Delay in seconds between downloads to respect server rate limits.')
+    parser.add_argument('--yes', '-y', action='store_true', default=False,
+                        help='Skip confirmation prompt for large downloads.')
     return parser.parse_args()
 
 
@@ -83,13 +92,95 @@ def error_labels_to_ids(error_labels):
     return error_ids
 
 
+def confirm_large_download(n_files, delay):
+    """
+    Ask user to confirm large downloads
+    """
+    estimated_time = n_files * delay
+    time_str = str(datetime.timedelta(seconds=int(estimated_time)))
+
+    print(f"\n{'='*60}")
+    print(f"WARNING: You are about to download {n_files} files.")
+    print(f"Estimated time: {time_str} (at {delay}s between downloads)")
+    print(f"{'='*60}")
+    print("\nThe server has rate limits in place. Bulk downloading without")
+    print("appropriate delays may result in your IP being blocked.")
+    print("\nNetwork and storage costs for Flight Review are funded by the")
+    print("Dronecode Foundation. If you find this service useful, please")
+    print("consider supporting the project: https://www.dronecode.org/membership/")
+    print(f"\nTo download more files, use: --max-num {n_files} --yes")
+
+    response = input("\nContinue with download? [y/N]: ")
+    return response.lower() in ['y', 'yes']
+
+
+def download_with_retry(url, entry_id, max_retries=5):
+    """
+    Download a file with rate-limit-aware retry logic
+    """
+    for attempt in range(max_retries):
+        try:
+            request = requests.get(url=url + "?log=" + entry_id, stream=True, timeout=10*60)
+
+            if request.status_code == 503:
+                # Rate limited - back off exponentially
+                wait_time = min(30 * (2 ** attempt), 300)  # Max 5 minutes
+                retry_after = request.headers.get('Retry-After')
+                if retry_after:
+                    wait_time = int(retry_after)
+                print(f'  Rate limited (503). Waiting {wait_time}s before retry...')
+                time.sleep(wait_time)
+                continue
+
+            if request.status_code in [403, 444]:
+                # IP has been blocked
+                print(f'\n{"="*60}')
+                print(f'ERROR: Your IP address has been blocked (HTTP {request.status_code}).')
+                print('This may be due to excessive download requests.')
+                print('\nIf you believe this is an error, please contact:')
+                print('https://github.com/PX4/flight_review/issues')
+                print(f'{"="*60}\n')
+                sys.exit(1)
+
+            if request.status_code == 404:
+                print('  Log not found (404). Skipping.')
+                return None
+
+            if request.status_code != 200:
+                print(f'  Unexpected status {request.status_code}. Retrying...')
+                time.sleep(10)
+                continue
+
+            return request
+
+        except requests.exceptions.ConnectionError:
+            # Connection refused or reset - could be IP block (444 closes connection)
+            if attempt == 0:
+                print('  Connection failed. This may indicate your IP has been blocked.')
+                print(f'  Retrying ({attempt + 1}/{max_retries})...')
+            else:
+                print(f'  Connection failed. Retrying ({attempt + 1}/{max_retries})...')
+            time.sleep(10 * (attempt + 1))
+        except requests.exceptions.Timeout:
+            print(f'  Request timed out. Retrying ({attempt + 1}/{max_retries})...')
+            time.sleep(10)
+        except requests.exceptions.RequestException as ex:
+            print(f'  Request failed: {ex}')
+            time.sleep(10)
+
+    print(f'  Failed after {max_retries} attempts. Skipping.')
+    return None
+
+
 def main():
     """ main script entry point """
     args = get_arguments()
 
     try:
         # the db_info_api sends a json file with a list of all public database entries
+        print("Fetching database info...")
         db_entries_list = requests.get(url=args.db_info_api, timeout=5*60).json()
+        print(f"Found {len(db_entries_list)} total public logs in database.")
     except:
         print("Server request failed.")
         raise
@@ -202,45 +293,57 @@ def main():
             reverse=True)
 
         # set number of files to download
-        n_en = len(db_entries_list)
+        n_matched = len(db_entries_list)
+        print(f"{n_matched} logs match your filter criteria.")
+
         if args.max_num > 0:
-            n_en = min(n_en, args.max_num)
+            n_en = min(n_matched, args.max_num)
+            if n_matched > args.max_num:
+                print(f"Limiting to {args.max_num} files (use --max-num to change).")
+        else:
+            n_en = n_matched
+
+        # Warn for large downloads
+        if n_en > WARN_THRESHOLD and not args.yes:
+            if not confirm_large_download(n_en, args.delay):
+                print("Download cancelled.")
+                sys.exit(0)
+
         n_downloaded = 0
         n_skipped = 0
+        n_failed = 0
 
         for i in range(n_en):
             entry_id = db_entries_list[i]['log_id']
 
-            num_tries = 0
-            for num_tries in range(100):
-                try:
-                    if args.overwrite or entry_id not in logids:
+            if not args.overwrite and entry_id in logids:
+                n_skipped += 1
+                continue
 
-                        file_path = os.path.join(args.download_folder, entry_id + ".ulg")
+            file_path = os.path.join(args.download_folder, entry_id + ".ulg")
+            print('Downloading {}/{} ({})'.format(i + 1, n_en, entry_id))
 
-                        print('downloading {:}/{:} ({:})'.format(i + 1, n_en, entry_id))
-                        request = requests.get(url=args.download_api +
-                                               "?log=" + entry_id, stream=True,
-                                               timeout=10*60)
-                        with open(file_path, 'wb') as log_file:
-                            for chunk in request.iter_content(chunk_size=1024):
-                                if chunk:  # filter out keep-alive new chunks
-                                    log_file.write(chunk)
-                        n_downloaded += 1
-                    else:
-                        n_skipped += 1
-                    break
-                except Exception as ex:
-                    print(ex)
-                    print('Waiting for 30 seconds to retry')
-                    time.sleep(30)
-            if num_tries == 99:
-                print('Retried', str(num_tries + 1), 'times without success, exiting.')
-                sys.exit(1)
+            request = download_with_retry(args.download_api, entry_id)
 
+            if request is None:
+                n_failed += 1
+                continue
 
-        print('{:} logs downloaded to {:}, {:} logs skipped (already downloaded)'.format(
-            n_downloaded, args.download_folder, n_skipped))
+            with open(file_path, 'wb') as log_file:
+                for chunk in request.iter_content(chunk_size=1024):
+                    if chunk:  # filter out keep-alive new chunks
+                        log_file.write(chunk)
+            n_downloaded += 1
+
+            # Rate limit delay between downloads (skip on last file)
+            if i < n_en - 1:
+                time.sleep(args.delay)
+
+        print('\nDownload complete:')
+        print(f'  {n_downloaded} logs downloaded to {args.download_folder}')
+        print(f'  {n_skipped} logs skipped (already downloaded)')
+        if n_failed > 0:
+            print(f'  {n_failed} logs failed')
 
 
 if __name__ == '__main__':
