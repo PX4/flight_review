@@ -92,16 +92,12 @@ def error_labels_to_ids(error_labels):
     return error_ids
 
 
-def confirm_large_download(n_files, delay):
+def confirm_large_download(n_files):
     """
     Ask user to confirm large downloads
     """
-    estimated_time = n_files * delay
-    time_str = str(datetime.timedelta(seconds=int(estimated_time)))
-
     print(f"\n{'='*60}")
     print(f"WARNING: You are about to download {n_files} files.")
-    print(f"Estimated time: {time_str} (at {delay}s between downloads)")
     print(f"{'='*60}")
     print("\nThe server has rate limits in place. Bulk downloading without")
     print("appropriate delays may result in your IP being blocked.")
@@ -305,7 +301,7 @@ def main():
 
         # Warn for large downloads
         if n_en > WARN_THRESHOLD and not args.yes:
-            if not confirm_large_download(n_en, args.delay):
+            if not confirm_large_download(n_en):
                 print("Download cancelled.")
                 sys.exit(0)
 
