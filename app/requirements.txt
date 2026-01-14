@@ -1,4 +1,4 @@
-bokeh==3.3.2
+bokeh==3.8.2
 jinja2
 jupyter
 pyfftw
