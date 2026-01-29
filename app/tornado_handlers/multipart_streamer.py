@@ -175,7 +175,7 @@ class TemporaryFileStreamedPart(StreamedPart):
         if self.is_moved:
             raise RuntimeError("Cannot move temporary file: it has already been moved.")
         self.f_out.close()
-        shutil.move(self.f_out.name, file_path)
+        shutil.move(self.f_out.name, file_path, copy_function=shutil.copyfile)
         self.is_moved = True
 
     def release(self):

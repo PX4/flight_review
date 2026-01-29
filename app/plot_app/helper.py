@@ -102,7 +102,7 @@ def download_file_maybe(filename, url):
             # conditions
             temp_file_name = filename+'.'+str(uuid.uuid4())
             urlretrieve(url, temp_file_name)
-            shutil.move(temp_file_name, filename)
+            shutil.move(temp_file_name, filename, copy_function=shutil.copyfile)
         except Exception as e:
             print("Download error: "+str(e))
             __last_failed_downloads[filename] = time.time()
