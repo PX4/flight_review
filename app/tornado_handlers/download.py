@@ -120,7 +120,7 @@ class DownloadHandler(TornadoRequestHandlerBase):
                                      'vehicle_global_position', kml_colors,
                                      style=style,
                                      camera_trigger_topic_name='camera_capture')
-                    shutil.move(temp_file_name, kml_file_name)
+                    shutil.move(temp_file_name, kml_file_name, copy_function=shutil.copyfile)
                 except Exception as e:
                     print('Error creating KML file', sys.exc_info()[0], sys.exc_info()[1])
                     raise CustomHTTPError(400, 'No Position Data in log') from e
