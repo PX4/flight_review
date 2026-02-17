@@ -428,10 +428,10 @@ order by new_date
         """ apply layout options to a bokeh plot """
 
         p.xaxis.formatter = DatetimeTickFormatter(
-            hours=["%d %b %Y %H:%M"],
-            days=["%d %b %Y"],
-            months=["%d %b %Y"],
-            years=["%d %b %Y"],
+            hours="%d %b %Y %H:%M",
+            days="%d %b %Y",
+            months="%d %b %Y",
+            years="%d %b %Y",
         )
 
         plots_width = self._config['plot_width']
