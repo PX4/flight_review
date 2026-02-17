@@ -1,31 +1,26 @@
 """ methods an classes used for plotting (wrappers around bokeh plots) """
 import copy
 
-from bokeh.plotting import figure
-#pylint: disable=line-too-long, arguments-differ, unused-import
-from bokeh.models import (
-    ColumnDataSource, Range1d, DataRange1d, DatetimeAxis,
-    TickFormatter, DatetimeTickFormatter, CustomJSTickFormatter,
-    Grid, Legend, Plot, BoxAnnotation, Span, CustomJS, Rect, Circle, Line,
-    HoverTool, BoxZoomTool, PanTool, WheelZoomTool, ResetTool, SaveTool,
-    WMTSTileSource, GMapPlot, GMapOptions,
-    LabelSet, Label, ColorBar, LinearColorMapper, BasicTicker, PrintfTickFormatter
-    )
-from bokeh.palettes import viridis
-from bokeh.models.widgets import DataTable, DateFormatter, TableColumn
-from bokeh import events
-
 import numpy as np
+import pyfftw
 import scipy
 import scipy.signal
-import pyfftw
+from bokeh import events
+# pylint: disable=line-too-long, arguments-differ, unused-import
+from bokeh.models import (
+    ColumnDataSource, Range1d, CustomJSTickFormatter,
+    BoxAnnotation, Span, CustomJS, Line,
+    HoverTool, BoxZoomTool, PanTool, WheelZoomTool, ResetTool, SaveTool,
+    GMapPlot, GMapOptions,
+    LabelSet, Label, ColorBar, LinearColorMapper, BasicTicker, PrintfTickFormatter
+)
+from bokeh.plotting import figure
 
 from config import debug_verbose_output
 from downsampling import DynamicDownsample
 from helper import (
     map_projection, WGS84_to_mercator, flight_modes_table, vtol_modes_table, get_lat_lon_alt_deg
-    )
-
+)
 
 TOOLS = "pan,wheel_zoom,box_zoom,reset,save"
 ACTIVE_SCROLL_TOOLS = "wheel_zoom"
