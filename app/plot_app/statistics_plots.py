@@ -289,8 +289,10 @@ order by new_date
                 return f'Unknown ({flight_mode})'
 
         dates, groups = self.get_data_for_plotting(
-            lambda log: [(str(mode), duration/3600)
-                         for mode, duration in log.flight_mode_durations])
+            # Filter out invalid durations
+            lambda log: [(str(mode), duration / 3600)
+                         for mode, duration in log.flight_mode_durations
+                         if duration < 7 * 24 * 3600])
         # Cumulative
         for group in groups:
             groups[group] = np.cumsum(groups[group])
