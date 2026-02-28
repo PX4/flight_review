@@ -94,8 +94,18 @@ class UploadHandler(TornadoRequestHandlerBase):
                     int(self.get_argument('expected_size')))
             try:
                 total = int(self.request.headers.get("Content-Length", "0"))
-            except KeyError:
-                total = 0
+            except (KeyError, ValueError):
+                 total = 0
+            # Set max body size based on Content-Length or expected_size parameter
+            if 'expected_size' in self.request.arguments:
+                max_size = int(self.get_argument('expected_size'))
+            elif total > 0:
+                # Add 10% buffer for multipart overhead
+                max_size = int(total * 1.1)
+            else:
+                # Default to 500MB if no size info available
+                max_size = 500 * 1024 * 1024
+            self.request.connection.set_max_body_size(max_size)
             self.multipart_streamer = MultiPartStreamer(total)
 
     def data_received(self, chunk):
@@ -344,4 +354,3 @@ class UploadHandler(TornadoRequestHandlerBase):
 
             finally:
                 self.multipart_streamer.release_parts()
-
