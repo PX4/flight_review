@@ -10,7 +10,7 @@ import datetime
 
 # this is needed for the following imports
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'plot_app'))
-from plot_app.config import get_db_filename, get_overview_img_filepath
+from plot_app.config import get_db_connection, get_overview_img_filepath
 from plot_app.helper import get_log_filename
 
 
@@ -33,7 +33,7 @@ source = args.source
 interactive = args.interactive
 private = args.private
 
-con = sqlite3.connect(get_db_filename(), detect_types=sqlite3.PARSE_DECLTYPES)
+con = get_db_connection()
 with con:
     cur = con.cursor()
     log_ids_to_remove = []

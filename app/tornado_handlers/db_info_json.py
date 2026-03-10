@@ -10,7 +10,7 @@ import tornado.web
 
 # this is needed for the following imports
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../plot_app'))
-from config import get_db_filename
+from config import get_db_connection
 from db_entry import DBData
 from helper import get_airframe_data
 
@@ -29,7 +29,7 @@ class DBInfoHandler(tornado.web.RequestHandler):
         jsonlist = []
 
         # get the logs (but only the public ones)
-        con = sqlite3.connect(get_db_filename(), detect_types=sqlite3.PARSE_DECLTYPES)
+        con = get_db_connection()
         cur = con.cursor()
 
         # get vehicle name information from vehicle table

@@ -18,7 +18,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../pl
 from helper import get_log_filename, validate_log_id, \
     flight_modes_table, load_ulog_file, get_default_parameters
 
-from config import get_db_filename, get_kml_filepath
+from config import get_db_connection, get_kml_filepath
 
 #pylint: disable=relative-beyond-top-level
 from .common import CustomHTTPError, TornadoRequestHandlerBase
@@ -44,7 +44,7 @@ class DownloadHandler(TornadoRequestHandlerBase):
             get the uploaded file name & exchange the file extension
             """
             try:
-                con = sqlite3.connect(get_db_filename(), detect_types=sqlite3.PARSE_DECLTYPES)
+                con = get_db_connection()
                 cur = con.cursor()
                 cur.execute('select OriginalFilename '
                             'from Logs where Id = ?', [log_id])
