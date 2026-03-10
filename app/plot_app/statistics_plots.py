@@ -12,7 +12,7 @@ from bokeh.models import (
     )
 
 from plotting import TOOLS, ACTIVE_SCROLL_TOOLS
-from config import get_db_filename
+from config import get_db_connection
 from helper import get_airframe_data, flight_modes_table
 
 
@@ -74,7 +74,7 @@ class StatisticsPlots:
         self._public_logs = []
 
         # read from the DB
-        con = sqlite3.connect(get_db_filename(), detect_types=sqlite3.PARSE_DECLTYPES)
+        con = get_db_connection()
         with con:
             cur = con.cursor()
 

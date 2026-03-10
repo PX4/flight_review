@@ -126,7 +126,7 @@ else:
         db_data = DBData()
         vehicle_data = None
         try:
-            con = sqlite3.connect(get_db_filename(), detect_types=sqlite3.PARSE_DECLTYPES)
+            con = get_db_connection()
             cur = con.cursor()
             cur.execute('select Description, Feedback, Type, WindSpeed, Rating, VideoUrl, '
                         'ErrorLabels from Logs where Id = ?', [log_id])
