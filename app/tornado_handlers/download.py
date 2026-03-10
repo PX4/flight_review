@@ -8,7 +8,6 @@ from html import escape
 import sys
 import uuid
 import shutil
-import sqlite3
 import tornado.web
 
 from pyulog.ulog2kml import convert_ulog2kml

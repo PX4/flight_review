@@ -1,5 +1,4 @@
 """ Class for statistics plots page """
-import sqlite3
 from dateutil.relativedelta import relativedelta
 
 import numpy as np

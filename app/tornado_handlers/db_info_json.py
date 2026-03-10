@@ -3,7 +3,6 @@ Tornado handler for the JSON public log list retrieval
 """
 from __future__ import print_function
 import json
-import sqlite3
 import os
 import sys
 import tornado.web
