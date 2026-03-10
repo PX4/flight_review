@@ -8,7 +8,6 @@ import os
 import re
 from datetime import datetime
 import json
-import sqlite3
 import tornado.web
 
 # this is needed for the following imports

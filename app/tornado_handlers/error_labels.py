@@ -5,7 +5,6 @@ from __future__ import print_function
 
 import sys
 import os
-import sqlite3
 import tornado.web
 
 # this is needed for the following imports

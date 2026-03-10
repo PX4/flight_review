@@ -10,7 +10,6 @@ from html import escape
 import sys
 import uuid
 import binascii
-import sqlite3
 import tornado.web
 from tornado.ioloop import IOLoop
 

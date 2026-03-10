@@ -4,7 +4,6 @@ Tornado handler to edit/delete a log upload entry
 from __future__ import print_function
 import os
 from html import escape
-import sqlite3
 import sys
 import tornado.web
 
