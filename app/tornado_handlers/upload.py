@@ -20,7 +20,7 @@ from pyulog.px4 import PX4ULog
 # this is needed for the following imports
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../plot_app'))
 from db_entry import DBVehicleData, DBData
-from config import get_db_filename, get_http_protocol, get_domain_name, \
+from config import get_db_connection, get_http_protocol, get_domain_name, \
     email_notifications_config, get_ulge_private_key_path
 from helper import get_total_flight_time, validate_url, get_log_filename, \
     load_ulog_file, get_airframe_name, ULogException, decrypt_ulge_payload
@@ -234,24 +234,28 @@ class UploadHandler(TornadoRequestHandlerBase):
                     ulog = load_ulog_file(ulog_file_name)
 
                 # put additional data into a DB
-                con = sqlite3.connect(get_db_filename())
-                cur = con.cursor()
-                cur.execute(
-                    'insert into Logs (Id, Title, Description, '
-                    'OriginalFilename, Date, AllowForAnalysis, Obfuscated, '
-                    'Source, Email, WindSpeed, Rating, Feedback, Type, '
-                    'videoUrl, ErrorLabels, Public, Token) values '
-                    '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                    [log_id, title, description, upload_file_name,
-                     datetime.datetime.now(), allow_for_analysis,
-                     obfuscated, source, stored_email, wind_speed, rating,
-                     feedback, upload_type, video_url, error_labels, is_public, token])
+                con = get_db_connection()
+                try:
+                    cur = con.cursor()
+                    cur.execute(
+                        'insert into Logs (Id, Title, Description, '
+                        'OriginalFilename, Date, AllowForAnalysis, Obfuscated, '
+                        'Source, Email, WindSpeed, Rating, Feedback, Type, '
+                        'videoUrl, ErrorLabels, Public, Token) values '
+                        '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                        [log_id, title, description, upload_file_name,
+                         datetime.datetime.now(), allow_for_analysis,
+                         obfuscated, source, stored_email, wind_speed, rating,
+                         feedback, upload_type, video_url, error_labels, is_public, token])
 
-                if ulog is not None:
-                    vehicle_data = update_vehicle_db_entry(cur, ulog, log_id, vehicle_name)
-                    vehicle_name = vehicle_data.name
+                    if ulog is not None:
+                        vehicle_data = update_vehicle_db_entry(cur, ulog, log_id, vehicle_name)
+                        vehicle_name = vehicle_data.name
 
-                con.commit()
+                    con.commit()
+                    cur.close()
+                finally:
+                    con.close()
 
                 url = '/plot_app?log='+log_id
                 full_plot_url = get_http_protocol()+'://'+get_domain_name()+url
@@ -310,16 +314,10 @@ class UploadHandler(TornadoRequestHandlerBase):
                         DBData.wind_speed_str_static(wind_speed), delete_url,
                         email, info)
 
-                    # also generate the additional DB entry
-                    # (we may have the log already loaded in 'ulog', however the
-                    # lru cache will make it very quick to load it again)
-                    generate_db_data_from_log_file(log_id, con)
+                    # generate the additional DB entry (opens its own connection)
+                    generate_db_data_from_log_file(log_id)
                     # also generate the preview image
                     IOLoop.instance().add_callback(generate_overview_img_from_id, log_id)
-
-                con.commit()
-                cur.close()
-                con.close()
 
                 # send notification emails
                 send_notification_email(email, full_plot_url, delete_url, info)
