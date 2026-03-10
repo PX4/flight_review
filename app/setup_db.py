@@ -33,6 +33,7 @@ if not os.path.exists(cur_dir):
 
 print('creating DB at '+get_db_filename())
 con = lite.connect(get_db_filename())
+con.execute('PRAGMA journal_mode=WAL')
 with con:
     cur = con.cursor()
 

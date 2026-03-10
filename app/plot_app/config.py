@@ -1,6 +1,7 @@
 """ configuration variables """
 import configparser
 import os
+import sqlite3
 
 #pylint: disable=invalid-name
 
@@ -113,6 +114,16 @@ def get_db_filename():
     if __DB_FILENAME_CUSTOM != "":
         return __DB_FILENAME_CUSTOM
     return __DB_FILENAME
+
+def get_db_connection():
+    """ get a properly configured SQLite database connection with WAL mode
+    and a 30s busy timeout to handle contention from multiple workers """
+    con = sqlite3.connect(get_db_filename(),
+                          detect_types=sqlite3.PARSE_DECLTYPES,
+                          timeout=30)
+    con.execute('PRAGMA journal_mode=WAL')
+    con.execute('PRAGMA busy_timeout=30000')
+    return con
 
 def get_airframes_filename():
     """ get configured airframes file name """
