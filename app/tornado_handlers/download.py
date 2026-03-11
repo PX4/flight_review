@@ -42,6 +42,7 @@ class DownloadHandler(TornadoRequestHandlerBase):
             """
             get the uploaded file name & exchange the file extension
             """
+            con = None
             try:
                 con = get_db_connection()
                 cur = con.cursor()
@@ -53,10 +54,11 @@ class DownloadHandler(TornadoRequestHandlerBase):
                     if original_file_name[-4:].lower() == '.ulg':
                         original_file_name = original_file_name[:-4]
                     return original_file_name + new_file_suffix
-                cur.close()
-                con.close()
             except:
                 print("DB access failed:", sys.exc_info()[0], sys.exc_info()[1])
+            finally:
+                if con is not None:
+                    con.close()
             return default_value
 
         if download_type == '1': # download the parameters
