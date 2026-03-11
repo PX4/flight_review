@@ -46,10 +46,24 @@ class _Log:
         self.hardware = db_tuple[5]
         self.uuid = db_tuple[11]
         # the version has typically the form 'v<i>.<j>.<k> <l>', where <l>
-        # indicates whether it's a development version (most of the time it's 0)
+        # is the firmware release type enum (0=dev, 64=alpha, 128=beta, 192=rc, 255=release)
         version = db_tuple[10].split(' ')
         self.sw_version = version[0]
-        self.is_release = len(version) > 1 and version[1] == '255'
+        release_type_suffix = {64: '-alpha', 128: '-beta', 192: '-rc', 255: ''}
+        if len(version) > 1:
+            try:
+                rtype = int(version[1])
+                suffix = release_type_suffix.get(rtype)
+                if suffix is not None:
+                    self.sw_version += suffix
+                else:
+                    # type 0 or unknown — untagged dev build, keep bare version
+                    pass
+                self.is_release = (rtype == 255)
+            except ValueError:
+                self.is_release = False
+        else:
+            self.is_release = False
 
         self.flight_mode_durations = \
             [tuple(map(int, x.split(':'))) for x in db_tuple[12].split(',') if len(x) > 0]
@@ -335,7 +349,7 @@ order by new_date
         """
 
         dates, groups = self.get_data_for_plotting(
-            lambda log: [('Not a Release' if not log.is_release else log.sw_version, 1)])
+            lambda log: [(log.sw_version, 1)])
         # Cumulative
         for group in groups:
             groups[group] = np.cumsum(groups[group])
