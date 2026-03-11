@@ -76,31 +76,41 @@ def _is_tagish(q: str) -> bool:
     return bool(_TAG_PREFIX_RE.match(q))
 
 
+def _escape_like(s):
+    """Escape LIKE wildcards so %, _ are matched literally."""
+    return s.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')
+
+_MAX_PAGE_SIZE = 500
+
 def _build_search_clause(search_str):
     """Build SQL WHERE clause and params for a search string.
 
     Returns (sql_fragment, params) where sql_fragment is like
-    '(col1 LIKE ? OR col2 LIKE ? ...)' and params is a list of
-    bound values.
+    '(col1 LIKE ? ESCAPE '\\' OR col2 LIKE ? ESCAPE '\\' ...)'
+    and params is a list of bound values.
     """
     if not search_str:
         return '', []
+
+    escaped = _escape_like(search_str)
+    like_expr = "LIKE ? ESCAPE '\\'"
 
     hash_mode = _is_hashish(search_str)
     tag_mode = _is_tagish(search_str)
 
     if hash_mode or tag_mode:
         # prefix match on software version columns only
-        pattern = search_str + '%'
+        pattern = escaped + '%'
         prefix_cols = ['LogsGenerated.Software', 'LogsGenerated.SoftwareVersion']
-        clauses = [f'{col} LIKE ?' for col in prefix_cols]
-        # also allow substring match on all columns as fallback
-        sub_pattern = '%' + search_str + '%'
-        clauses += [f'{col} LIKE ?' for col in _SEARCH_COLUMNS]
-        params = [pattern] * len(prefix_cols) + [sub_pattern] * len(_SEARCH_COLUMNS)
+        clauses = [f'{col} {like_expr}' for col in prefix_cols]
+        # also allow substring match on remaining columns as fallback
+        sub_pattern = '%' + escaped + '%'
+        fallback_cols = [col for col in _SEARCH_COLUMNS if col not in prefix_cols]
+        clauses += [f'{col} {like_expr}' for col in fallback_cols]
+        params = [pattern] * len(prefix_cols) + [sub_pattern] * len(fallback_cols)
     else:
-        pattern = '%' + search_str + '%'
-        clauses = [f'{col} LIKE ?' for col in _SEARCH_COLUMNS]
+        pattern = '%' + escaped + '%'
+        clauses = [f'{col} {like_expr}' for col in _SEARCH_COLUMNS]
         params = [pattern] * len(_SEARCH_COLUMNS)
 
     return '(' + ' OR '.join(clauses) + ')', params
@@ -240,7 +250,7 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
                         '',                          # 9: Flight Modes (not orderable)
                         ]
         sql_order = ' ORDER BY Logs.Date DESC'
-        if ordering_col[order_ind] != '':
+        if 0 <= order_ind < len(ordering_col) and ordering_col[order_ind] != '':
             col = ordering_col[order_ind]
             direction = ' DESC' if order_dir == 'desc' else ''
             # push NULLs to the end regardless of sort direction
@@ -266,12 +276,12 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
         records_filtered = cur.fetchone()[0]
         json_output['recordsFiltered'] = records_filtered
 
-        # fetch only the page we need
-        if data_length == -1:
-            limit_clause = ''
-        else:
-            limit_clause = ' LIMIT ? OFFSET ?'
-            params += [data_length, data_start]
+        # fetch only the page we need, enforce a hard max to prevent
+        # unbounded queries from reintroducing the performance problem
+        if data_length <= 0 or data_length > _MAX_PAGE_SIZE:
+            data_length = _MAX_PAGE_SIZE
+        limit_clause = ' LIMIT ? OFFSET ?'
+        params += [data_length, data_start]
 
         cur.execute(_SELECT_COLS + where + sql_order + limit_clause, params)
         db_tuples = cur.fetchall()
