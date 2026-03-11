@@ -121,7 +121,9 @@ def get_db_connection():
     con = sqlite3.connect(get_db_filename(),
                           detect_types=sqlite3.PARSE_DECLTYPES,
                           timeout=30)
-    con.execute('PRAGMA journal_mode=WAL')
+    result = con.execute('PRAGMA journal_mode=WAL').fetchone()
+    if result is None or result[0].lower() != 'wal':
+        print('Warning: failed to enable WAL mode, got: {}'.format(result))
     con.execute('PRAGMA busy_timeout=30000')
     return con
 

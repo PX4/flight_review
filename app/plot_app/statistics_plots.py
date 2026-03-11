@@ -74,7 +74,7 @@ class StatisticsPlots:
 
         # read from the DB
         con = get_db_connection()
-        with con:
+        try:
             cur = con.cursor()
 
             cur.execute("select count(Id) from Logs")
@@ -165,6 +165,8 @@ order by new_date
                 self._num_flight_hours_total += log.duration
 
             self._num_flight_hours_total /= 3600
+        finally:
+            con.close()
 
 
     def get_data_for_plotting(self, groups_value_getter, empty_value=0,
