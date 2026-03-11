@@ -28,6 +28,60 @@ _TAG_PREFIX_RE = re.compile(
     re.IGNORECASE | re.VERBOSE,
 )
 
+# PX4 firmware release type enum → display suffix
+# type 0 means untagged dev build — no suffix, we show the git hash instead
+_RELEASE_TYPE_SUFFIX = {
+    64: '-alpha',
+    128: '-beta',
+    192: '-rc',
+    255: '',   # stable release, no suffix
+}
+
+# reverse map: search keyword → release type integer(s)
+_RELEASE_KEYWORD_MAP = {
+    'alpha': [64],
+    'beta': [128],
+    'rc': [192],
+    'release': [255],
+}
+
+
+def _format_sw_version(ver_sw_release, ver_sw_git_hash):
+    """Format a human-readable software version string.
+
+    Args:
+        ver_sw_release: stored as 'vMAJOR.MINOR.PATCH TYPE', e.g. 'v1.16.0 128'
+        ver_sw_git_hash: git hash string, e.g. 'abc123def456...'
+
+    Returns:
+        Human-readable version like 'v1.16.0-beta (abc123)' or 'v1.16.0'
+    """
+    if not ver_sw_release:
+        # fall back to truncated git hash
+        if len(ver_sw_git_hash) > 10:
+            return ver_sw_git_hash[:6]
+        return ver_sw_git_hash
+
+    try:
+        parts = ver_sw_release.split()
+        version_tag = parts[0]
+        release_type = int(parts[1])
+    except (IndexError, ValueError):
+        # malformed ver_sw_release, fall back
+        if len(ver_sw_git_hash) > 10:
+            return ver_sw_git_hash[:6]
+        return ver_sw_git_hash
+
+    suffix = _RELEASE_TYPE_SUFFIX.get(release_type, '')
+    display = version_tag + suffix
+
+    # for untagged builds (type 0), append short git hash for identification
+    if release_type not in _RELEASE_TYPE_SUFFIX and ver_sw_git_hash:
+        short_hash = ver_sw_git_hash[:6] if len(ver_sw_git_hash) > 6 else ver_sw_git_hash
+        display += ' (' + short_hash + ')'
+
+    return display
+
 # columns searchable via SQL LIKE
 _SEARCH_COLUMNS = [
     'Logs.Description',
@@ -82,6 +136,28 @@ def _escape_like(s):
 
 _MAX_PAGE_SIZE = 500
 
+def _parse_version_search(search_str):
+    """Check if search_str contains a release type keyword and extract it.
+
+    Handles searches like 'beta', 'v1.16.0-beta', 'v1.16-rc'.
+    Returns (version_prefix_or_None, release_types_or_None).
+    """
+    lower = search_str.lower().strip()
+
+    # check for 'vX.Y.Z-keyword' pattern
+    match = re.match(r'^(v[\d]+(?:\.[\d]+){0,2})-(alpha|beta|rc|release)$', lower)
+    if match:
+        version_prefix = match.group(1)
+        keyword = match.group(2)
+        return version_prefix, _RELEASE_KEYWORD_MAP.get(keyword)
+
+    # check for bare keyword
+    if lower in _RELEASE_KEYWORD_MAP:
+        return None, _RELEASE_KEYWORD_MAP[lower]
+
+    return None, None
+
+
 def _build_search_clause(search_str):
     """Build SQL WHERE clause and params for a search string.
 
@@ -97,6 +173,32 @@ def _build_search_clause(search_str):
 
     hash_mode = _is_hashish(search_str)
     tag_mode = _is_tagish(search_str)
+
+    # check for release type keyword searches (e.g. 'beta', 'v1.16.0-beta')
+    version_prefix, release_types = _parse_version_search(search_str)
+
+    if release_types is not None:
+        # build clauses that match release type in SoftwareVersion column
+        # SoftwareVersion stores 'v1.16.0 128' where 128 is the type
+        clauses = []
+        params = []
+        for rtype in release_types:
+            if version_prefix:
+                # match 'v1.16.0 128' pattern with specific version prefix
+                pattern = _escape_like(version_prefix) + '% ' + str(rtype)
+            else:
+                # match any version with this release type, e.g. '% 128'
+                pattern = '% ' + str(rtype)
+            clauses.append(f'LogsGenerated.SoftwareVersion {like_expr}')
+            params.append(pattern)
+
+        # also do standard substring search on other columns as fallback
+        sub_pattern = '%' + escaped + '%'
+        for col in _SEARCH_COLUMNS:
+            clauses.append(f'{col} {like_expr}')
+            params.append(sub_pattern)
+
+        return '(' + ' OR '.join(clauses) + ')', params
 
     if hash_mode or tag_mode:
         # prefix match on software version columns only
@@ -153,17 +255,7 @@ def _get_columns_from_tuple(db_tuple, counter, all_overview_imgs, con, cur):
         db_data.start_time_utc = db_tuple[19]
 
     # bring it into displayable form
-    ver_sw = db_data.ver_sw
-    if len(ver_sw) > 10:
-        ver_sw = ver_sw[:6]
-    if len(db_data.ver_sw_release) > 0:
-        try:
-            release_split = db_data.ver_sw_release.split()
-            release_type = int(release_split[1])
-            if release_type == 255: # it's a release
-                ver_sw = release_split[0]
-        except:
-            pass
+    ver_sw = _format_sw_version(db_data.ver_sw_release, db_data.ver_sw)
     airframe_data = get_airframe_data(db_data.sys_autostart_id)
     if airframe_data is None:
         airframe = db_data.sys_autostart_id
