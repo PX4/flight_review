@@ -48,9 +48,10 @@
                 "search": {{ initial_search }}
             },
 {% endif %}
+            "pageLength": 25,
             "order": [[1, 'desc']],
             "ordering": true,
-            "lengthMenu": [10, 25, 50, 75, 100],
+            "lengthMenu": [25, 50, 75, 100],
 
             "columns": [
                 { "orderable": false }, /* row number */
@@ -68,6 +69,7 @@
                 "infoFiltered": "<br>(filtered from _MAX_ total entries)",
             },
             "serverSide": true,
+            "searchDelay": 500,
             "ajax": "browse_data_retrieval",
         });
         var table = $('#logs_table').DataTable();
