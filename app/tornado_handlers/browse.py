@@ -241,9 +241,10 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
                         ]
         sql_order = ' ORDER BY Logs.Date DESC'
         if ordering_col[order_ind] != '':
-            sql_order = ' ORDER BY ' + ordering_col[order_ind]
-            if order_dir == 'desc':
-                sql_order += ' DESC'
+            col = ordering_col[order_ind]
+            direction = ' DESC' if order_dir == 'desc' else ''
+            # push NULLs to the end regardless of sort direction
+            sql_order = f' ORDER BY {col} IS NULL, {col}{direction}'
 
         # build WHERE with optional search
         where = 'WHERE ' + _BASE_WHERE
