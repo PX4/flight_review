@@ -222,7 +222,7 @@ class BrowseDataRetrievalHandler(tornado.web.RequestHandler):
         data_length = int(self.get_argument('length'))
         draw_counter = int(self.get_argument('draw'))
 
-        json_output = dict(draw=draw_counter, data=[])
+        json_output = {'draw': draw_counter, 'data': []}
 
         con = get_db_connection()
         cur = con.cursor()
