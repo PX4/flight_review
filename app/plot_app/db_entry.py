@@ -90,9 +90,9 @@ class DBDataGenerated:
         px4_ulog = PX4ULog(ulog)
 
         # extract information
-        _MAX_DURATION_S = 86400  # 24h — anything beyond is a corrupted timestamp
+        max_duration_s = 86400  # 24h — anything beyond is a corrupted timestamp
         duration_us = ulog.last_timestamp - ulog.start_timestamp
-        if duration_us > _MAX_DURATION_S * 1e6 or ulog.last_timestamp > 2**63:
+        if duration_us > max_duration_s * 1e6 or ulog.last_timestamp > 2**63:
             obj.duration_s = 0
         else:
             obj.duration_s = int(duration_us / 1e6)
