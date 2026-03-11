@@ -133,6 +133,14 @@ with con:
             cur.execute("ALTER TABLE LogsGenerated ADD COLUMN StartTime INT DEFAULT 0")
 
 
+    # Indexes for browse/search performance
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_logs_public_source_date "
+                "ON Logs(Public, Source, Date DESC)")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_logsgenerated_hardware "
+                "ON LogsGenerated(Hardware)")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_logsgenerated_software "
+                "ON LogsGenerated(Software)")
+
     # Vehicle table (contains information about a vehicle)
     cur.execute("PRAGMA table_info('Vehicle')")
     columns = cur.fetchall()
