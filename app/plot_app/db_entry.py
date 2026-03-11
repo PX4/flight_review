@@ -90,7 +90,12 @@ class DBDataGenerated:
         px4_ulog = PX4ULog(ulog)
 
         # extract information
-        obj.duration_s = int((ulog.last_timestamp - ulog.start_timestamp)/1e6)
+        _MAX_DURATION_S = 86400  # 24h — anything beyond is a corrupted timestamp
+        duration_us = ulog.last_timestamp - ulog.start_timestamp
+        if duration_us > _MAX_DURATION_S * 1e6 or ulog.last_timestamp > 2**63:
+            obj.duration_s = 0
+        else:
+            obj.duration_s = int(duration_us / 1e6)
         obj.mav_type = px4_ulog.get_mav_type()
         obj.estimator = px4_ulog.get_estimator()
         obj.sys_autostart_id = ulog.initial_parameters.get('SYS_AUTOSTART', 0)
