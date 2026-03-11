@@ -59,7 +59,7 @@ class _Log:
                 else:
                     # type 0 or unknown — untagged dev build, keep bare version
                     pass
-                self.is_release = (rtype == 255)
+                self.is_release = rtype == 255
             except ValueError:
                 self.is_release = False
         else:
