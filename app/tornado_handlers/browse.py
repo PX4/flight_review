@@ -139,13 +139,13 @@ _MAX_PAGE_SIZE = 500
 def _parse_version_search(search_str):
     """Check if search_str contains a release type keyword and extract it.
 
-    Handles searches like 'beta', 'v1.16.0-beta', 'v1.16-rc', 'dev'.
+    Handles searches like 'beta', 'v1.16.0-beta', 'v1.16-rc'.
     Returns (version_prefix_or_None, release_types_or_None).
     """
     lower = search_str.lower().strip()
 
     # check for 'vX.Y.Z-keyword' pattern
-    match = re.match(r'^(v[\d]+(?:\.[\d]+){0,2})-(dev|alpha|beta|rc|release)$', lower)
+    match = re.match(r'^(v[\d]+(?:\.[\d]+){0,2})-(alpha|beta|rc|release)$', lower)
     if match:
         version_prefix = match.group(1)
         keyword = match.group(2)
