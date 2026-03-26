@@ -119,6 +119,12 @@ function setupPlots() {
 					' href="#'+plot_fragments[index_of]+'"><big>&para;</big></a>');
 			$(plot_view.canvas_view.el).before(a);
 			fragment_elements.set(plot_fragments[index_of], a[0])
+
+			// Hide the focus outline around the plots
+			// This can be removed once https://github.com/bokeh/bokeh/issues/14481 is fixed
+			var sheet = new CSSStyleSheet;
+			sheet.replaceSync( `.bk-events:focus, .bk-events:focus-visible { --outline-width: 0; --outline-style: none; outline: none !important; }`);
+			plot_view.canvas_view.events_el.parentNode.adoptedStyleSheets.push(sheet);
 		}
 	});
 

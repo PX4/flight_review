@@ -2,12 +2,11 @@
 
 # Script to remove a single DB entry
 
-import sqlite3 as lite
 import sys
 import os
 import argparse
 
-from plot_app.config import get_db_filename
+from plot_app.config import get_db_connection
 
 
 parser = argparse.ArgumentParser(description='Remove a DB entry (but not the log file)')
@@ -17,7 +16,7 @@ parser.add_argument('log_id', metavar='log-id', action='store', nargs='+',
 
 args = parser.parse_args()
 
-con = lite.connect(get_db_filename())
+con = get_db_connection()
 with con:
     cur = con.cursor()
     for log_id in args.log_id:

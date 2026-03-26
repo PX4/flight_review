@@ -1,31 +1,26 @@
 """ methods an classes used for plotting (wrappers around bokeh plots) """
 import copy
 
-from bokeh.plotting import figure
-#pylint: disable=line-too-long, arguments-differ, unused-import
-from bokeh.models import (
-    ColumnDataSource, Range1d, DataRange1d, DatetimeAxis,
-    TickFormatter, DatetimeTickFormatter, CustomJSTickFormatter,
-    Grid, Legend, Plot, BoxAnnotation, Span, CustomJS, Rect, Circle, Line,
-    HoverTool, BoxZoomTool, PanTool, WheelZoomTool, ResetTool, SaveTool,
-    WMTSTileSource, GMapPlot, GMapOptions,
-    LabelSet, Label, ColorBar, LinearColorMapper, BasicTicker, PrintfTickFormatter
-    )
-from bokeh.palettes import viridis
-from bokeh.models.widgets import DataTable, DateFormatter, TableColumn
-from bokeh import events
-
 import numpy as np
+import pyfftw
 import scipy
 import scipy.signal
-import pyfftw
+from bokeh import events
+# pylint: disable=line-too-long, arguments-differ, unused-import
+from bokeh.models import (
+    ColumnDataSource, Range1d, CustomJSTickFormatter,
+    BoxAnnotation, Span, CustomJS, Line,
+    HoverTool, BoxZoomTool, PanTool, WheelZoomTool, ResetTool, SaveTool,
+    GMapPlot, GMapOptions,
+    LabelSet, Label, ColorBar, LinearColorMapper, BasicTicker, PrintfTickFormatter
+)
+from bokeh.plotting import figure
 
 from config import debug_verbose_output
 from downsampling import DynamicDownsample
 from helper import (
     map_projection, WGS84_to_mercator, flight_modes_table, vtol_modes_table, get_lat_lon_alt_deg
-    )
-
+)
 
 TOOLS = "pan,wheel_zoom,box_zoom,reset,save"
 ACTIVE_SCROLL_TOOLS = "wheel_zoom"
@@ -71,7 +66,7 @@ def add_virtual_fifo_topic_data(ulog, topic_name, instance=0):
         scale = cur_dataset.data['scale']
         total_samples = 0
         for i in range(len(t)):
-            total_samples += samples[i]
+            total_samples += int(samples[i])
         t_new = np.zeros(total_samples, t.dtype)
         xyz_new = [np.zeros(total_samples, np.float64) for i in range(3)]
         sample = 0
@@ -82,7 +77,7 @@ def add_virtual_fifo_topic_data(ulog, topic_name, instance=0):
                 for j, axis in enumerate(['x', 'y', 'z']):
                     data_point = cur_dataset.data[axis+'['+str(s)+']'][i] * scale[i]
                     xyz_new[j][sample+s] = data_point
-            sample += samples[i]
+            sample += int(samples[i])
         cur_dataset.data['timestamp'] = t_new
         cur_dataset.data['timestamp_sample'] = t_new
         cur_dataset.data['x'] = xyz_new[0]
@@ -151,7 +146,7 @@ def plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states=Non
             mode_name, color = flight_modes_table[mode]
             annotation = BoxAnnotation(left=int(t_start), right=int(t_end),
                                        fill_alpha=0.09, line_color=None,
-                                       fill_color=color,
+                                       fill_color=color, movable='none', resizable='none',
                                        **added_box_annotation_args)
             p.add_layout(annotation)
 
@@ -196,7 +191,7 @@ def plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states=Non
                 mode_name, color = vtol_modes_table[mode]
                 p.add_layout(BoxAnnotation(left=int(t_start), right=int(t_end),
                                            fill_alpha=0.09, line_color=None,
-                                           fill_color=color,
+                                           fill_color=color, movable='none', resizable='none',
                                            top=vtol_state_height, top_units='screen'))
         # use screen coords so that the label always stays. It's a bit
         # unfortunate that the x position includes the x-offset of the y-axis,
@@ -393,9 +388,9 @@ def plot_map(ulog, config, map_type='plain', api_key=None, setpoints=False,
 
                 data_source = ColumnDataSource(data={'lat': lat, 'lon': lon})
 
-                p.circle(x='lon', y='lat', source=data_source,
-                         line_width=2, size=6, line_color=config['mission_setpoint_color'],
-                         fill_color=None, legend_label='Position Setpoints')
+                p.scatter(x='lon', y='lat', source=data_source,
+                          line_width=2, size=6, line_color=config['mission_setpoint_color'],
+                          fill_color=None, legend_label='Position Setpoints')
             except:
                 pass
 
@@ -452,8 +447,8 @@ class DataPlot:
 
             if y_start is not None:
                 # make sure y axis starts at y_start. We do it by adding an invisible circle
-                self._p.circle(x=int(self._cur_dataset.data['timestamp'][0]),
-                               y=y_start, size=0, alpha=0)
+                self._p.scatter(x=int(self._cur_dataset.data['timestamp'][0]),
+                                y=y_start, size=0, alpha=0)
 
         except (KeyError, IndexError, ValueError) as error:
             if debug_verbose_output():
@@ -596,9 +591,9 @@ class DataPlot:
             data_source = ColumnDataSource(data=data_set)
 
             for field_name, color, legend in zip(field_names_expanded, colors, legends):
-                p.circle(x='timestamp', y=field_name, source=data_source,
-                         legend_label=legend, line_width=2, size=4, line_color=color,
-                         fill_color=None)
+                p.scatter(x='timestamp', y=field_name, source=data_source,
+                          legend_label=legend, line_width=2, size=4, line_color=color,
+                          fill_color=None)
 
         except (KeyError, IndexError, ValueError) as error:
             if debug_verbose_output():
@@ -651,6 +646,7 @@ class DataPlot:
         for color, limit in zip(colors, limits):
             self._p.add_layout(BoxAnnotation(
                 bottom=bottom, top=limit, fill_alpha=0.09, line_alpha=1,
+                movable='none', resizable='none',
                 fill_color=color, line_width=0))
             bottom = limit
 

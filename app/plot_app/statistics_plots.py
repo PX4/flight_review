@@ -1,6 +1,4 @@
 """ Class for statistics plots page """
-import sqlite3
-import datetime
 from dateutil.relativedelta import relativedelta
 
 import numpy as np
@@ -9,12 +7,12 @@ from bokeh.plotting import figure
 from bokeh.palettes import viridis # alternatives: magma, inferno
 from bokeh.models import (
     DatetimeTickFormatter,
-    HoverTool, ColumnDataSource, LabelSet
+    HoverTool, ColumnDataSource
     )
 
 from plotting import TOOLS, ACTIVE_SCROLL_TOOLS
-from config import get_db_filename
-from helper import get_airframe_data, flight_modes_table, get_sw_releases
+from config import get_db_connection
+from helper import get_airframe_data, flight_modes_table
 
 
 #pylint: disable=invalid-name,consider-using-dict-items
@@ -48,10 +46,24 @@ class _Log:
         self.hardware = db_tuple[5]
         self.uuid = db_tuple[11]
         # the version has typically the form 'v<i>.<j>.<k> <l>', where <l>
-        # indicates whether it's a development version (most of the time it's 0)
+        # is the firmware release type enum (0=dev, 64=alpha, 128=beta, 192=rc, 255=release)
         version = db_tuple[10].split(' ')
         self.sw_version = version[0]
-        self.is_release = len(version) > 1 and version[1] == '255'
+        release_type_suffix = {64: '-alpha', 128: '-beta', 192: '-rc', 255: ''}
+        if len(version) > 1:
+            try:
+                rtype = int(version[1])
+                suffix = release_type_suffix.get(rtype)
+                if suffix is not None:
+                    self.sw_version += suffix
+                else:
+                    # type 0 or unknown — untagged dev build, keep bare version
+                    pass
+                self.is_release = rtype == 255
+            except ValueError:
+                self.is_release = False
+        else:
+            self.is_release = False
 
         self.flight_mode_durations = \
             [tuple(map(int, x.split(':'))) for x in db_tuple[12].split(',') if len(x) > 0]
@@ -75,8 +87,8 @@ class StatisticsPlots:
         self._public_logs = []
 
         # read from the DB
-        con = sqlite3.connect(get_db_filename(), detect_types=sqlite3.PARSE_DECLTYPES)
-        with con:
+        con = get_db_connection()
+        try:
             cur = con.cursor()
 
             cur.execute("select count(Id) from Logs")
@@ -167,6 +179,8 @@ order by new_date
                 self._num_flight_hours_total += log.duration
 
             self._num_flight_hours_total /= 3600
+        finally:
+            con.close()
 
 
     def get_data_for_plotting(self, groups_value_getter, empty_value=0,
@@ -241,44 +255,6 @@ order by new_date
             plot_dates(p, self._private_log_dates_intervals, last_date, 'Private', colors[2])
             plot_dates(p, self._public_log_dates_intervals, last_date, 'Public', colors[4])
 
-
-        # show the release versions as text markers
-        release_dict = {'dates': [], 'tags': [], 'y': [], 'y_offset': []}
-        max_logs_dates = self._public_log_dates_intervals # defines range limits of the plot
-        if len(max_logs_dates) > 0:
-            first_date = max_logs_dates[0][0]
-            y_max = max(sum(x[1] for x in max_logs_dates),
-                        sum(x[1] for x in self._private_log_dates_intervals))
-            y_pos = -y_max*0.08
-
-            releases = get_sw_releases()
-            if releases:
-                y_offset = True
-                for release in reversed(releases):
-                    tag = release['tag_name']
-                    release_date_str = release['published_at']
-                    release_date = datetime.datetime.strptime(release_date_str,
-                                                              "%Y-%m-%dT%H:%M:%SZ")
-                    if release_date > first_date and not 'rc' in tag.lower() \
-                        and not 'beta' in tag.lower():
-                        release_dict['dates'].append(release_date)
-                        release_dict['tags'].append(tag)
-                        release_dict['y'].append(y_pos)
-                        if y_offset:
-                            release_dict['y_offset'].append(5)
-                        else:
-                            release_dict['y_offset'].append(-18)
-                        y_offset = not y_offset
-
-            if len(release_dict['dates']) > 0:
-                source = ColumnDataSource(data=release_dict)
-                x = p.scatter(x='dates', y='y', size=4, source=source, color='#000000')
-                labels = LabelSet(x='dates', y='y',
-                                  text='tags', level='glyph',
-                                  x_offset=2, y_offset='y_offset', source=source,
-                                  text_font_size="10pt")
-                p.add_layout(labels)
-
         self._setup_plot(p, 'large')
 
         return p
@@ -328,8 +304,10 @@ order by new_date
                 return f'Unknown ({flight_mode})'
 
         dates, groups = self.get_data_for_plotting(
-            lambda log: [(str(mode), duration/3600)
-                         for mode, duration in log.flight_mode_durations])
+            # Filter out invalid durations
+            lambda log: [(str(mode), duration / 3600)
+                         for mode, duration in log.flight_mode_durations
+                         if duration < 7 * 24 * 3600])
         # Cumulative
         for group in groups:
             groups[group] = np.cumsum(groups[group])
@@ -371,7 +349,7 @@ order by new_date
         """
 
         dates, groups = self.get_data_for_plotting(
-            lambda log: [('Not a Release' if not log.is_release else log.sw_version, 1)])
+            lambda log: [(log.sw_version, 1)])
         # Cumulative
         for group in groups:
             groups[group] = np.cumsum(groups[group])
@@ -467,10 +445,10 @@ order by new_date
         """ apply layout options to a bokeh plot """
 
         p.xaxis.formatter = DatetimeTickFormatter(
-            hours=["%d %b %Y %H:%M"],
-            days=["%d %b %Y"],
-            months=["%d %b %Y"],
-            years=["%d %b %Y"],
+            hours="%d %b %Y %H:%M",
+            days="%d %b %Y",
+            months="%d %b %Y",
+            years="%d %b %Y",
         )
 
         plots_width = self._config['plot_width']

@@ -8,7 +8,6 @@ from html import escape
 import sys
 import uuid
 import shutil
-import sqlite3
 import tornado.web
 
 from pyulog.ulog2kml import convert_ulog2kml
@@ -18,7 +17,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../pl
 from helper import get_log_filename, validate_log_id, \
     flight_modes_table, load_ulog_file, get_default_parameters
 
-from config import get_db_filename, get_kml_filepath
+from config import get_db_connection, get_kml_filepath
 
 #pylint: disable=relative-beyond-top-level
 from .common import CustomHTTPError, TornadoRequestHandlerBase
@@ -43,8 +42,9 @@ class DownloadHandler(TornadoRequestHandlerBase):
             """
             get the uploaded file name & exchange the file extension
             """
+            con = None
             try:
-                con = sqlite3.connect(get_db_filename(), detect_types=sqlite3.PARSE_DECLTYPES)
+                con = get_db_connection()
                 cur = con.cursor()
                 cur.execute('select OriginalFilename '
                             'from Logs where Id = ?', [log_id])
@@ -54,10 +54,11 @@ class DownloadHandler(TornadoRequestHandlerBase):
                     if original_file_name[-4:].lower() == '.ulg':
                         original_file_name = original_file_name[:-4]
                     return original_file_name + new_file_suffix
-                cur.close()
-                con.close()
             except:
                 print("DB access failed:", sys.exc_info()[0], sys.exc_info()[1])
+            finally:
+                if con is not None:
+                    con.close()
             return default_value
 
         if download_type == '1': # download the parameters

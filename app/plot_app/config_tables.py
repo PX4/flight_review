@@ -5,6 +5,7 @@
 flight_modes_table = {
     0: ('Manual', '#cc0000'), # red
     1: ('Altitude', '#eecc00'), # yellow
+    8: ('Altitude Cruise', '#eecc00'), # yellow
     2: ('Position', '#00cc33'), # green
     6: ('Position (Slow)', '#00cc33'), # green
     10: ('Acro', '#66cc00'), # olive
@@ -23,6 +24,15 @@ flight_modes_table = {
     20: ('Precision Land', '#6600cc'), # purple
     21: ('Orbit', '#6600cc'), # purple
     22: ('VTOL Takeoff', '#6600cc'), # purple
+
+    23: ('External 1', '#9700cc'), # violett
+    24: ('External 2', '#9700cc'), # violett
+    25: ('External 3', '#9700cc'), # violett
+    26: ('External 4', '#9700cc'), # violett
+    27: ('External 5', '#9700cc'), # violett
+    28: ('External 6', '#9700cc'), # violett
+    29: ('External 7', '#9700cc'), # violett
+    30: ('External 8', '#9700cc'), # violett
     }
 
 vtol_modes_table = {

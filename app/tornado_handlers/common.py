@@ -13,7 +13,7 @@ import tornado.web
 # this is needed for the following imports
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../plot_app'))
 from db_entry import DBDataGenerated
-from config import get_db_filename
+from config import get_db_connection
 
 #pylint: disable=abstract-method
 
@@ -64,7 +64,7 @@ def generate_db_data_from_log_file(log_id, db_connection=None):
 
     need_closing = False
     if db_connection is None:
-        db_connection = sqlite3.connect(get_db_filename())
+        db_connection = get_db_connection()
         need_closing = True
 
     db_cursor = db_connection.cursor()
