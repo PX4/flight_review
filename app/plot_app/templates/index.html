@@ -30,11 +30,22 @@
       var waypoint_bounds = [];
 
       var mymap = L.map('mapid').setView([pos_datas[0][0], pos_datas[0][1]],15);
-      L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
-          attribution: 'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-          id: 'mapbox.satellite',
-          accessToken: '{{ mapbox_api_access_token }}'
-      }).addTo(mymap);
+      var mapboxToken = '{{ mapbox_api_access_token }}'.trim();
+      if (mapboxToken.length > 0) {
+        L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+            attribution: 'Imagery © <a href="https://www.mapbox.com/">Mapbox</a> | Data © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            id: 'mapbox/satellite-v9',
+            tileSize: 512,
+            zoomOffset: -1,
+            maxZoom: 20,
+            accessToken: mapboxToken
+        }).addTo(mymap);
+      } else {
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: 'Data © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19
+        }).addTo(mymap);
+      }
 
       for(var j=0; j<pos_flight_modes.length - 1; j++) {
         var offset = -1;
