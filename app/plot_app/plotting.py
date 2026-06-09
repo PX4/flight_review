@@ -945,9 +945,9 @@ class DataPlotFFT(DataPlot):
             data_set[timestamp_key] = self._cur_dataset.data[timestamp_key]
             data_len = len(data_set[timestamp_key])
 
-            # calculate the sampling frequency
-            # (Note: logging dropouts are not taken into account here)
-            delta_t = ((data_set[timestamp_key][-1] - data_set[timestamp_key][0]) * 1.0e-6) / data_len
+            # calculate the sampling frequency using the median inter-sample interval
+            # to avoid bias from logging dropouts
+            delta_t = np.median(np.diff(data_set[timestamp_key])) * 1.0e-6
             sampling_frequency = 1.0 / delta_t
 
             if sampling_frequency < 100 or sampling_frequency == float("inf"): # require min sampling freq
