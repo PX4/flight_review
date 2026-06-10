@@ -245,7 +245,7 @@ class Trace:
         pad = 1024 - (len(traces[0]) % 1024)  # padding to power of 2, increases transform speed
         traces = np.pad(traces, [[0, 0], [0, pad]], mode='constant')
         trspec = np.fft.rfft(traces, axis=-1, norm='ortho')
-        trfreq = np.fft.rfftfreq(len(traces[0]), time[1] - time[0])
+        trfreq = np.fft.rfftfreq(len(traces[0]), np.median(np.diff(time)))
         return trfreq, trspec
 
     def stackfilter(self, time, trace_ref, trace_filt, window):
