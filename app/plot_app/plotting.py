@@ -828,9 +828,11 @@ class DataPlotSpec(DataPlot):
 
             data_set[timestamp_key] = self._cur_dataset.data[timestamp_key]
 
-            # calculate the sampling frequency
-            # (Note: logging dropouts are not taken into account here)
-            delta_t = ((data_set[timestamp_key][-1] - data_set[timestamp_key][0]) * 1.0e-6) / len(data_set[timestamp_key])
+            # calculate the sampling frequency using the median inter-sample interval
+            # to avoid bias from logging dropouts
+            dt_diff = np.diff(data_set[timestamp_key])
+            delta_t = np.median(dt_diff) * 1.0e-6
+            mean_delta_t = np.mean(dt_diff) * 1.0e-6
             if delta_t < 0.000001: # avoid division by zero
                 self._had_error = True
                 return
@@ -858,7 +860,8 @@ class DataPlotSpec(DataPlot):
 
             # offset = int(((1024/2.0)/250.0)*1e6)
             # scale time to microseconds and add start time as offset
-            time = time * 1.0e6 + self._cur_dataset.data[timestamp_key][0]
+            # stretch by mean/median to realign with actual elapsed time after dropout correction
+            time = time * (mean_delta_t / delta_t) * 1.0e6 + self._cur_dataset.data[timestamp_key][0]
 
             inner_image = 10 * np.log10(sum_psd)
             # Bokeh/JSON can't handle -inf.
@@ -945,9 +948,9 @@ class DataPlotFFT(DataPlot):
             data_set[timestamp_key] = self._cur_dataset.data[timestamp_key]
             data_len = len(data_set[timestamp_key])
 
-            # calculate the sampling frequency
-            # (Note: logging dropouts are not taken into account here)
-            delta_t = ((data_set[timestamp_key][-1] - data_set[timestamp_key][0]) * 1.0e-6) / data_len
+            # calculate the sampling frequency using the median inter-sample interval
+            # to avoid bias from logging dropouts
+            delta_t = np.median(np.diff(data_set[timestamp_key])) * 1.0e-6
             sampling_frequency = 1.0 / delta_t
 
             if sampling_frequency < 100 or sampling_frequency == float("inf"): # require min sampling freq
