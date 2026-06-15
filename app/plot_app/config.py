@@ -40,6 +40,7 @@ __MAPBOX_API_ACCESS_TOKEN = _conf.get('general', 'mapbox_api_access_token')
 __CESIUM_API_KEY = _conf.get('general', 'cesium_api_key')
 __CESIUM_ENABLE_BING_AERIAL = _conf.get('general', 'cesium_enable_bing_aerial')
 __LOG_CACHE_SIZE = int(_conf.get('general', 'log_cache_size'))
+__LOG_LOAD_TIMEOUT = int(_conf.get('general', 'log_load_timeout'))
 __DB_FILENAME_CUSTOM = _conf.get('general', 'db_filename')
 
 __STORAGE_PATH = _conf.get('general', 'storage_path')
@@ -170,6 +171,10 @@ def get_cesium_enable_bing_aerial():
 def get_log_cache_size():
     """ get maximum number of cached logs in RAM """
     return __LOG_CACHE_SIZE
+
+def get_log_load_timeout():
+    """ get maximum seconds to spend loading a single log (0 = disabled) """
+    return __LOG_LOAD_TIMEOUT
 
 def debug_print_timing():
     """ print timing information? """
