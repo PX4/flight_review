@@ -4,9 +4,12 @@ from timeit import default_timer as timer
 import time
 import re
 import os
+import signal
+import threading
 import traceback
 import sys
 from functools import lru_cache
+from contextlib import contextmanager
 from urllib.request import urlretrieve
 import xml.etree.ElementTree # airframe parsing
 import shutil
@@ -19,7 +22,7 @@ from scipy.interpolate import interp1d
 from config_tables import *
 from config import get_log_filepath, get_airframes_filename, get_airframes_url, \
                    get_parameters_filename, get_parameters_url, \
-                   get_log_cache_size, debug_print_timing, \
+                   get_log_cache_size, get_log_load_timeout, debug_print_timing, \
                    get_releases_filename
 
 from Crypto.Cipher import ChaCha20
@@ -290,6 +293,43 @@ class ULogException(Exception):
     """
     pass
 
+
+class ULogTimeoutException(ULogException):
+    """
+    Exception to indicate that loading a log took longer than the configured
+    timeout. This usually means the storage backend (e.g. an S3 FUSE/NFS mount)
+    stalled on a read. It is a subclass of ULogException so existing handlers
+    treat it as a (transient) load error.
+    """
+    pass
+
+
+@contextmanager
+def _log_load_timeout(seconds, file_name):
+    """ abort the wrapped block after `seconds` using SIGALRM.
+
+    A stalled read on a network/FUSE filesystem blocks in a C-level syscall, so
+    a thread-based timeout cannot interrupt it; SIGALRM can. SIGALRM is only
+    deliverable on the main thread, so if we are not on the main thread (e.g.
+    called from a thread-pool executor) the timeout silently no-ops and the
+    block runs without a deadline. A value of 0 also disables the timeout.
+    """
+    if seconds <= 0 or threading.current_thread() is not threading.main_thread():
+        yield
+        return
+
+    def _handler(signum, frame):
+        raise ULogTimeoutException(
+            "Loading log %s timed out after %d s" % (file_name, seconds))
+
+    previous = signal.signal(signal.SIGALRM, _handler)
+    signal.alarm(seconds)
+    try:
+        yield
+    finally:
+        signal.alarm(0)
+        signal.signal(signal.SIGALRM, previous)
+
 @lru_cache(maxsize=get_log_cache_size())
 def load_ulog_file(file_name):
     """ load an ULog file
@@ -319,9 +359,16 @@ def load_ulog_file(file_name):
                   'vehicle_thrust_setpoint', 'vehicle_torque_setpoint',
                   'failsafe_flags']
     try:
-        ulog = ULog(file_name, msg_filter, disable_str_exceptions=True)
+        with _log_load_timeout(get_log_load_timeout(), file_name):
+            ulog = ULog(file_name, msg_filter, disable_str_exceptions=True)
     except FileNotFoundError:
         print("Error: file %s not found" % file_name)
+        raise
+    except ULogTimeoutException:
+        # storage backend stalled - surface as-is (a ULogException subclass) so
+        # the worker recovers instead of hanging. Not cached (lru_cache only
+        # stores successful returns).
+        print("Error: loading file %s timed out" % file_name)
         raise
 
     # catch all other exceptions and turn them into an ULogException
