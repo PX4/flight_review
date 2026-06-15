@@ -22,7 +22,8 @@ from db_entry import DBVehicleData, DBData
 from config import get_db_connection, get_http_protocol, get_domain_name, \
     email_notifications_config, get_ulge_private_key_path
 from helper import get_total_flight_time, validate_url, get_log_filename, \
-    load_ulog_file, get_airframe_name, ULogException, decrypt_ulge_payload
+    load_ulog_file, get_airframe_name, ULogException, ULogTimeoutException, \
+    decrypt_ulge_payload
 from overview_generator import generate_overview_img_from_id
 
 
@@ -329,6 +330,15 @@ class UploadHandler(TornadoRequestHandlerBase):
 
             except CustomHTTPError:
                 raise
+
+            except ULogTimeoutException as e:
+                # transient: the storage backend stalled while reading the file,
+                # not a problem with the file itself. 503 signals retryable.
+                raise CustomHTTPError(
+                    503,
+                    'The server timed out while reading your file. Your upload '
+                    'was received but could not be processed right now - please '
+                    'try uploading again in a moment.') from e
 
             except ULogException as e:
                 raise CustomHTTPError(
