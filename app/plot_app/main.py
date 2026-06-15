@@ -108,6 +108,10 @@ else:
         px4_ulog = PX4ULog(ulog)
         px4_ulog.add_roll_pitch_yaw()
 
+    except ULogTimeoutException:
+        error_message = ('The server timed out while reading this log - the '
+                         'storage backend may be busy. Please reload the page '
+                         'in a moment to try again.')
     except ULogException:
         error_message = ('A parsing error occured when trying to read the file - '
                          'the log is most likely corrupt.')
