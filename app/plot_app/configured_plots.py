@@ -944,16 +944,25 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
         input_data = [
             ('Health Flags (vel, pos, hgt)', estimator_status['health_flags']),
             ('Timeout Flags (vel, pos, hgt)', estimator_status['timeout_flags']),
-            ('Velocity Check Bit', (estimator_status['innovation_check_flags'])&0x1),
-            ('Horizontal Position Check Bit', (estimator_status['innovation_check_flags']>>1)&1),
-            ('Vertical Position Check Bit', (estimator_status['innovation_check_flags']>>2)&1),
-            ('Mag X, Y, Z Check Bits', (estimator_status['innovation_check_flags']>>3)&0x7),
-            ('Yaw Check Bit', (estimator_status['innovation_check_flags']>>6)&1),
-            ('Airspeed Check Bit', (estimator_status['innovation_check_flags']>>7)&1),
-            ('Synthetic Sideslip Check Bit', (estimator_status['innovation_check_flags']>>8)&1),
-            ('Height to Ground Check Bit', (estimator_status['innovation_check_flags']>>9)&1),
-            ('Optical Flow X, Y Check Bits', (estimator_status['innovation_check_flags']>>10)&0x3),
             ]
+        # innovation_check_flags was removed from estimator_status in newer PX4
+        # versions (the checks moved to *_test_ratio / pre_flt_fail_innov_*
+        # fields). Only add these rows for older logs that still have the field,
+        # so newer logs still render the health/timeout flags above instead of
+        # skipping the whole plot.
+        if 'innovation_check_flags' in estimator_status:
+            innovation_check_flags = estimator_status['innovation_check_flags']
+            input_data += [
+                ('Velocity Check Bit', (innovation_check_flags)&0x1),
+                ('Horizontal Position Check Bit', (innovation_check_flags>>1)&1),
+                ('Vertical Position Check Bit', (innovation_check_flags>>2)&1),
+                ('Mag X, Y, Z Check Bits', (innovation_check_flags>>3)&0x7),
+                ('Yaw Check Bit', (innovation_check_flags>>6)&1),
+                ('Airspeed Check Bit', (innovation_check_flags>>7)&1),
+                ('Synthetic Sideslip Check Bit', (innovation_check_flags>>8)&1),
+                ('Height to Ground Check Bit', (innovation_check_flags>>9)&1),
+                ('Optical Flow X, Y Check Bits', (innovation_check_flags>>10)&0x3),
+                ]
         # filter: show only the flags that have non-zero samples
         for cur_label, cur_data in input_data:
             if np.amax(cur_data) > 0.1:
