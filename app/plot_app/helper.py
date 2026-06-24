@@ -357,7 +357,7 @@ def load_ulog_file(file_name):
                   'ekf2_timestamps', 'manual_control_switches', 'event',
                   'vehicle_imu_status', 'actuator_motors', 'actuator_servos',
                   'vehicle_thrust_setpoint', 'vehicle_torque_setpoint',
-                  'failsafe_flags']
+                  'failsafe_flags', 'device_information']
     try:
         with _log_load_timeout(get_log_load_timeout(), file_name):
             ulog = ULog(file_name, msg_filter, disable_str_exceptions=True)
