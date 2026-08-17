@@ -388,6 +388,30 @@ def load_ulog_file(file_name):
 
     return ulog
 
+def is_valid_ulog(ulog):
+    """ check whether a loaded ULog holds actual logged data.
+    Single source of truth for the app: a file that only carries the ULog
+    header (or header + definitions, but no data messages) is not a valid log.
+    :param ulog: object returned by load_ulog_file(), or None
+    :return: bool
+    """
+    return ulog is not None and len(ulog.data_list) > 0
+
+# deliberately simple (not full RFC 5322): one '@', no whitespace, a dot in the domain
+_EMAIL_RE = re.compile(r'[^@\s]+@[^@\s]+\.[^@\s]+')
+
+def is_valid_email(email):
+    """ check whether the given string is a usable email address for
+    notifications. Single source of truth for the app.
+    :param email: str (may be empty)
+    :return: bool
+    """
+    if not isinstance(email, str):
+        return False
+    if len(email) == 0 or len(email) > 254: # RFC 5321 max address length
+        return False
+    return _EMAIL_RE.fullmatch(email) is not None
+
 class ActuatorControls:
     """
         Compatibility for actuator control topics

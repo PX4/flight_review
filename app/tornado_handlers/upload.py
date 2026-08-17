@@ -23,7 +23,7 @@ from config import get_db_connection, get_http_protocol, get_domain_name, \
     email_notifications_config, get_ulge_private_key_path
 from helper import get_total_flight_time, validate_url, get_log_filename, \
     load_ulog_file, get_airframe_name, ULogException, ULogTimeoutException, \
-    decrypt_ulge_payload
+    decrypt_ulge_payload, is_valid_email, is_valid_ulog
 from overview_generator import generate_overview_img_from_id
 
 
@@ -319,8 +319,11 @@ class UploadHandler(TornadoRequestHandlerBase):
                     # also generate the preview image
                     IOLoop.instance().add_callback(generate_overview_img_from_id, log_id)
 
-                # send notification emails
-                send_notification_email(email, full_plot_url, delete_url, info)
+                # send notification email: never for CI uploads, and only for a
+                # valid address and a log with actual data (prevents abusing the
+                # upload form as a mail relay)
+                if source != 'CI' and is_valid_email(email) and is_valid_ulog(ulog):
+                    send_notification_email(email, full_plot_url, delete_url, info)
 
                 if should_redirect:
                     self.redirect(url)
