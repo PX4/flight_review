@@ -76,9 +76,10 @@ def tailsitter_orientation(ulog, vtol_states):
     # correct angular rates for VTOL tailsitter in FW mode
     try:
         cur_dataset = ulog.get_dataset('vehicle_angular_velocity')
-        w_r = cur_dataset.data['xyz[0]']
-        w_p = cur_dataset.data['xyz[1]']
-        w_y = cur_dataset.data['xyz[2]']
+        # copy to avoid mutating the cached ULog dataset across page reloads
+        w_r = np.copy(cur_dataset.data['xyz[0]'])
+        w_p = np.copy(cur_dataset.data['xyz[1]'])
+        w_y = np.copy(cur_dataset.data['xyz[2]'])
         w_t = cur_dataset.data['timestamp']
 
         # fw rates and setpoints(roll and yaw swap, roll is negative axis)
@@ -118,9 +119,10 @@ def tailsitter_orientation(ulog, vtol_states):
     try:
 
         setp_dataset = ulog.get_dataset('vehicle_rates_setpoint')
-        setp_r = setp_dataset.data['roll']
-        setp_p = setp_dataset.data['pitch']
-        setp_y = setp_dataset.data['yaw']
+        # copy to avoid mutating the cached ULog dataset across page reloads
+        setp_r = np.copy(setp_dataset.data['roll'])
+        setp_p = np.copy(setp_dataset.data['pitch'])
+        setp_y = np.copy(setp_dataset.data['yaw'])
         w_t = setp_dataset.data['timestamp']
 
         # fw setpoints(roll and yaw swap, roll is negative axis)
