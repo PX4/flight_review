@@ -130,6 +130,11 @@ in `app/tornado_handlers/`.
 application can subscribe to. A topic must live in this list in order to be
 plotted.
 
+A log can optionally carry annotations: YAML files uploaded alongside it that
+mark intervals of the flight, shown in a table and drawn onto the plots they
+name. See [docs/annotations.md](docs/annotations.md) for the file format and the
+design.
+
 Tornado uses a single-threaded event loop. This means all operations should be
 non-blocking (see also http://www.tornadoweb.org/en/stable/guide/async.html).
 (This is currently not the case for sending emails).

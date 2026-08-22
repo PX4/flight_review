@@ -25,6 +25,7 @@ from helper import get_total_flight_time, validate_url, get_log_filename, \
     load_ulog_file, get_airframe_name, ULogException, ULogTimeoutException, \
     decrypt_ulge_payload, is_valid_email, is_valid_ulog
 from overview_generator import generate_overview_img_from_id
+import annotations
 
 
 #pylint: disable=relative-beyond-top-level
@@ -181,6 +182,14 @@ class UploadHandler(TornadoRequestHandlerBase):
                         if form_data['public'].decode("utf-8") == 'true':
                             is_public = 1
 
+                # validated before anything is written. Read as parts: get_values() caps at 10 KB
+                try:
+                    annotations_json = annotations.from_upload(
+                        self.multipart_streamer.get_parts_by_name('annotations'))
+                except ValueError as error:
+                    raise CustomHTTPError(
+                        400, 'Invalid annotations file: {}'.format(error)) from error
+
                 file_obj = self.multipart_streamer.get_parts_by_name('filearg')[0]
                 upload_file_name = file_obj.get_filename()
 
@@ -241,12 +250,13 @@ class UploadHandler(TornadoRequestHandlerBase):
                         'insert into Logs (Id, Title, Description, '
                         'OriginalFilename, Date, AllowForAnalysis, Obfuscated, '
                         'Source, Email, WindSpeed, Rating, Feedback, Type, '
-                        'videoUrl, ErrorLabels, Public, Token) values '
-                        '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                        'videoUrl, ErrorLabels, Public, Token, Annotations) values '
+                        '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                         [log_id, title, description, upload_file_name,
                          datetime.datetime.now(), allow_for_analysis,
                          obfuscated, source, stored_email, wind_speed, rating,
-                         feedback, upload_type, video_url, error_labels, is_public, token])
+                         feedback, upload_type, video_url, error_labels, is_public, token,
+                         annotations_json])
 
                     if ulog is not None:
                         vehicle_data = update_vehicle_db_entry(cur, ulog, log_id, vehicle_name)
