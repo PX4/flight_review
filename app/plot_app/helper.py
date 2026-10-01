@@ -341,7 +341,7 @@ def load_ulog_file(file_name):
     # load only the messages we really need
     msg_filter = ['battery_status', 'distance_sensor', 'esc_status',
                   'estimator_status', 'sensor_combined', 'cpuload',
-                  'vehicle_gps_position', 'vehicle_local_position',
+                  'vehicle_gnss', 'vehicle_gps_position', 'vehicle_local_position',
                   'vehicle_local_position_setpoint',
                   'vehicle_global_position', 'actuator_controls_0',
                   'actuator_controls_1', 'actuator_outputs',
@@ -498,18 +498,56 @@ class ActuatorControls:
         return self._thrust_z_neg
 
 
-def get_lat_lon_alt_deg(ulog: ULog, vehicle_gps_position_dataset: ULog.Data):
+# COMPATIBILITY: vehicle_gps_position names of the vehicle_gnss receiver fields
+# that dropped their units
+_VEHICLE_GPS_POSITION_FIELDS = {
+    'latitude': 'latitude_deg',
+    'longitude': 'longitude_deg',
+    'altitude_msl': 'altitude_msl_m',
+    'altitude_ellipsoid': 'altitude_ellipsoid_m',
+    'speed_accuracy': 's_variance_m_s',
+    'course_accuracy': 'c_variance_rad',
+    'noise': 'noise_per_ms',
+    'ground_speed': 'vel_m_s',
+    'vel_north': 'vel_n_m_s',
+    'vel_east': 'vel_e_m_s',
+    'vel_down': 'vel_d_m_s',
+    'course': 'cog_rad',
+}
+
+
+class GnssTopic:
+    """
+    Topic with the selected GNSS receiver's data: vehicle_gnss, which nests the
+    receiver's sample under 'receiver.', or vehicle_gps_position in older logs.
+    """
+
+    def __init__(self, ulog):
+        if any(elem.name == 'vehicle_gps_position' for elem in ulog.data_list):
+            self.name = 'vehicle_gps_position'
+        else:
+            self.name = 'vehicle_gnss'
+
+    def field(self, name):
+        """ name in the log of the vehicle_gnss receiver field `name` """
+        if self.name == 'vehicle_gps_position':
+            return _VEHICLE_GPS_POSITION_FIELDS.get(name, name)
+        return 'receiver.' + name
+
+
+def get_lat_lon_alt_deg(ulog: ULog, gnss_dataset: ULog.Data):
     """
     Get (lat, lon, alt) tuple in degrees and altitude in meters
     """
     if ulog.msg_info_dict.get('ver_data_format', 0) >= 2:
-        lat = vehicle_gps_position_dataset.data['latitude_deg']
-        lon = vehicle_gps_position_dataset.data['longitude_deg']
-        alt = vehicle_gps_position_dataset.data['altitude_msl_m']
+        gnss = GnssTopic(ulog)
+        lat = gnss_dataset.data[gnss.field('latitude')]
+        lon = gnss_dataset.data[gnss.field('longitude')]
+        alt = gnss_dataset.data[gnss.field('altitude_msl')]
     else: # COMPATIBILITY
-        lat = vehicle_gps_position_dataset.data['lat'] / 1e7
-        lon = vehicle_gps_position_dataset.data['lon'] / 1e7
-        alt = vehicle_gps_position_dataset.data['alt'] / 1e3
+        lat = gnss_dataset.data['lat'] / 1e7
+        lon = gnss_dataset.data['lon'] / 1e7
+        alt = gnss_dataset.data['alt'] / 1e3
     return lat, lon, alt
 
 
