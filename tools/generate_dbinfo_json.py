@@ -28,7 +28,17 @@ import tempfile
 import urllib.request
 import xml.etree.ElementTree
 
+# The app's own lookup tables, so consumers of the stats file decode fields
+# exactly as Flight Review does. config_tables has no dependencies.
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                             '..', 'app', 'plot_app'))
+from config_tables import flight_modes_table  # pylint: disable=wrong-import-position
+
 AIRFRAMES_URL = 'https://px4-travis.s3.amazonaws.com/Firmware/master/_general/airframes.xml'
+
+# Firmware type byte in ver_sw_release ('v1.17.0 255'), as defined by pyulog's
+# get_version_info: a value maps to the highest key that is <= it.
+RELEASE_TYPES = {0: 'dev', 64: 'alpha', 128: 'beta', 192: 'rc', 255: 'release'}
 
 
 def download_airframes_xml():
@@ -189,6 +199,10 @@ def generate_stats(db_path):
         'totals': totals,
         'daily': daily,
         'daily_by_source': daily_by_source,
+        # Legends for decoding dbinfo.json entries
+        'flight_modes': {str(mode): name for mode, (name, _color)
+                         in sorted(flight_modes_table.items())},
+        'release_types': {str(value): name for value, name in RELEASE_TYPES.items()},
     }
 
 
