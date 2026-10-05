@@ -19,7 +19,8 @@ from bokeh.plotting import figure
 from config import debug_verbose_output
 from downsampling import DynamicDownsample
 from helper import (
-    map_projection, WGS84_to_mercator, flight_modes_table, vtol_modes_table, get_lat_lon_alt_deg
+    map_projection, WGS84_to_mercator, flight_modes_table, vtol_modes_table, get_lat_lon_alt_deg,
+    GnssTopic
 )
 
 TOOLS = "pan,wheel_zoom,box_zoom,reset,save"
@@ -250,10 +251,11 @@ def plot_map(ulog, config, map_type='plain', api_key=None, setpoints=False,
     :return: bokeh plot object
     """
 
+    gnss = GnssTopic(ulog)
     try:
-        cur_dataset = ulog.get_dataset('vehicle_gps_position')
+        cur_dataset = ulog.get_dataset(gnss.name)
         t = cur_dataset.data['timestamp']
-        indices = cur_dataset.data['fix_type'] > 2 # use only data with a fix
+        indices = cur_dataset.data[gnss.field('fix_type')] > 2 # use only data with a fix
         t = t[indices]
         lat, lon, _ = get_lat_lon_alt_deg(ulog, cur_dataset)
 
@@ -397,7 +399,7 @@ def plot_map(ulog, config, map_type='plain', api_key=None, setpoints=False,
     except (KeyError, IndexError, ValueError) as error:
         # log does not contain the value we are looking for
         if debug_verbose_output():
-            print(type(error), "(vehicle_gps_position):", error)
+            print(type(error), "("+gnss.name+"):", error)
         return None
     p.toolbar.logo = None
     # make it possible to hide graphs by clicking on the label
