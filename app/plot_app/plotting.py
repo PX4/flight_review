@@ -55,34 +55,31 @@ def add_virtual_fifo_topic_data(ulog, topic_name, instance=0):
     """ adds a virtual topic by expanding the FIFO samples array into individual
         samples, so it can be used for normal plotting.
         new topic name: topic_name+'_virtual'
-        :return: True if topic data was added
+        :return: True if topic data was added (or already exists)
     """
+    virtual_name = topic_name+'_virtual'
+    if any(d.name == virtual_name and d.multi_id == instance for d in ulog.data_list):
+        return True
     try:
         cur_dataset = copy.deepcopy(ulog.get_dataset(topic_name, instance))
-        cur_dataset.name = topic_name+'_virtual'
+        cur_dataset.name = virtual_name
         t = cur_dataset.data['timestamp_sample']
-        dt = cur_dataset.data['dt']
-        samples = cur_dataset.data['samples']
-        scale = cur_dataset.data['scale']
-        total_samples = 0
-        for i in range(len(t)):
-            total_samples += int(samples[i])
-        t_new = np.zeros(total_samples, t.dtype)
-        xyz_new = [np.zeros(total_samples, np.float64) for i in range(3)]
-        sample = 0
-        # TODO: this could be faster...
-        for i, _ in enumerate(t):
-            for s in range(samples[i]):
-                t_new[sample+s] = t[i]-(samples[i]-s-1)*dt[i]
-                for j, axis in enumerate(['x', 'y', 'z']):
-                    data_point = cur_dataset.data[axis+'['+str(s)+']'][i] * scale[i]
-                    xyz_new[j][sample+s] = data_point
-            sample += int(samples[i])
+        dt = cur_dataset.data['dt'].astype(np.float64)
+        samples = cur_dataset.data['samples'].astype(np.int64)
+        scale = cur_dataset.data['scale'].astype(np.float64)
+        max_samples = int(np.max(samples))
+        # [message, sample] index of all valid samples, in time order
+        sample_index = np.arange(max_samples)
+        valid = sample_index[np.newaxis, :] < samples[:, np.newaxis]
+        t_new = (t[:, np.newaxis].astype(np.float64)
+                 - (samples[:, np.newaxis] - sample_index[np.newaxis, :] - 1)
+                 * dt[:, np.newaxis])[valid].astype(t.dtype)
         cur_dataset.data['timestamp'] = t_new
         cur_dataset.data['timestamp_sample'] = t_new
-        cur_dataset.data['x'] = xyz_new[0]
-        cur_dataset.data['y'] = xyz_new[1]
-        cur_dataset.data['z'] = xyz_new[2]
+        for axis in ['x', 'y', 'z']:
+            raw = np.stack([cur_dataset.data[axis+'['+str(s)+']'] for s in range(max_samples)],
+                           axis=1).astype(np.float64)
+            cur_dataset.data[axis] = (raw * scale[:, np.newaxis])[valid]
         ulog.data_list.append(cur_dataset)
         return True
     except (KeyError, IndexError, ValueError) as error:
@@ -467,6 +464,11 @@ class DataPlot:
     @property
     def bokeh_plot(self):
         """ return the bokeh plot """
+        return self._p
+
+    @property
+    def layout(self):
+        """ return the bokeh layout to show (the plot, with widgets if any) """
         return self._p
 
     @property
