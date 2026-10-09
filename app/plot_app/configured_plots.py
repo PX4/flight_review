@@ -9,6 +9,10 @@ from bokeh.models.widgets import Button
 from bokeh.io import curdoc
 
 from config import *
+from gyro_filter_analysis import (
+    DataPlotGyroSpectrogram, get_gyro_filter_plots, gyro_filter_raw_dataset,
+    prepare_gyro_filter_analysis
+    )
 from helper import *
 from leaflet import ulog_to_polyline
 from plotting import *
@@ -183,6 +187,9 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
 
     x_range_offset = (ulog.last_timestamp - ulog.start_timestamp) * 0.05
     x_range = Range1d(ulog.start_timestamp - x_range_offset, ulog.last_timestamp + x_range_offset)
+
+    # gyro filter: notch filter tracking, and the gyro data before filtering
+    gyro_filter_config, gyro_filter_raw = prepare_gyro_filter_analysis(ulog)
 
     # Altitude estimate
     data_plot = DataPlot(data, plot_config, 'vehicle_gps_position',
@@ -535,9 +542,17 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
                 data_plot.mark_frequency(
                     ulog.initial_parameters['IMU_GYRO_NF_FREQ'],
                     'IMU_GYRO_NF_FREQ', 70)
+        for i, name in enumerate(['IMU_GYRO_NF0_FRQ', 'IMU_GYRO_NF1_FRQ']):
+            if ulog.initial_parameters.get(name, 0) > 0:
+                data_plot.mark_frequency(ulog.initial_parameters[name], name, 70 + 15 * i)
 
     if data_plot.finalize() is not None: plots.append(data_plot)
 
+    # gyro filter tuning: noise before vs after filtering with the notch filters,
+    # filter delay, spectrogram and noise over throttle
+    for data_plot in get_gyro_filter_plots(ulog, plot_config, gyro_filter_config,
+                                           gyro_filter_raw):
+        if data_plot.finalize() is not None: plots.append(data_plot)
 
     # angular_acceleration FFT (for filter & output noise analysis)
     data_plot = DataPlotFFT(data, plot_config, 'vehicle_angular_acceleration',
@@ -698,13 +713,11 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
-    # Filtered Gyro (angular velocity) Spectrogram
-    data_plot = DataPlotSpec(data, plot_config, 'vehicle_angular_velocity',
-                             y_axis_label='[Hz]', title='Angular velocity Power Spectral Density',
-                             plot_height='small', x_range=x_range)
-    data_plot.add_graph(['xyz[0]', 'xyz[1]', 'xyz[2]'],
-                        ['rollspeed', 'pitchspeed', 'yawspeed'])
-
+    # Filtered Gyro (angular velocity) Spectrogram, with buttons to show the gyro
+    # before filtering and the notch filters
+    data_plot = DataPlotGyroSpectrogram(data, plot_config, x_range,
+                                        'Angular velocity Power Spectral Density')
+    data_plot.add_graphs(*gyro_filter_raw_dataset(ulog, gyro_filter_raw), gyro_filter_config)
     if data_plot.finalize() is not None: plots.append(data_plot)
 
 
@@ -776,7 +789,6 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
                                  y_axis_label='[deg/s]', title=f'Raw Gyro (FIFO, IMU{instance})',
                                  plot_height='small', changed_params=changed_params,
                                  x_range=x_range, topic_instance=instance)
-            data_plot.add_graph(['x', 'y', 'z'], colors3, ['X', 'Y', 'Z'])
             data_plot.add_graph([
                 lambda data: ('x', np.rad2deg(data['x'])),
                 lambda data: ('y', np.rad2deg(data['y'])),
@@ -1086,7 +1098,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
                 param_change_labels.append(plots[i].param_change_label)
 
             plot_title = plots[i].title
-            plots[i] = plots[i].bokeh_plot
+            plots[i] = plots[i].layout
 
             fragment = 'Nav-'+plot_title.replace(' ', '-') \
                 .replace('&', '_').replace('(', '').replace(')', '')
