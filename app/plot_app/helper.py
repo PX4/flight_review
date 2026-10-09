@@ -357,7 +357,7 @@ def load_ulog_file(file_name):
                   'ekf2_timestamps', 'manual_control_switches', 'event',
                   'vehicle_imu_status', 'actuator_motors', 'actuator_servos',
                   'vehicle_thrust_setpoint', 'vehicle_torque_setpoint',
-                  'failsafe_flags', 'device_information', 'gyro_filter_status',
+                  'failsafe_flags', 'device_information', 'gyro_filter_status', 'sensor_selection',
                   'sensor_gyro', 'sensor_gyro_fft', 'vehicle_land_detected']
     try:
         with _log_load_timeout(get_log_load_timeout(), file_name):

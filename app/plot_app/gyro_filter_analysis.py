@@ -174,10 +174,10 @@ def _get_logged_filter_config(ulog):
     d = status.data
     t = _timestamps(status)
 
+    params = ulog.initial_parameters
     tracks = []
     num_escs = 12
-    esc_bandwidth = float(np.max(d['esc_rpm_notch_bandwidth_hz']))
-    for harmonic in range(int(np.max(d['esc_rpm_notch_harmonics']))):
+    for harmonic in range(7):
         segments = []
         names = []
         for esc in range(num_escs):
@@ -187,9 +187,8 @@ def _get_logged_filter_config(ulog):
                 names.append(f'Motor {esc + 1}')
         if len(segments) > 0:
             tracks.append(NotchTrack(f'RPM Notch {harmonic + 1}', 'esc', harmonic, segments,
-                                     esc_bandwidth, names))
+                                     float(params.get('IMU_GYRO_DNF_BW', 15.)), names))
 
-    fft_bandwidth = float(np.max(d['fft_notch_bandwidth_hz']))
     for peak in range(3):
         segments = []
         for axis_index, axis in enumerate(AXES):
@@ -198,19 +197,49 @@ def _get_logged_filter_config(ulog):
                 segments.append((t, _nan_disabled(frequencies), axis_index))
         if len(segments) > 0:
             tracks.append(NotchTrack(f'FFT Notch {peak + 1}', 'fft', peak, segments,
-                                     fft_bandwidth))
+                                     _fft_notch_bandwidth(ulog)))
 
+    return _filter_config(ulog, tracks, False)
+
+
+def _fft_notch_bandwidth(ulog):
+    """ FFT notch bandwidth: PX4 uses the FFT resolution, limited to [8, 30] Hz """
+    sensor_gyro_fft = _get_dataset(ulog, 'sensor_gyro_fft')
+    if sensor_gyro_fft is None:
+        return 0.
+    return float(np.clip(np.median(sensor_gyro_fft.data['resolution_hz']), 8., 30.))
+
+
+def _selected_gyro(ulog):
+    """ :return: (device id, raw sample rate [Hz]) of the gyro used for
+    vehicle_angular_velocity, the rate the filters run at (0 / NaN if unknown) """
+    sensor_selection = _get_dataset(ulog, 'sensor_selection')
+    device_id = int(sensor_selection.data['gyro_device_id'][-1]) \
+        if sensor_selection is not None else 0
+    for dataset in ulog.data_list:
+        if dataset.name == 'vehicle_imu_status' and \
+                int(dataset.data['gyro_device_id'][-1]) == device_id:
+            rates = dataset.data['gyro_raw_rate_hz']
+            rates = rates[rates > 0]
+            if len(rates) > 0:
+                return device_id, float(np.median(rates))
+    return device_id, np.nan
+
+
+def _filter_config(ulog, tracks, reconstructed):
+    """ GyroFilterConfig with the given notch tracks and the static filters
+    from the parameters """
+    params = ulog.initial_parameters
     static_notches = []
     for i in range(2):
-        frequency = float(np.median(d[f'static_notch_hz[{i}]']))
-        bandwidth = float(np.median(d[f'static_notch_bandwidth_hz[{i}]']))
-        if frequency > 0:
+        frequency = float(params.get(f'IMU_GYRO_NF{i}_FRQ', 0.))
+        bandwidth = float(params.get(f'IMU_GYRO_NF{i}_BW', 0.))
+        if frequency > 0 and bandwidth > 0:
             static_notches.append((f'Static Notch {i + 1}', frequency, bandwidth))
-
-    return GyroFilterConfig(tracks, static_notches, float(np.median(d['lowpass_cutoff_hz'])),
-                            float(ulog.initial_parameters.get('IMU_DGYRO_CUTOFF', 0.)),
-                            float(np.median(d['sample_rate_hz'])), int(d['device_id'][-1]),
-                            False)
+    device_id, sample_rate = _selected_gyro(ulog)
+    return GyroFilterConfig(tracks, static_notches, float(params.get('IMU_GYRO_CUTOFF', 0.)),
+                            float(params.get('IMU_DGYRO_CUTOFF', 0.)), sample_rate, device_id,
+                            reconstructed)
 
 
 def _get_reconstructed_filter_config(ulog):
@@ -261,7 +290,7 @@ def _get_reconstructed_filter_config(ulog):
     if sensor_gyro_fft is not None and (dnf_enable & 2) != 0:
         d = sensor_gyro_fft.data
         t = _timestamps(sensor_gyro_fft)
-        bandwidth = float(np.clip(np.median(d['resolution_hz']), 8., 30.))
+        bandwidth = _fft_notch_bandwidth(ulog)
         for peak in range(3):
             segments = []
             for axis_index, axis in enumerate(AXES):
@@ -273,15 +302,7 @@ def _get_reconstructed_filter_config(ulog):
                 tracks.append(NotchTrack(f'FFT Notch {peak + 1}', 'fft', peak, segments,
                                          bandwidth))
 
-    static_notches = []
-    for i in range(2):
-        frequency = float(params.get(f'IMU_GYRO_NF{i}_FRQ', 0.))
-        bandwidth = float(params.get(f'IMU_GYRO_NF{i}_BW', 0.))
-        if frequency > 0 and bandwidth > 0:
-            static_notches.append((f'Static Notch {i + 1}', frequency, bandwidth))
-
-    return GyroFilterConfig(tracks, static_notches, float(params.get('IMU_GYRO_CUTOFF', 0.)),
-                            float(params.get('IMU_DGYRO_CUTOFF', 0.)), np.nan, 0, True)
+    return _filter_config(ulog, tracks, True)
 
 
 def get_gyro_filter_config(ulog):
