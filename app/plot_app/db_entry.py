@@ -21,6 +21,7 @@ class DBData:
         self.video_url = ''
         self.error_labels = []
         self.source = ''
+        self.annotations = '' # stored JSON, see annotations.py
 
         super().__init__()
 

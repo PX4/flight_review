@@ -60,6 +60,7 @@ with con:
                 "ErrorLabels TEXT, " # the type of error (if any) that occurred during flight
                 "Public INT, " # if 1 this log can be publicly listed
                 "Token TEXT, " # Security token (currently used to delete the entry)
+                "Annotations TEXT, " # user-provided annotations (see plot_app/annotations.py)
                 "CONSTRAINT Id_PK PRIMARY KEY (Id))")
     else:
         # try to upgrade
@@ -91,6 +92,9 @@ with con:
         if not 'Token' in column_names:
             print('Adding column Token')
             cur.execute("ALTER TABLE Logs ADD COLUMN Token TEXT DEFAULT ''")
+        if not 'Annotations' in column_names:
+            print('Adding column Annotations')
+            cur.execute("ALTER TABLE Logs ADD COLUMN Annotations TEXT DEFAULT ''")
 
 
     # LogsGenerated table (information from the log file, for faster access)
