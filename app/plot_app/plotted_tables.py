@@ -13,7 +13,7 @@ from bokeh.models.widgets import DataTable, TableColumn, Div, HTMLTemplateFormat
 from config import plot_color_red
 from helper import (
     get_default_parameters, get_airframe_name,
-    get_total_flight_time, error_labels_table
+    get_total_flight_time, error_labels_table, GnssTopic
     )
 from events import get_logged_events
 
@@ -59,8 +59,9 @@ def get_heading_html(ulog, px4_ulog, db_data, link_to_3d_page,
     if 'sys_name' in ulog.msg_info_dict:
         sys_name = escape(ulog.msg_info_dict['sys_name']) + ' '
 
+    gnss = GnssTopic(ulog)
     if link_to_3d_page is not None and \
-        any(elem.name == 'vehicle_gps_position' for elem in ulog.data_list):
+        any(elem.name == gnss.name for elem in ulog.data_list):
         link_to_3d = ("<a class='btn btn-outline-primary' href='"+
                       link_to_3d_page+"'>Open 3D View</a>")
     else:
@@ -138,13 +139,14 @@ def get_info_table_html(ulog, px4_ulog, db_data, vehicle_data, vtol_states):
     # logging start time & date
     try:
         # get the first non-zero timestamp
-        gps_data = ulog.get_dataset('vehicle_gps_position')
-        indices = np.nonzero(gps_data.data['time_utc_usec'])
+        gnss = GnssTopic(ulog)
+        time_utc_usec = ulog.get_dataset(gnss.name).data[gnss.field('time_utc_usec')]
+        indices = np.nonzero(time_utc_usec)
         if len(indices[0]) > 0:
             # we use the timestamp from the log and then convert it with JS to
             # display with local timezone.
             # In addition we add a tooltip to show the timezone from the log
-            logging_start_time = int(gps_data.data['time_utc_usec'][indices[0][0]] / 1000000)
+            logging_start_time = int(time_utc_usec[indices[0][0]] / 1000000)
 
             utc_offset_min = ulog.initial_parameters.get('SDLOG_UTC_OFFSET', 0)
             utctimestamp = datetime.datetime.utcfromtimestamp(

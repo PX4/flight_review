@@ -41,7 +41,8 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
         magnetometer_ga_topic = 'sensor_combined'
     manual_control_sp_controls = ['roll', 'pitch', 'yaw', 'throttle']
     manual_control_sp_throttle_range = '[-1, 1]'
-    vehicle_gps_position_altitude = None
+    gnss = GnssTopic(ulog)
+    gnss_altitude = None
     for topic in data:
         if topic.name == 'system_power':
             # COMPATIBILITY: rename fields to new format
@@ -58,11 +59,11 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
             if 'throttle' not in topic.data: # old (prior to PX4-Autopilot/pull/15949)
                 manual_control_sp_controls = ['y', 'x', 'r', 'z']
                 manual_control_sp_throttle_range = '[0, 1]'
-        elif topic.name == 'vehicle_gps_position':
+        elif topic.name == gnss.name:
             if ulog.msg_info_dict.get('ver_data_format', 0) >= 2:
-                vehicle_gps_position_altitude = topic.data['altitude_msl_m']
+                gnss_altitude = topic.data[gnss.field('altitude_msl')]
             else: # COMPATIBILITY
-                vehicle_gps_position_altitude = topic.data['alt'] * 0.001
+                gnss_altitude = topic.data['alt'] * 0.001
 
     if any(elem.name == 'vehicle_angular_velocity' for elem in data):
         rate_estimated_topic_name = 'vehicle_angular_velocity'
@@ -162,7 +163,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
         if data_plot.finalize() is not None:
             plots.append(data_plot.bokeh_plot)
 
-    if any(elem.name == 'vehicle_gps_position' for elem in ulog.data_list):
+    if any(elem.name == gnss.name for elem in ulog.data_list):
         # Leaflet Map
         try:
             pos_datas, flight_modes = ulog_to_polyline(ulog, flight_mode_changes)
@@ -185,10 +186,10 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
     x_range = Range1d(ulog.start_timestamp - x_range_offset, ulog.last_timestamp + x_range_offset)
 
     # Altitude estimate
-    data_plot = DataPlot(data, plot_config, 'vehicle_gps_position',
+    data_plot = DataPlot(data, plot_config, gnss.name,
                          y_axis_label='[m]', title='Altitude Estimate',
                          changed_params=changed_params, x_range=x_range)
-    data_plot.add_graph([lambda data: ('alt', vehicle_gps_position_altitude)],
+    data_plot.add_graph([lambda data: ('alt', gnss_altitude)],
                         colors8[0:1], ['GPS Altitude (MSL)'])
     data_plot.change_dataset(baro_alt_meter_topic)
     data_plot.add_graph(['baro_alt_meter'], colors8[1:2], ['Barometer Altitude'])
@@ -419,8 +420,9 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
                 data_plot.change_dataset('airspeed')
                 data_plot.add_graph(['indicated_airspeed_m_s'], colors8[1:2],
                                     ['Indicated Airspeed'])
-            data_plot.change_dataset('vehicle_gps_position')
-            data_plot.add_graph(['vel_m_s'], colors8[2:3], ['Ground Speed (from GPS)'])
+            data_plot.change_dataset(gnss.name)
+            data_plot.add_graph([gnss.field('ground_speed')], colors8[2:3],
+                                ['Ground Speed (from GPS)'])
             data_plot.change_dataset('tecs_status')
             data_plot.add_graph(['true_airspeed_sp'], colors8[3:4], ['True Airspeed Setpoint'])
             plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
@@ -825,12 +827,12 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
     # gps uncertainty
     # the accuracy values can be really large if there is no fix, so we limit the
     # y axis range to some sane values
-    data_plot = DataPlot(data, plot_config, 'vehicle_gps_position',
+    data_plot = DataPlot(data, plot_config, gnss.name,
                          title='GPS Uncertainty', y_range=Range1d(0, 40),
                          plot_height='small', changed_params=changed_params,
                          x_range=x_range)
-    data_plot.add_graph(['eph', 'epv', 'hdop', 'vdop', 's_variance_m_s',
-                         'satellites_used', 'fix_type'], colors8,
+    data_plot.add_graph([gnss.field(f) for f in ['eph', 'epv', 'hdop', 'vdop', 'speed_accuracy',
+                                                 'satellites_used', 'fix_type']], colors8,
                          ['Horizontal position accuracy [m]',
                          'Vertical position accuracy [m]', 'Horizontal dilution of precision [m]',
                          'Vertical dilution of precision [m]', 'Speed accuracy [m/s]',
@@ -840,11 +842,11 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
 
 
     # gps noise & jamming
-    data_plot = DataPlot(data, plot_config, 'vehicle_gps_position',
+    data_plot = DataPlot(data, plot_config, gnss.name,
                          y_start=0, title='GPS Noise & Jamming',
                          plot_height='small', changed_params=changed_params,
                          x_range=x_range)
-    data_plot.add_graph(['noise_per_ms', 'jamming_indicator'], colors3[0:2],
+    data_plot.add_graph([gnss.field('noise'), gnss.field('jamming_indicator')], colors3[0:2],
                         ['Noise per ms', 'Jamming Indicator'])
     plot_flight_modes_background(data_plot, flight_mode_changes, vtol_states)
     if data_plot.finalize() is not None: plots.append(data_plot)

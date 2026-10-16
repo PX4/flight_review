@@ -5,7 +5,7 @@ from html import escape
 from pyulog import *
 from pyulog.px4 import *
 
-from helper import get_log_filename, load_ulog_file
+from helper import get_log_filename, load_ulog_file, GnssTopic
 
 #pylint: disable=missing-docstring, too-few-public-methods
 
@@ -137,10 +137,11 @@ class DBDataGenerated:
         # logging start time & date
         try:
            # get the first non-zero timestamp
-            gps_data = ulog.get_dataset('vehicle_gps_position')
-            indices = np.nonzero(gps_data.data['time_utc_usec'])
+            gnss = GnssTopic(ulog)
+            time_utc_usec = ulog.get_dataset(gnss.name).data[gnss.field('time_utc_usec')]
+            indices = np.nonzero(time_utc_usec)
             if len(indices[0]) > 0:
-                obj.start_time_utc = int(gps_data.data['time_utc_usec'][indices[0][0]] / 1000000)
+                obj.start_time_utc = int(time_utc_usec[indices[0][0]] / 1000000)
         except:
             # Ignore. Eg. if topic not found
             pass

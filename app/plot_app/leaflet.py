@@ -3,7 +3,7 @@ a Leaflet map via jinja arguments """
 
 from colors import HTML_color_to_RGB
 from config_tables import flight_modes_table
-from helper import get_lat_lon_alt_deg
+from helper import get_lat_lon_alt_deg, GnssTopic
 
 #pylint: disable=consider-using-enumerate
 
@@ -23,12 +23,13 @@ def ulog_to_polyline(ulog, flight_mode_changes):
             if rgb[i] > 255: rgb[i] = 255
 
         return "#" + "".join(map(lambda x: format(x, '02x'), rgb))
-    cur_data = ulog.get_dataset('vehicle_gps_position')
+    gnss = GnssTopic(ulog)
+    cur_data = ulog.get_dataset(gnss.name)
     pos_lat, pos_lon, _ = get_lat_lon_alt_deg(ulog, cur_data)
     pos_t = cur_data.data['timestamp']
 
-    if 'fix_type' in cur_data.data:
-        indices = cur_data.data['fix_type'] > 2  # use only data with a fix
+    if gnss.field('fix_type') in cur_data.data:
+        indices = cur_data.data[gnss.field('fix_type')] > 2  # use only data with a fix
         pos_lon = pos_lon[indices]
         pos_lat = pos_lat[indices]
         pos_t = pos_t[indices]

@@ -10,7 +10,7 @@ import smopy
 import matplotlib.pyplot as plt
 
 from config import get_log_filepath, get_overview_img_filepath
-from helper import load_ulog_file, get_lat_lon_alt_deg
+from helper import load_ulog_file, get_lat_lon_alt_deg, GnssTopic
 
 MAXTILES = 16
 def get_zoom(input_box, z=18):
@@ -40,8 +40,9 @@ def generate_overview_img(ulog, log_id):
         return
 
     try:
-        cur_dataset = ulog.get_dataset('vehicle_gps_position')
-        indices = cur_dataset.data['fix_type'] > 2 # use only data with a fix
+        gnss = GnssTopic(ulog)
+        cur_dataset = ulog.get_dataset(gnss.name)
+        indices = cur_dataset.data[gnss.field('fix_type')] > 2 # use only data with a fix
         lat, lon, _ = get_lat_lon_alt_deg(ulog, cur_dataset)
         lat = lat[indices]
         lon = lon[indices]
