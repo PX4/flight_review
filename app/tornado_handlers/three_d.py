@@ -68,11 +68,16 @@ class ThreeDHandler(TornadoRequestHandlerBase):
         takeoff_longitude = '{:.10f}'.format(lon[takeoff_index])
 
 
-        # calculate UTC time offset (assume there's no drift over the entire log)
-        utc_offset = int(gps_pos.data[gnss.field('time_utc_usec')][takeoff_index]) - \
-                int(gps_pos.data['timestamp'][takeoff_index])
-        # Make sure it's not negative, in case 'time_utc_usec' is 0
-        utc_offset = max(utc_offset, 0)
+        # calculate UTC time offset (assume there's no drift over the entire log).
+        # A receiver can report a fix before it knows the time, so use the first
+        # sample with a UTC time.
+        utc_offset = 0
+        time_utc_usec = gps_pos.data[gnss.field('time_utc_usec')]
+        utc_indices = np.nonzero(time_utc_usec)
+        if len(utc_indices[0]) > 0:
+            utc_index = utc_indices[0][0]
+            utc_offset = int(time_utc_usec[utc_index]) - \
+                    int(gps_pos.data['timestamp'][utc_index])
 
         # flight modes
         flight_mode_changes = get_flight_mode_changes(ulog)
