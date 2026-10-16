@@ -523,10 +523,10 @@ class GnssTopic:
     """
 
     def __init__(self, ulog):
-        if any(elem.name == 'vehicle_gps_position' for elem in ulog.data_list):
-            self.name = 'vehicle_gps_position'
-        else:
+        if any(elem.name == 'vehicle_gnss' for elem in ulog.data_list):
             self.name = 'vehicle_gnss'
+        else:
+            self.name = 'vehicle_gps_position'
 
     def field(self, name):
         """ name in the log of the vehicle_gnss receiver field `name` """
