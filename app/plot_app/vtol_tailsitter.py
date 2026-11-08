@@ -84,7 +84,7 @@ def tailsitter_orientation(ulog, vtol_states):
 
         # fw rates and setpoints(roll and yaw swap, roll is negative axis)
         w_r_fw = w_y*-1
-        w_y_fw = w_r*1 # *1 to get python to copy not reference
+        w_y_fw = np.copy(w_r)
         # temporary variables for storing VTOL states
         is_vtol_fw = False
         fw_start = np.nan
@@ -128,7 +128,7 @@ def tailsitter_orientation(ulog, vtol_states):
         # fw setpoints(roll and yaw swap, roll is negative axis)
 
         setp_r_fw = setp_y*-1
-        setp_y_fw = setp_r*1
+        setp_y_fw = np.copy(setp_r)
         # temporary variables for storing VTOL states
 
         is_vtol_fw = False
