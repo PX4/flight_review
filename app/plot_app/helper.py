@@ -286,7 +286,7 @@ def validate_url(url):
         r'(?:/?|[/?]\S+)$', re.IGNORECASE)
     return regex.match(url) is not None
 
-class ULogException(Exception):
+class ULogParseException(Exception):
     """
     Exception to indicate an ULog parsing error. It is most likely a corrupt log
     file, but could also be a bug in the parser.
@@ -294,11 +294,11 @@ class ULogException(Exception):
     pass
 
 
-class ULogTimeoutException(ULogException):
+class ULogTimeoutException(ULogParseException):
     """
     Exception to indicate that loading a log took longer than the configured
     timeout. This usually means the storage backend (e.g. an S3 FUSE/NFS mount)
-    stalled on a read. It is a subclass of ULogException so existing handlers
+    stalled on a read. It is a subclass of ULogParseException so existing handlers
     treat it as a (transient) load error.
     """
     pass
@@ -365,16 +365,16 @@ def load_ulog_file(file_name):
         print("Error: file %s not found" % file_name)
         raise
     except ULogTimeoutException:
-        # storage backend stalled - surface as-is (a ULogException subclass) so
+        # storage backend stalled - surface as-is (a ULogParseException subclass) so
         # the worker recovers instead of hanging. Not cached (lru_cache only
         # stores successful returns).
         print("Error: loading file %s timed out" % file_name)
         raise
 
-    # catch all other exceptions and turn them into an ULogException
+    # catch all other exceptions and turn them into an ULogParseException
     except Exception as error:
         traceback.print_exception(*sys.exc_info())
-        raise ULogException() from error
+        raise ULogParseException() from error
 
     # filter messages with timestamp = 0 (these are invalid).
     # The better way is not to publish such messages in the first place, and fix
