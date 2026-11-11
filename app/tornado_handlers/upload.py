@@ -22,7 +22,7 @@ from db_entry import DBVehicleData, DBData
 from config import get_db_connection, get_http_protocol, get_domain_name, \
     email_notifications_config, get_ulge_private_key_path
 from helper import get_total_flight_time, validate_url, get_log_filename, \
-    load_ulog_file, get_airframe_name, ULogException, ULogTimeoutException, \
+    load_ulog_file, get_airframe_name, ULogParseException, ULogTimeoutException, \
     decrypt_ulge_payload, is_valid_email, is_valid_ulog
 from overview_generator import generate_overview_img_from_id
 
@@ -343,7 +343,7 @@ class UploadHandler(TornadoRequestHandlerBase):
                     'was received but could not be processed right now - please '
                     'try uploading again in a moment.') from e
 
-            except ULogException as e:
+            except ULogParseException as e:
                 raise CustomHTTPError(
                     400,
                     'Failed to parse the file. It is most likely corrupt.') from e
