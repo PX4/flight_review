@@ -772,7 +772,7 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
                                  plot_height='small',
                                  changed_params=changed_params,
                                  x_range=x_range, topic_instance=instance)
-            sensor_accel_fifo = ulog.get_dataset('sensor_accel_fifo').data
+            sensor_accel_fifo = ulog.get_dataset('sensor_accel_fifo', instance).data
             sampling_diff = np.diff(sensor_accel_fifo['timestamp'])
             min_sampling_diff = np.amin(sampling_diff)
             plot_dropouts(data_plot.bokeh_plot, ulog.dropouts, min_sampling_diff)
