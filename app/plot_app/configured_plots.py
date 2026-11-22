@@ -410,7 +410,12 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
             if any(elem.name == 'airspeed_validated' for elem in data):
                 airspeed_validated = ulog.get_dataset('airspeed_validated')
                 data_plot.change_dataset('airspeed_validated')
-                if np.amax(airspeed_validated.data['airspeed_sensor_measurement_valid']) == 1:
+                if 'airspeed_source' in airspeed_validated.data:  # PX4 v1.17+, sensors: 1-3
+                    sensor = np.any(np.isin(airspeed_validated.data['airspeed_source'], [1, 2, 3]))
+                    if np.any(np.isfinite(airspeed_validated.data['true_airspeed_m_s'])):
+                        data_plot.add_graph(['true_airspeed_m_s'], colors8[1:2],
+                                            ['True Airspeed' + ('' if sensor else ' (estimated)')])
+                elif np.amax(airspeed_validated.data['airspeed_sensor_measurement_valid']) == 1:
                     data_plot.add_graph(['true_airspeed_m_s'], colors8[1:2],
                                         ['True Airspeed'])
                 else:
@@ -925,7 +930,11 @@ def generate_plots(ulog, px4_ulog, db_data, vehicle_data, link_to_3d_page,
     data_plot.add_graph(['temperature'], colors8[2:3],
                         ['Accel temperature'])
     data_plot.change_dataset('airspeed')
-    data_plot.add_graph(['air_temperature_celsius'], colors8[4:5],
+    temperature_field = 'air_temperature_celsius'
+    if not data_plot.dataset or temperature_field not in data_plot.dataset.data:
+        data_plot.change_dataset('differential_pressure')  # PX4 v1.16+
+        temperature_field = 'temperature'
+    data_plot.add_graph([temperature_field], colors8[4:5],
                         ['Airspeed temperature'])
     data_plot.change_dataset('battery_status')
     data_plot.add_graph(['temperature'], colors8[6:7],
