@@ -18,6 +18,7 @@ from db_entry import *
 from configured_plots import generate_plots
 from pid_analysis_plots import get_pid_analysis_plots
 from statistics_plots import StatisticsPlots
+import annotations
 
 #pylint: disable=invalid-name, redefined-outer-name
 
@@ -132,7 +133,7 @@ else:
             con = get_db_connection()
             cur = con.cursor()
             cur.execute('select Description, Feedback, Type, WindSpeed, Rating, VideoUrl, '
-                        'ErrorLabels from Logs where Id = ?', [log_id])
+                        'ErrorLabels, Annotations from Logs where Id = ?', [log_id])
             db_tuple = cur.fetchone()
             if db_tuple is not None:
                 db_data.description = db_tuple[0]
@@ -144,6 +145,7 @@ else:
                 db_data.error_labels = sorted(
                     [int(x) for x in db_tuple[6].split(',') if len(x) > 0]) \
                     if db_tuple[6] else []
+                db_data.annotations = db_tuple[7]
 
             # vehicle data
             if 'sys_uuid' in ulog.msg_info_dict:
@@ -232,6 +234,10 @@ else:
             try:
                 plots = generate_plots(ulog, px4_ulog, db_data, vehicle_data,
                                        link_to_3d_page, link_to_pid_analysis_page)
+
+                # after generate_plots, so the annotations see the titles the plots really got
+                curdoc().template_variables['annotations_html'] = annotations.render(
+                    db_data.annotations, plots, curdoc().template_variables.get('plots'))
 
                 title = 'Flight Review - '+px4_ulog.get_mav_type()
 
