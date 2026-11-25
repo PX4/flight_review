@@ -1,12 +1,15 @@
 """ This contains PID analysis plots """
 from bokeh.io import curdoc
+from bokeh.models import DataRange1d, LinearAxis, Range1d
 from bokeh.models.widgets import Div
 from bokeh.layouts import column
-from scipy.interpolate import interp1d
 
 from config import plot_width, plot_config, colors3
 from helper import get_flight_mode_changes, ActuatorControls
-from pid_analysis import Trace, plot_pid_response
+from gyro_filter_analysis import get_flying_intervals
+from rate_response import (
+    get_angle_responses, get_rate_responses, step_response_plot
+    )
 from plotting import *
 from plotted_tables import get_heading_html
 
@@ -17,35 +20,46 @@ def get_pid_analysis_plots(ulog, px4_ulog, db_data, link_to_main_plots):
     get all bokeh plots shown on the PID analysis page
     :return: list of bokeh plots
     """
-    def _resample(time_array, data, desired_time):
-        """ resample data at a given time to a vector of desired_time """
-        data_f = interp1d(time_array, data, fill_value='extrapolate')
-        return data_f(desired_time)
-
     page_intro = """
 <p>
-This page shows step response plots for the PID controller. The step
-response is an objective measure to evaluate the performance of a PID
-controller, i.e. if the tuning gains are appropriate. In particular, the
-following metrics can be read from the plots: response time, overshoot and
-settling time.
+This page shows how well the rate and attitude controllers follow their
+setpoints, estimated from the setpoint and the measured rate (or angle) while
+flying. The estimate needs excitation: stick inputs on every axis (quick rolls
+and pitch changes, or a chirp) and the setpoint logged at the controller rate
+(SDLOG_PROFILE bit 4 or 12). With only hovering, there is nothing to estimate.
 </p>
 <p>
-The step response plots are based on <a href="https://github.com/Plasmatree/PID-Analyzer">
-PID-Analyzer</a>, originally written for Betaflight by Florian Melsheimer.
-Documentation with some examples can be found <a
-href="https://github.com/Plasmatree/PID-Analyzer/wiki/Influence-of-parameters">here</a>.
+<b>Step response</b>: how the vehicle would respond to an instant setpoint
+change of 1. It is the average over all windows of the flight where the
+setpoint varies; "every window" shows the estimate of each window alone (where
+a window has no excitation at a frequency, it falls back to the average), so
+the spread shows how consistent the response is.
 </p>
-<p>
-The analysis may take a while...
-</p>
-    """
+<ul>
+<li><b>Delay</b>: time until the response reaches 50 % of the step. It is the
+sum of the filter delays, the motor spin-up and the controller.</li>
+<li><b>Rise time</b>: time from 10 % to 90 % of the step. Higher P (or
+feed forward) makes it shorter.</li>
+<li><b>Overshoot</b>: how far the response goes beyond the setpoint, in %.
+Small overshoot (up to 10-15 %) is normal, large overshoot or ringing means too
+much P or too little D.</li>
+</ul>
+"""
     curdoc().template_variables['title_html'] = get_heading_html(
         ulog, px4_ulog, db_data, None, [('Open Main Plots', link_to_main_plots)],
         'PID Analysis') + page_intro
 
     plots = []
     data = ulog.data_list
+    intervals = get_flying_intervals(ulog)
+    rate_responses = get_rate_responses(ulog, intervals)
+    num_responses = 0
+
+    def add_response_plot(data_plot):
+        nonlocal num_responses
+        if data_plot.finalize() is not None:
+            plots.append(data_plot.layout)
+            num_responses += 1
     flight_mode_changes = get_flight_mode_changes(ulog)
     x_range_offset = (ulog.last_timestamp - ulog.start_timestamp) * 0.05
     x_range = Range1d(ulog.start_timestamp - x_range_offset, ulog.last_timestamp + x_range_offset)
@@ -61,37 +75,6 @@ The analysis may take a while...
                                 for elem in data)
     actuator_controls_0 = ActuatorControls(ulog, dynamic_control_alloc, 0)
 
-    # required PID response data
-    pid_analysis_error = False
-    try:
-        # Rate
-        rate_data = ulog.get_dataset(rate_topic_name)
-        gyro_time = rate_data.data['timestamp']
-
-        vehicle_rates_setpoint = ulog.get_dataset('vehicle_rates_setpoint')
-        actuator_controls_0_data = ulog.get_dataset(actuator_controls_0.thrust_sp_topic)
-        throttle = _resample(actuator_controls_0_data.data['timestamp'],
-                             actuator_controls_0.thrust * 100, gyro_time)
-        time_seconds = gyro_time / 1e6
-    except (KeyError, IndexError, ValueError) as error:
-        print(type(error), ":", error)
-        pid_analysis_error = True
-        div = Div(text="<p><b>Error</b>: missing topics or data for PID analysis "
-                  "(required topics: vehicle_angular_velocity, vehicle_rates_setpoint, "
-                  "vehicle_attitude, vehicle_attitude_setpoint and "
-                  "actuator_controls_0).</p>", width=int(plot_width*0.9))
-        plots.append(column(div, width=int(plot_width*0.9)))
-
-    has_attitude = True
-    try:
-        # Attitude (optional)
-        vehicle_attitude = ulog.get_dataset('vehicle_attitude')
-        attitude_time = vehicle_attitude.data['timestamp']
-        vehicle_attitude_setpoint = ulog.get_dataset('vehicle_attitude_setpoint')
-    except (KeyError, IndexError, ValueError) as error:
-        print(type(error), ":", error)
-        has_attitude = False
-
     for index, axis in enumerate(['roll', 'pitch', 'yaw']):
         axis_name = axis.capitalize()
         # rate
@@ -100,12 +83,11 @@ The analysis may take a while...
                              plot_height='small',
                              x_range=x_range)
 
-        thrust_max = 200
         thrust_sp_data = data_plot.dataset
         if thrust_sp_data is None: # do not show the rate plot if actuator_controls is missing
             continue
         time_thrust = thrust_sp_data.data['timestamp']
-        thrust = actuator_controls_0.thrust * thrust_max
+        thrust = actuator_controls_0.thrust * 100
         # downsample if necessary
         max_num_data_points = 4.0*plot_config['plot_width']
         if len(time_thrust) > max_num_data_points:
@@ -118,9 +100,13 @@ The analysis may take a while...
             time_thrust = np.insert(time_thrust, [0, len(time_thrust)],
                                       [time_thrust[0], time_thrust[-1]])
 
+        # thrust on its own axis on the right
         p = data_plot.bokeh_plot
-        p.patch(time_thrust, thrust, line_width=0, fill_color='#555555', # pylint: disable=too-many-function-args
-                fill_alpha=0.4, alpha=0, legend_label='Thrust [0, {:}]'.format(thrust_max))
+        p.extra_y_ranges = {'thrust': Range1d(0, 100)}
+        p.add_layout(LinearAxis(y_range_name='thrust', axis_label='Thrust [%]'), 'right')
+        thrust_patch = p.patch(time_thrust, thrust, line_width=0, fill_color='#555555', # pylint: disable=too-many-function-args
+                               fill_alpha=0.25, alpha=0, legend_label='Thrust [%]',
+                               y_range_name='thrust')
 
         data_plot.change_dataset(rate_topic_name)
         data_plot.add_graph([lambda data: ("rate"+str(index),
@@ -141,53 +127,24 @@ The analysis may take a while...
         data_plot.add_graph([lambda data: (axis, data[axis+'speed_integ']*100)],
                             colors3[2:3], [axis_name+' Rate Integral '+rate_int_limit])
         plot_flight_modes_background(data_plot, flight_mode_changes)
+        # the rate axis range ignores the thrust
+        p.y_range = DataRange1d(renderers=[r for r in p.renderers if r is not thrust_patch])
 
         if data_plot.finalize() is not None: plots.append(data_plot.bokeh_plot)
 
-        # PID response
-        if not pid_analysis_error:
-            try:
-                gyro_rate = np.rad2deg(rate_data.data[rate_field_names[index]])
-                setpoint = _resample(vehicle_rates_setpoint.data['timestamp'],
-                                     np.rad2deg(vehicle_rates_setpoint.data[axis]),
-                                     gyro_time)
-                trace = Trace(axis, time_seconds, gyro_rate, setpoint, throttle)
-                plots.append(plot_pid_response(trace, ulog.data_list, plot_config).bokeh_plot)
-            except Exception as e:
-                print(type(e), axis, ":", e)
-                div = Div(text="<p><b>Error</b>: PID analysis failed. Possible "
-                          "error causes are: logged data rate is too low, or there "
-                          "is not enough motion for the analysis.</p>",
-                          width=int(plot_width*0.9))
-                plots.insert(0, column(div, width=int(plot_width*0.9)))
-                pid_analysis_error = True
+        # step response, estimated from the whole flight
+        if rate_responses is not None:
+            add_response_plot(step_response_plot(ulog, plot_config, rate_responses[index],
+                                                 'Rate'))
 
-    # attitude
-    if not pid_analysis_error and has_attitude:
-        throttle = _resample(actuator_controls_0_data.data['timestamp'],
-                             actuator_controls_0.thrust * 100, attitude_time)
-        time_seconds = attitude_time / 1e6
-    # don't plot yaw, as yaw is mostly controlled directly by rate
-    for index, axis in enumerate(['roll', 'pitch']):
-        axis_name = axis.capitalize()
+    # attitude (yaw is mostly controlled directly by rate)
+    for angle_response in get_angle_responses(ulog, intervals) or []:
+        add_response_plot(step_response_plot(ulog, plot_config, angle_response, 'Angle'))
 
-        # PID response
-        if not pid_analysis_error and has_attitude:
-            try:
-                attitude_estimated = np.rad2deg(vehicle_attitude.data[axis])
-                setpoint = _resample(vehicle_attitude_setpoint.data['timestamp'],
-                                     np.rad2deg(vehicle_attitude_setpoint.data[axis+'_d']),
-                                     attitude_time)
-                trace = Trace(axis, time_seconds, attitude_estimated, setpoint, throttle)
-                plots.append(plot_pid_response(trace, ulog.data_list, plot_config,
-                                               'Angle').bokeh_plot)
-            except Exception as e:
-                print(type(e), axis, ":", e)
-                div = Div(text="<p><b>Error</b>: Attitude PID analysis failed. Possible "
-                          "error causes are: logged data rate is too low/data missing, "
-                          "or there is not enough motion for the analysis.</p>",
-                          width=int(plot_width*0.9))
-                plots.insert(0, column(div, width=int(plot_width*0.9)))
-                pid_analysis_error = True
+    if num_responses == 0:
+        plots.insert(0, column(Div(
+            text="<p><b>Error</b>: no controller response could be estimated: the "
+            "setpoints vary too little (no stick inputs) or are logged at a too low "
+            "rate.</p>", width=int(plot_width*0.9)), width=int(plot_width*0.9)))
 
     return plots
